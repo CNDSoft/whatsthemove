@@ -1,0 +1,217 @@
+# Cursor Rules for SwiftUI Countries App
+
+## Project Architecture
+
+This project follows Clean Architecture principles with the following layers:
+
+### Layer Structure
+- **Core/**: App entry point, AppDelegate, AppState, system event handlers
+- **DependencyInjection/**: DIContainer, AppEnvironment setup
+- **Interactors/**: Business logic layer (protocol + Real + Stub implementations)
+- **Repositories/**: Data access layer
+  - **Database/**: SwiftData persistence with `DBModel` namespace
+  - **WebAPI/**: Network layer with `ApiModel` namespace
+  - **Models/**: Data models for both DB and API
+- **UI/**: SwiftUI views organized by feature
+- **Utilities/**: Shared utilities (Loadable, Store, CancelBag, Helpers)
+
+## Code Conventions
+
+### File Header
+All files should include the standard header:
+```swift
+//
+//  FileName.swift
+//  CountriesSwiftUI
+//
+//  Created by [Author] on [Date].
+//  Copyright © [Year] [Author]. All rights reserved.
+//
+```
+
+### Interactors Pattern
+Define business logic using protocol + implementation pattern:
+```swift
+protocol SomeInteractor {
+    func doSomething() async throws
+}
+
+struct RealSomeInteractor: SomeInteractor {
+    let webRepository: SomeWebRepository
+    let dbRepository: SomeDBRepository
+    
+    func doSomething() async throws {
+        // Implementation
+    }
+}
+
+struct StubSomeInteractor: SomeInteractor {
+    func doSomething() async throws {
+        // Stub for testing/previews
+    }
+}
+```
+
+### Repository Pattern
+- WebRepositories: Protocol conforming to `WebRepository` base protocol
+- DBRepositories: Protocol + extension on `MainDBRepository`
+- Use `ApiModel` namespace for API response models
+- Use `DBModel` namespace for SwiftData models
+
+### View Structure
+Organize views with MARK comments:
+```swift
+struct SomeView: View {
+    // State and environment properties
+    @State private var someState: Loadable<SomeType>
+    @Environment(\.injected) private var injected: DIContainer
+    
+    var body: some View {
+        content
+    }
+    
+    @ViewBuilder private var content: some View {
+        switch someState {
+        case .notRequested: defaultView()
+        case .isLoading: loadingView()
+        case let .loaded(data): loadedView(data)
+        case let .failed(error): failedView(error)
+        }
+    }
+}
+
+// MARK: - Loading Content
+private extension SomeView {
+    func defaultView() -> some View { }
+    func loadingView() -> some View { }
+    func failedView(_ error: Error) -> some View { }
+}
+
+// MARK: - Displaying Content
+private extension SomeView {
+    func loadedView(_ data: SomeType) -> some View { }
+}
+
+// MARK: - Side Effects
+private extension SomeView {
+    func loadData() { }
+}
+
+// MARK: - Routing
+extension SomeView {
+    struct Routing: Equatable { }
+}
+
+// MARK: - State Updates
+private extension SomeView {
+    var routingUpdate: AnyPublisher<Routing, Never> { }
+}
+```
+
+### State Management
+- Use `Loadable<T>` enum for async loading states: `.notRequested`, `.isLoading`, `.loaded`, `.failed`
+- Use `Store<AppState>` (CurrentValueSubject wrapper) for global app state
+- Use `@State` for local view state
+- Use `.dispatched(to:_:)` binding modifier for routing state synchronization
+
+### Dependency Injection
+- Access dependencies via `@Environment(\.injected)` in views
+- Register in `DIContainer.Interactors`
+- Use `.inject(_:)` view modifier to provide container
+
+## Naming Conventions
+
+### Files
+- Views: `SomeView.swift` or `SomeFeatureView.swift`
+- Interactors: `SomeInteractor.swift`
+- Repositories: `SomeWebRepository.swift`, `SomeDBRepository.swift`
+- Models: Named by domain entity
+
+### Types
+- API models: `ApiModel.SomeType`
+- Database models: `DBModel.SomeType`
+- Interactor protocols: `SomeInteractor`
+- Real implementations: `RealSomeInteractor`
+- Stub implementations: `StubSomeInteractor`
+
+### Functions
+- Loading functions: `loadSomething(forceReload: Bool)`
+- Store functions: `store(something:)` for persistence
+
+## Testing Patterns
+
+### Test Structure
+Use Swift Testing framework:
+```swift
+@MainActor
+@Suite class SomeTests {
+    let mockedWebRepo: MockedSomeWebRepository
+    let mockedDBRepo: MockedSomeDBRepository
+    let sut: RealSomeInteractor
+    
+    init() {
+        mockedWebRepo = MockedSomeWebRepository()
+        mockedDBRepo = MockedSomeDBRepository()
+        sut = RealSomeInteractor(webRepository: mockedWebRepo, dbRepository: mockedDBRepo)
+    }
+}
+
+final class SomeSpecificTests: SomeTests {
+    @Test func happyPath() async throws {
+        // Setup mocks
+        mockedWebRepo.actions = .init(expected: [...])
+        // Execute
+        try await sut.someMethod()
+        // Verify
+        mockedWebRepo.verify()
+    }
+}
+```
+
+### Mock Verification
+- Set expected actions on mocks before execution
+- Call `.verify()` after execution to confirm all expected actions occurred
+
+## SwiftData Conventions
+
+### Model Definition
+```swift
+extension DBModel {
+    @Model final class SomeEntity {
+        var property: String
+        @Attribute(.unique) var identifier: String
+        @Relationship(...) var related: [OtherEntity] = []
+        
+        init(...) { }
+    }
+}
+```
+
+### API to DB Conversion
+```swift
+internal extension ApiModel.SomeType {
+    func dbModel() -> DBModel.SomeType {
+        return .init(...)
+    }
+}
+```
+
+## Async/Await Usage
+
+- Interactors use `async throws` functions
+- Views load data using `$state.load { }` extension on LoadableSubject
+- Use `@MainActor` for UI-related code
+
+## Important Rules
+
+1. Never add comments with emojis
+2. Keep files under 200-300 lines, refactor if needed
+3. Use MARK comments for code organization in views
+4. Always provide Stub implementations for interactors
+5. Separate API models from DB models
+6. Use protocols for testability
+7. Follow DRY principle - check existing code before adding new implementations
+8. Include class/struct name in log messages: "ClassName - [message]"
+9. Write production-ready code, no placeholder implementations
+10. Don't modify unrelated code when making changes
+
