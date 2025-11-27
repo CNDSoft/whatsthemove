@@ -34,6 +34,7 @@ extension AppState {
 extension AppState {
     struct UserData: Equatable {
         var isAuthenticated: Bool = false
+        var hasCompletedOnboarding: Bool = false
         var userId: String?
         var email: String?
     }

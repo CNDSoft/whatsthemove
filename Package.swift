@@ -14,13 +14,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/nalexn/EnvironmentOverrides", from: "0.0.4"),
-        .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.0")
+        .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0")
     ],
     targets: [
         .target(
             name: "WhatsTheMove",
             dependencies: [
-                .product(name: "EnvironmentOverrides", package: "EnvironmentOverrides")
+                .product(name: "EnvironmentOverrides", package: "EnvironmentOverrides"),
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             path: "WhatsTheMove",
             exclude: [
@@ -29,6 +31,7 @@ let package = Package(
             resources: [
                 .process("Resources/Assets.xcassets"),
                 .process("Resources/Localizable.xcstrings"),
+                .process("Resources/GoogleService-Info.plist"),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v5)

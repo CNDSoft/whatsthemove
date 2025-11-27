@@ -10,6 +10,7 @@ import UIKit
 import SwiftUI
 import Combine
 import Foundation
+import Firebase
 
 @MainActor
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -23,6 +24,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions
         launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        FirebaseApp.configure()
+        print("AppDelegate - Firebase configured")
         return true
     }
 

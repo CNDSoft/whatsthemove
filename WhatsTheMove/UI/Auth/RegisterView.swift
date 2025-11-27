@@ -290,14 +290,14 @@ private extension RegisterView {
         errorMessage = nil
         isLoading = true
         
-        let fullName = "\(firstName) \(lastName)"
-        
         Task {
             do {
                 try await injected.interactors.auth.signUp(
                     email: email,
                     password: password,
-                    name: fullName
+                    firstName: firstName,
+                    lastName: lastName,
+                    ageRange: selectedAgeRange.rawValue
                 )
                 isLoading = false
                 dismiss()

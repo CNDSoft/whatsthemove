@@ -54,9 +54,12 @@ extension AppEnvironment {
 
 private struct RootContent: View {
     
+    private static let onboardingCompletedKey = "hasCompletedOnboarding"
+    
     @Environment(\.injected) private var injected: DIContainer
     @State private var showLaunchScreen: Bool = true
     @State private var isAuthenticated: Bool = false
+    @State private var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: onboardingCompletedKey)
     
     var body: some View {
         ZStack {
@@ -65,8 +68,13 @@ private struct RootContent: View {
                     .transition(.opacity)
             } else {
                 if isAuthenticated {
-                    MainTabView()
-                        .transition(.opacity)
+                    if hasCompletedOnboarding {
+                        MainTabView()
+                            .transition(.opacity)
+                    } else {
+                        OnboardingView(onComplete: completeOnboarding)
+                            .transition(.opacity)
+                    }
                 } else {
                     AuthView()
                         .transition(.opacity)
@@ -75,7 +83,9 @@ private struct RootContent: View {
         }
         .animation(.easeInOut(duration: 0.3), value: showLaunchScreen)
         .animation(.easeInOut(duration: 0.3), value: isAuthenticated)
+        .animation(.easeInOut(duration: 0.3), value: hasCompletedOnboarding)
         .onReceive(isAuthenticatedUpdate) { self.isAuthenticated = $0 }
+        .onReceive(hasCompletedOnboardingUpdate) { self.hasCompletedOnboarding = $0 }
         .task {
             await checkAuthAndDismissLaunchScreen()
         }
@@ -85,11 +95,24 @@ private struct RootContent: View {
         injected.appState.updates(for: \.userData.isAuthenticated)
     }
     
+    private var hasCompletedOnboardingUpdate: AnyPublisher<Bool, Never> {
+        injected.appState.updates(for: \.userData.hasCompletedOnboarding)
+    }
+    
     private func checkAuthAndDismissLaunchScreen() async {
         let authStatus = await injected.interactors.auth.checkAuthStatus()
         isAuthenticated = authStatus
         
+        let onboardingCompleted = UserDefaults.standard.bool(forKey: Self.onboardingCompletedKey)
+        hasCompletedOnboarding = onboardingCompleted
+        injected.appState[\.userData.hasCompletedOnboarding] = onboardingCompleted
+        
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         showLaunchScreen = false
+    }
+    
+    private func completeOnboarding() {
+        UserDefaults.standard.set(true, forKey: Self.onboardingCompletedKey)
+        injected.appState[\.userData.hasCompletedOnboarding] = true
     }
 }

@@ -18,6 +18,10 @@ struct LoginView: View {
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var showRegister: Bool = false
+    @State private var showForgotPasswordAlert: Bool = false
+    @State private var forgotPasswordEmail: String = ""
+    @State private var showPasswordResetSuccess: Bool = false
+    @State private var isResettingPassword: Bool = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -39,6 +43,25 @@ struct LoginView: View {
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $showRegister) {
             RegisterView()
+        }
+        .alert("Reset Password", isPresented: $showForgotPasswordAlert) {
+            TextField("Email", text: $forgotPasswordEmail)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.emailAddress)
+            Button("Cancel", role: .cancel) {
+                forgotPasswordEmail = ""
+            }
+            Button("Send Reset Link") {
+                handleResetPassword()
+            }
+            .disabled(forgotPasswordEmail.isEmpty)
+        } message: {
+            Text("Enter your email address and we'll send you a link to reset your password.")
+        }
+        .alert("Password Reset Email Sent", isPresented: $showPasswordResetSuccess) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Check your email for instructions to reset your password.")
         }
     }
 }
@@ -233,6 +256,28 @@ private extension LoginView {
     
     func handleForgotPassword() {
         print("LoginView - Forgot password tapped")
+        forgotPasswordEmail = email
+        showForgotPasswordAlert = true
+    }
+    
+    func handleResetPassword() {
+        guard !forgotPasswordEmail.isEmpty else { return }
+        
+        isResettingPassword = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                try await injected.interactors.auth.resetPassword(email: forgotPasswordEmail)
+                isResettingPassword = false
+                forgotPasswordEmail = ""
+                showPasswordResetSuccess = true
+            } catch {
+                isResettingPassword = false
+                errorMessage = error.localizedDescription
+                print("LoginView - Reset password error: \(error)")
+            }
+        }
     }
     
     func handleNavigateToSignUp() {

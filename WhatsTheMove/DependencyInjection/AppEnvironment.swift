@@ -71,9 +71,11 @@ extension AppEnvironment {
         let images = RealImagesWebRepository(session: session)
         let countries = RealCountriesWebRepository(session: session)
         let pushToken = RealPushTokenWebRepository(session: session)
+        let users = RealUserWebRepository()
         return .init(images: images,
                      countries: countries,
-                     pushToken: pushToken)
+                     pushToken: pushToken,
+                     users: users)
     }
 
     private static func configuredDBRepositories(modelContainer: ModelContainer) -> DIContainer.DBRepositories {
@@ -105,7 +107,9 @@ extension AppEnvironment {
                     UIApplication.shared.open($0, options: [:], completionHandler: nil)
                 }
             })
-        let auth = RealAuthInteractor(appState: appState)
+        let auth = RealAuthInteractor(
+            appState: appState,
+            userWebRepository: webRepositories.users)
         return .init(images: images,
                      countries: countries,
                      userPermissions: userPermissions,
