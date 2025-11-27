@@ -8,7 +8,7 @@
 
 import Foundation
 import Testing
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 @Suite struct HelpersTests {
 

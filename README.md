@@ -1,25 +1,11 @@
-### Articles related to this project
+# WhatsTheMove
 
-* [Clean Architecture for SwiftUI](https://nalexn.github.io/clean-architecture-swiftui/?utm_source=nalexn_github)
-* [Programmatic navigation in SwiftUI project](https://nalexn.github.io/swiftui-deep-linking/?utm_source=nalexn_github)
-* [Separation of Concerns in Software Design](https://nalexn.github.io/separation-of-concerns/?utm_source=nalexn_github)
+A SwiftUI application built with Clean Architecture principles.
 
----
-
-# Clean Architecture for SwiftUI + Combine
-
-A demo project showcasing the setup of the SwiftUI app with Clean Architecture.
-
-The app uses the [restcountries.com](https://restcountries.com/) REST API to show the list of countries and details about them.
-
-**Check out [mvvm branch](https://github.com/nalexn/clean-architecture-swiftui/tree/mvvm) for the MVVM revision of the same app.**
-
-For the example of handling the **authentication state** in the app, you can refer to my [other tiny project](https://github.com/nalexn/uikit-swiftui) that harnesses the locks and keys principle for solving this problem.
-
-![platforms](https://img.shields.io/badge/platforms-iPhone%20%7C%20iPad%20%7C%20macOS-lightgrey) [![codecov](https://codecov.io/gh/nalexn/clean-architecture-swiftui/branch/master/graph/badge.svg)](https://codecov.io/gh/nalexn/clean-architecture-swiftui) [![codebeat badge](https://codebeat.co/badges/db33561b-0b2b-4ee1-a941-a08efbd0ebd7)](https://codebeat.co/projects/github-com-nalexn-clean-architecture-swiftui-master)
+![platforms](https://img.shields.io/badge/platforms-iPhone%20%7C%20iPad%20%7C%20macOS-lightgrey)
 
 <p align="center">
-  <img src="https://github.com/nalexn/blob_files/blob/master/images/countries_preview.png?raw=true" alt="Diagram"/>
+  <img src="https://github.com/nalexn/blob_files/blob/master/images/countries_preview.png?raw=true" alt="App Preview"/>
 </p>
 
 ## Key features

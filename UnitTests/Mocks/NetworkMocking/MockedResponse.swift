@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 extension RequestMocking {
     struct MockedResponse {

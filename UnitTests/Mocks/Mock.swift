@@ -7,7 +7,7 @@
 //
 
 import Testing
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 protocol Mock {
     associatedtype Action: Equatable

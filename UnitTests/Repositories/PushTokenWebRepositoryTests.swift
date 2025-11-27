@@ -8,7 +8,7 @@
 
 import Testing
 import Foundation
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 @Suite struct PushTokenWebRepositoryTests {
 

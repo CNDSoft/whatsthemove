@@ -8,7 +8,7 @@
 
 import Testing
 import SwiftUI
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 @MainActor
 @Suite class CountriesInteractorTests {

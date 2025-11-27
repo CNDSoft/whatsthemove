@@ -8,7 +8,7 @@
 
 import Testing
 import UIKit.UIImage
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 @Suite(.serialized) final class ImageWebRepositoryTests {
 

@@ -7,7 +7,7 @@
 //
 
 import Testing
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 @MainActor
 @Suite struct DeepLinksHandlerTests {

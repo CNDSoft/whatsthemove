@@ -10,7 +10,7 @@ import Testing
 import SwiftData
 import ViewInspector
 import UIKit.UIColor
-@testable import CountriesSwiftUI
+@testable import WhatsTheMove
 
 @MainActor
 @Suite struct DeepLinkUITests {
