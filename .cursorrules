@@ -214,4 +214,5 @@ internal extension ApiModel.SomeType {
 8. Include class/struct name in log messages: "ClassName - [message]"
 9. Write production-ready code, no placeholder implementations
 10. Don't modify unrelated code when making changes
+11. Put common utilities (Color extensions, UIColor extensions, Font helpers, etc.) in dedicated files under Utilities/ folder - never add global extensions directly in View files
 
