@@ -37,11 +37,13 @@ extension DIContainer {
         let images: ImagesInteractor
         let countries: CountriesInteractor
         let userPermissions: UserPermissionsInteractor
+        let auth: AuthInteractor
 
         static var stub: Self {
             .init(images: StubImagesInteractor(),
                   countries: StubCountriesInteractor(),
-                  userPermissions: StubUserPermissionsInteractor())
+                  userPermissions: StubUserPermissionsInteractor(),
+                  auth: StubAuthInteractor())
         }
     }
 }

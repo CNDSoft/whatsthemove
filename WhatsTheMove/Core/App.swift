@@ -56,32 +56,40 @@ private struct RootContent: View {
     
     @Environment(\.injected) private var injected: DIContainer
     @State private var showLaunchScreen: Bool = true
+    @State private var isAuthenticated: Bool = false
     
     var body: some View {
         ZStack {
             if showLaunchScreen {
-                LaunchScreenView(
-                    onRegister: {
-                        dismissLaunchScreen()
-                    },
-                    onSignIn: {
-                        dismissLaunchScreen()
-                    }
-                )
-                .transition(.opacity)
+                LaunchScreenView()
+                    .transition(.opacity)
             } else {
-                CountriesList()
+                if isAuthenticated {
+                    MainTabView()
+                        .transition(.opacity)
+                } else {
+                    AuthView()
+                        .transition(.opacity)
+                }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: showLaunchScreen)
-        .onReceive(showLaunchScreenUpdate) { self.showLaunchScreen = $0 }
+        .animation(.easeInOut(duration: 0.3), value: isAuthenticated)
+        .onReceive(isAuthenticatedUpdate) { self.isAuthenticated = $0 }
+        .task {
+            await checkAuthAndDismissLaunchScreen()
+        }
     }
     
-    private var showLaunchScreenUpdate: AnyPublisher<Bool, Never> {
-        injected.appState.updates(for: \.system.showLaunchScreen)
+    private var isAuthenticatedUpdate: AnyPublisher<Bool, Never> {
+        injected.appState.updates(for: \.userData.isAuthenticated)
     }
     
-    private func dismissLaunchScreen() {
-        injected.appState[\.system.showLaunchScreen] = false
+    private func checkAuthAndDismissLaunchScreen() async {
+        let authStatus = await injected.interactors.auth.checkAuthStatus()
+        isAuthenticated = authStatus
+        
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        showLaunchScreen = false
     }
 }

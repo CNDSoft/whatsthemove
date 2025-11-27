@@ -105,8 +105,10 @@ extension AppEnvironment {
                     UIApplication.shared.open($0, options: [:], completionHandler: nil)
                 }
             })
+        let auth = RealAuthInteractor(appState: appState)
         return .init(images: images,
                      countries: countries,
-                     userPermissions: userPermissions)
+                     userPermissions: userPermissions,
+                     auth: auth)
     }
 }

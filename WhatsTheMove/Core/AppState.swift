@@ -13,6 +13,7 @@ struct AppState: Equatable {
     var routing = ViewRouting()
     var system = System()
     var permissions = Permissions()
+    var userData = UserData()
 }
 
 extension AppState {
@@ -27,6 +28,14 @@ extension AppState {
         var isActive: Bool = false
         var keyboardHeight: CGFloat = 0
         var showLaunchScreen: Bool = true
+    }
+}
+
+extension AppState {
+    struct UserData: Equatable {
+        var isAuthenticated: Bool = false
+        var userId: String?
+        var email: String?
     }
 }
 
@@ -48,4 +57,5 @@ func == (lhs: AppState, rhs: AppState) -> Bool {
     return lhs.routing == rhs.routing
         && lhs.system == rhs.system
         && lhs.permissions == rhs.permissions
+        && lhs.userData == rhs.userData
 }

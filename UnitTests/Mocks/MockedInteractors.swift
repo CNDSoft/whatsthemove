@@ -15,12 +15,14 @@ extension DIContainer.Interactors {
     static func mocked(
         countries: [MockedCountriesInteractor.Action] = [],
         images: [MockedImagesInteractor.Action] = [],
-        permissions: [MockedUserPermissionsInteractor.Action] = []
+        permissions: [MockedUserPermissionsInteractor.Action] = [],
+        auth: [MockedAuthInteractor.Action] = []
     ) -> DIContainer.Interactors {
         self.init(
             images: MockedImagesInteractor(expected: images),
             countries: MockedCountriesInteractor(expected: countries),
-            userPermissions: MockedUserPermissionsInteractor(expected: permissions))
+            userPermissions: MockedUserPermissionsInteractor(expected: permissions),
+            auth: MockedAuthInteractor(expected: auth))
     }
     
     func verify(sourceLocation: SourceLocation = #_sourceLocation) {
@@ -29,6 +31,8 @@ extension DIContainer.Interactors {
         (images as? MockedImagesInteractor)?
             .verify(sourceLocation: sourceLocation)
         (userPermissions as? MockedUserPermissionsInteractor)?
+            .verify(sourceLocation: sourceLocation)
+        (auth as? MockedAuthInteractor)?
             .verify(sourceLocation: sourceLocation)
     }
 }
@@ -78,7 +82,7 @@ struct MockedImagesInteractor: Mock, ImagesInteractor {
     }
 }
 
-// MARK: - ImagesInteractor
+// MARK: - UserPermissionsInteractor
 
 final class MockedUserPermissionsInteractor: Mock, UserPermissionsInteractor {
     
@@ -99,5 +103,41 @@ final class MockedUserPermissionsInteractor: Mock, UserPermissionsInteractor {
     
     func request(permission: Permission) {
         register(.request(permission))
+    }
+}
+
+// MARK: - AuthInteractor
+
+struct MockedAuthInteractor: Mock, AuthInteractor {
+    
+    enum Action: Equatable {
+        case signIn(email: String, password: String)
+        case signUp(email: String, password: String, name: String)
+        case signOut
+        case checkAuthStatus
+    }
+    
+    let actions: MockActions<Action>
+    var authStatusResponse: Bool = false
+    
+    init(expected: [Action]) {
+        self.actions = .init(expected: expected)
+    }
+    
+    func signIn(email: String, password: String) async throws {
+        register(.signIn(email: email, password: password))
+    }
+    
+    func signUp(email: String, password: String, name: String) async throws {
+        register(.signUp(email: email, password: password, name: name))
+    }
+    
+    func signOut() async throws {
+        register(.signOut)
+    }
+    
+    func checkAuthStatus() async -> Bool {
+        register(.checkAuthStatus)
+        return authStatusResponse
     }
 }
