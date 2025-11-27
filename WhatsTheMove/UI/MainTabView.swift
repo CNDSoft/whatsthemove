@@ -15,82 +15,130 @@ struct MainTabView: View {
     
     enum Tab {
         case home
-        case search
         case saved
         case profile
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            CountriesList()
-                .tabItem {
-                    Label("Home", systemImage: "house.fill")
-                }
-                .tag(Tab.home)
-            
-            Text("Search")
-                .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
-                }
-                .tag(Tab.search)
-            
-            Text("Saved")
-                .tabItem {
-                    Label("Saved", systemImage: "bookmark.fill")
-                }
-                .tag(Tab.saved)
-            
+        ZStack(alignment: .bottom) {
+            tabContent
+            customTabBar
+        }
+        .ignoresSafeArea(.keyboard)
+    }
+}
+
+// MARK: - Tab Content
+
+private extension MainTabView {
+    
+    @ViewBuilder
+    var tabContent: some View {
+        switch selectedTab {
+        case .home:
+            HomeEmptyView()
+        case .saved:
+            SavedEmptyView()
+        case .profile:
             ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
-                }
-                .tag(Tab.profile)
         }
     }
 }
 
-// MARK: - Profile View
+// MARK: - Custom Tab Bar
 
-private struct ProfileView: View {
+private extension MainTabView {
     
-    @Environment(\.injected) private var injected: DIContainer
+    var customTabBar: some View {
+        HStack(spacing: 10) {
+            tabBarPill
+            addButton
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 15)
+    }
     
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    if let email = injected.appState.value.userData.email {
-                        Text(email)
-                            .font(.headline)
-                    }
-                    if let userId = injected.appState.value.userData.userId {
-                        Text("User ID: \(userId)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
+    var tabBarPill: some View {
+        HStack(spacing: 0) {
+            tabItem(tab: .home, icon: "home", label: "Home")
+            tabItem(tab: .saved, icon: "bookmark", label: "Saved")
+            tabItem(tab: .profile, icon: "profile", label: "Profile")
+        }
+        .padding(3)
+        .frame(width: 275, height: 50)
+        .background(Color.white)
+        .clipShape(Capsule())
+        .shadow(color: Color.black.opacity(0.15), radius: 7, x: 0, y: 0)
+    }
+    
+    func tabItem(tab: Tab, icon: String, label: String) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selectedTab = tab
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(icon)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+                    .foregroundColor(Color(hex: "11104B"))
                 
-                Section {
-                    Button("Sign Out") {
-                        signOut()
-                    }
-                    .foregroundColor(.red)
+                if selectedTab == tab {
+                    Text(label)
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "11104B"))
+                        .lineLimit(1)
                 }
             }
-            .navigationTitle("Profile")
+            .frame(height: 44)
+            .frame(maxWidth: .infinity)
+            .background(
+                Group {
+                    if selectedTab == tab {
+                        Color(hex: "11104B").opacity(0.06)
+                    } else {
+                        Color.clear
+                    }
+                }
+            )
+            .clipShape(Capsule())
         }
+        .buttonStyle(.plain)
     }
     
-    private func signOut() {
-        Task {
-            do {
-                try await injected.interactors.auth.signOut()
-            } catch {
-                print("ProfileView - Error signing out: \(error)")
-            }
+    var addButton: some View {
+        Button {
+            // Add action will be implemented later
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(Color(hex: "F8F7F1"))
+                .frame(width: 50, height: 50)
+                .background(Color(hex: "11104B"))
+                .clipShape(Circle())
         }
+        .buttonStyle(.plain)
     }
 }
+
+// MARK: - Empty Tab Views
+
+private struct HomeEmptyView: View {
+    var body: some View {
+        Color(hex: "F8F7F1")
+            .ignoresSafeArea()
+    }
+}
+
+private struct SavedEmptyView: View {
+    var body: some View {
+        Color(hex: "F8F7F1")
+            .ignoresSafeArea()
+    }
+}
+
 
 // MARK: - Previews
 
@@ -98,5 +146,3 @@ private struct ProfileView: View {
     MainTabView()
         .inject(DIContainer(appState: AppState(), interactors: .stub))
 }
-
-
