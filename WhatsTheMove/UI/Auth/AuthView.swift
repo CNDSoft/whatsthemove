@@ -30,8 +30,15 @@ struct AuthView: View {
                 actionButtons
             }
         }
-        .sheet(item: $showAuthForm) { formType in
-            AuthFormView(formType: formType)
+        .fullScreenCover(item: $showAuthForm) { formType in
+            NavigationStack {
+                switch formType {
+                case .signIn:
+                    LoginView()
+                case .signUp:
+                    RegisterView()
+                }
+            }
         }
     }
 }
@@ -121,208 +128,6 @@ enum AuthFormType: Identifiable {
         case .signIn: return "signIn"
         case .signUp: return "signUp"
         }
-    }
-}
-
-// MARK: - Auth Form View
-
-private struct AuthFormView: View {
-    
-    @Environment(\.injected) private var injected: DIContainer
-    @Environment(\.dismiss) private var dismiss
-    let formType: AuthFormType
-    
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var name: String = ""
-    @State private var isLoading: Bool = false
-    @State private var errorMessage: String?
-    
-    var body: some View {
-        ZStack {
-            Color(hex: "11104B")
-                .ignoresSafeArea()
-            
-            VStack(spacing: 32) {
-                headerSection
-                
-                Spacer()
-                
-                formSection
-                
-                actionButton
-                
-                Spacer()
-            }
-            .padding(.horizontal, 30)
-        }
-    }
-}
-
-// MARK: - Header Section
-
-private extension AuthFormView {
-    
-    var headerSection: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(Color(hex: "F8F7F1"))
-                }
-                
-                Spacer()
-            }
-            .padding(.top, 20)
-            
-            Image("wtm-logo")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 60)
-            
-            Text(formType == .signIn ? "Welcome Back" : "Create Account")
-                .font(.rubik(.semiBold, size: 24))
-                .foregroundColor(Color(hex: "F8F7F1"))
-        }
-    }
-}
-
-// MARK: - Form Section
-
-private extension AuthFormView {
-    
-    var formSection: some View {
-        VStack(spacing: 16) {
-            if formType == .signUp {
-                AuthTextField(
-                    placeholder: "Name",
-                    text: $name,
-                    icon: "person.fill"
-                )
-            }
-            
-            AuthTextField(
-                placeholder: "Email",
-                text: $email,
-                icon: "envelope.fill",
-                keyboardType: .emailAddress
-            )
-            
-            AuthTextField(
-                placeholder: "Password",
-                text: $password,
-                icon: "lock.fill",
-                isSecure: true
-            )
-            
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .padding(.top, 4)
-            }
-        }
-    }
-}
-
-// MARK: - Action Button
-
-private extension AuthFormView {
-    
-    var actionButton: some View {
-        Button(action: handleAuth) {
-            HStack {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "11104B")))
-                } else {
-                    Text(formType == .signIn ? "Sign In" : "Sign Up")
-                        .font(.rubik(.semiBold, size: 16))
-                }
-            }
-            .foregroundColor(Color(hex: "11104B"))
-            .frame(maxWidth: .infinity)
-            .frame(height: 52)
-            .background(
-                Capsule()
-                    .fill(Color(hex: "E7FF63"))
-            )
-        }
-        .disabled(isLoading || !isFormValid)
-        .opacity(isFormValid ? 1.0 : 0.6)
-    }
-    
-    var isFormValid: Bool {
-        if formType == .signIn {
-            return !email.isEmpty && !password.isEmpty
-        } else {
-            return !email.isEmpty && !password.isEmpty && !name.isEmpty
-        }
-    }
-}
-
-// MARK: - Side Effects
-
-private extension AuthFormView {
-    
-    func handleAuth() {
-        errorMessage = nil
-        isLoading = true
-        
-        Task {
-            do {
-                if formType == .signIn {
-                    try await injected.interactors.auth.signIn(email: email, password: password)
-                } else {
-                    try await injected.interactors.auth.signUp(email: email, password: password, name: name)
-                }
-                isLoading = false
-                dismiss()
-            } catch {
-                isLoading = false
-                errorMessage = error.localizedDescription
-                print("AuthFormView - Error: \(error)")
-            }
-        }
-    }
-}
-
-// MARK: - Auth Text Field
-
-struct AuthTextField: View {
-    
-    let placeholder: String
-    @Binding var text: String
-    let icon: String
-    var keyboardType: UIKeyboardType = .default
-    var isSecure: Bool = false
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(Color(hex: "11104B").opacity(0.6))
-                .frame(width: 20)
-            
-            if isSecure {
-                SecureField(placeholder, text: $text)
-                    .font(.rubik(.regular, size: 15))
-            } else {
-                TextField(placeholder, text: $text)
-                    .font(.rubik(.regular, size: 15))
-                    .keyboardType(keyboardType)
-                    .textInputAutocapitalization(.never)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(hex: "F8F7F1"))
-        )
-        .foregroundColor(Color(hex: "11104B"))
     }
 }
 

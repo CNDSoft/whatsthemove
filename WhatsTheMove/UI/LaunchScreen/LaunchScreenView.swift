@@ -19,6 +19,7 @@ struct LaunchScreenView: View {
             
             Image("wtm-logo")
                 .resizable()
+                .scaledToFit()
                 .frame(width: 240, height: 240)
         }
     }
