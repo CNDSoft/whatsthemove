@@ -55,7 +55,7 @@ private extension MainTabView {
             addButton
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 15)
+        .padding(.bottom, 30)
     }
     
     var tabBarPill: some View {
