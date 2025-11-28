@@ -43,6 +43,7 @@ extension AppState {
 extension AppState {
     struct Permissions: Equatable {
         var push: Permission.Status = .unknown
+        var camera: Permission.Status = .unknown
     }
 
     static func permissionKeyPath(for permission: Permission) -> WritableKeyPath<AppState, Permission.Status> {
@@ -50,6 +51,8 @@ extension AppState {
         switch permission {
         case .pushNotifications:
             return pathToPermissions.appending(path: \.push)
+        case .camera:
+            return pathToPermissions.appending(path: \.camera)
         }
     }
 }

@@ -74,8 +74,12 @@ private struct RootContent: View {
                         MainTabView()
                             .transition(.opacity)
                     } else {
-                        OnboardingView(onComplete: completeOnboarding)
-                            .transition(.opacity)
+                        OnboardingView(
+                            onComplete: completeOnboarding,
+                            onRequestCameraAccess: requestCameraAccess,
+                            onRequestNotifications: requestNotifications
+                        )
+                        .transition(.opacity)
                     }
                 } else {
                     AuthView()
@@ -123,5 +127,13 @@ private struct RootContent: View {
     private func completeOnboarding() {
         UserDefaults.standard.set(true, forKey: Self.onboardingCompletedKey)
         injected.appState[\.userData.hasCompletedOnboarding] = true
+    }
+    
+    private func requestCameraAccess() {
+        injected.interactors.userPermissions.request(permission: .camera)
+    }
+    
+    private func requestNotifications() {
+        injected.interactors.userPermissions.request(permission: .pushNotifications)
     }
 }

@@ -8,9 +8,11 @@
 
 import Foundation
 import UserNotifications
+import AVFoundation
 
 enum Permission {
     case pushNotifications
+    case camera
 }
 
 extension Permission {
@@ -70,6 +72,8 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
             Task { @MainActor in
                 appState[keyPath] = await pushNotificationsPermissionStatus()
             }
+        case .camera:
+            appState[keyPath] = cameraPermissionStatus()
         }
     }
 
@@ -84,6 +88,10 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
         case .pushNotifications:
             Task {
                 await requestPushNotificationsPermission()
+            }
+        case .camera:
+            Task {
+                await requestCameraPermission()
             }
         }
     }
@@ -114,6 +122,33 @@ private extension RealUserPermissionsInteractor {
         let center = notificationCenter
         let isGranted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
         appState[\.permissions.push] = isGranted ? .granted : .denied
+    }
+}
+
+// MARK: - Camera
+
+extension AVAuthorizationStatus {
+    var map: Permission.Status {
+        switch self {
+        case .denied, .restricted: return .denied
+        case .authorized: return .granted
+        case .notDetermined: return .notRequested
+        @unknown default: return .notRequested
+        }
+    }
+}
+
+private extension RealUserPermissionsInteractor {
+    
+    func cameraPermissionStatus() -> Permission.Status {
+        return AVCaptureDevice.authorizationStatus(for: .video).map
+    }
+    
+    func requestCameraPermission() async {
+        let isGranted = await AVCaptureDevice.requestAccess(for: .video)
+        await MainActor.run {
+            appState[\.permissions.camera] = isGranted ? .granted : .denied
+        }
     }
 }
 
