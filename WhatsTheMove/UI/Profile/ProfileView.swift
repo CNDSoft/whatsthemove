@@ -49,6 +49,7 @@ private extension ProfileView {
             .foregroundColor(Color(hex: "11104B"))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 20)
+            .hidden()
     }
     
     var profileInfo: some View {
