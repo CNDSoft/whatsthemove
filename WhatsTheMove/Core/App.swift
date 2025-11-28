@@ -9,6 +9,7 @@
 import SwiftUI
 import Combine
 import EnvironmentOverrides
+import FirebaseAuth
 
 @main
 struct MainApp: App {
@@ -55,6 +56,7 @@ extension AppEnvironment {
 private struct RootContent: View {
     
     private static let onboardingCompletedKey = "hasCompletedOnboarding"
+    private static let hasLaunchedBeforeKey = "hasLaunchedBefore"
     
     @Environment(\.injected) private var injected: DIContainer
     @State private var showLaunchScreen: Bool = true
@@ -100,6 +102,13 @@ private struct RootContent: View {
     }
     
     private func checkAuthAndDismissLaunchScreen() async {
+        let hasLaunchedBefore = UserDefaults.standard.bool(forKey: Self.hasLaunchedBeforeKey)
+        if !hasLaunchedBefore {
+            UserDefaults.standard.set(true, forKey: Self.hasLaunchedBeforeKey)
+            try? Auth.auth().signOut()
+            print("RootContent - First launch detected, cleared stale Firebase auth")
+        }
+        
         let authStatus = await injected.interactors.auth.checkAuthStatus()
         isAuthenticated = authStatus
         
