@@ -11,24 +11,18 @@ import SwiftUI
 struct OnboardingPage7: View {
     
     var body: some View {
-        ZStack {
-            Color(hex: "11104B")
-                .ignoresSafeArea()
+        VStack(spacing: 30) {
+            Spacer()
+                .frame(height: 80)
             
-            backgroundPattern
+            headerSection
             
-            VStack(spacing: 30) {
-                Spacer()
-                    .frame(height: 100)
-                
-                headerSection
-                
-                featureCards
-                
-                Spacer()
-            }
-            .padding(.horizontal, 40)
+            featureCards
+            
+            Spacer()
         }
+        .padding(.horizontal, 40)
+        .background(backgroundPattern)
     }
 }
 
@@ -40,7 +34,6 @@ private extension OnboardingPage7 {
         Image("auth-background")
             .resizable()
             .scaledToFill()
-            .ignoresSafeArea()
     }
 }
 
@@ -72,4 +65,5 @@ private extension OnboardingPage7 {
 
 #Preview("Page 7") {
     OnboardingPage7()
+        .background(Color(hex: "11104B"))
 }

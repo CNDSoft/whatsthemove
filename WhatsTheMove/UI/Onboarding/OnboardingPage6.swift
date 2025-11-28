@@ -37,7 +37,7 @@ struct OnboardingPage6: View {
 private extension OnboardingPage6 {
     
     var titleSection: some View {
-        Text("Connect Your Calendar")
+        Text("Connect Your\nCalendar")
             .font(.rubik(.bold, size: 32))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
@@ -96,10 +96,12 @@ private extension OnboardingPage6 {
                 Text(title)
                     .font(.rubik(.regular, size: 15))
                     .foregroundColor(Color(hex: "11104B"))
+                    .lineLimit(1)
                 
                 Spacer()
             }
-            .padding(.horizontal, 40)
+            .padding(.trailing, 30)
+            .padding(.leading, 40)
             .padding(.vertical, 15)
             .background(
                 Capsule()

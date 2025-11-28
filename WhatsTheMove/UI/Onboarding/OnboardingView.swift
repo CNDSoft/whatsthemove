@@ -12,6 +12,7 @@ struct OnboardingView: View {
     
     @Environment(\.injected) private var injected: DIContainer
     @State private var currentPage: Int = 0
+    @State private var direction: TransitionDirection = .forward
     var onComplete: () -> Void
     var onRequestCameraAccess: (() -> Void)?
     var onRequestNotifications: (() -> Void)?
@@ -24,40 +25,13 @@ struct OnboardingView: View {
         ZStack {
             backgroundColor
                 .ignoresSafeArea()
+                .animation(.easeInOut(duration: 0.4), value: currentPage)
             
             VStack(spacing: 0) {
-                TabView(selection: $currentPage) {
-                    OnboardingPage1()
-                        .tag(0)
-                    
-                    OnboardingPage2()
-                        .tag(1)
-                    
-                    OnboardingPage3()
-                        .tag(2)
-                    
-                    OnboardingPage4()
-                        .tag(3)
-                    
-                    OnboardingPage5()
-                        .tag(4)
-                    
-                    OnboardingPage6(
-                        onConnectGoogle: {
-                            onConnectGoogleCalendar?()
-                            goToNextPage()
-                        },
-                        onConnectApple: {
-                            onConnectAppleCalendar?()
-                            goToNextPage()
-                        }
-                    )
-                    .tag(5)
-                    
-                    OnboardingPage7()
-                        .tag(6)
+                ZStack {
+                    pageContent
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 if currentPage < totalPages - 1 {
                     bottomSection
@@ -66,6 +40,71 @@ struct OnboardingView: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    private var pageContent: some View {
+        Group {
+            switch currentPage {
+            case 0:
+                OnboardingPage1()
+                    .transition(pageTransition)
+            case 1:
+                OnboardingPage2()
+                    .transition(pageTransition)
+            case 2:
+                OnboardingPage3()
+                    .transition(pageTransition)
+            case 3:
+                OnboardingPage4()
+                    .transition(pageTransition)
+            case 4:
+                OnboardingPage5()
+                    .transition(pageTransition)
+            case 5:
+                OnboardingPage6(
+                    onConnectGoogle: {
+                        onConnectGoogleCalendar?()
+                        goToNextPage()
+                    },
+                    onConnectApple: {
+                        onConnectAppleCalendar?()
+                        goToNextPage()
+                    }
+                )
+                .transition(pageTransition)
+            case 6:
+                OnboardingPage7()
+                    .transition(pageTransition)
+            default:
+                EmptyView()
+            }
+        }
+        .id(currentPage)
+    }
+    
+    private var pageTransition: AnyTransition {
+        if direction == .forward {
+            return .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+        } else {
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        }
+    }
+}
+
+// MARK: - Transition Direction
+
+private extension OnboardingView {
+    
+    enum TransitionDirection {
+        case forward
+        case backward
     }
 }
 
@@ -153,14 +192,14 @@ private extension OnboardingView {
         Button(action: {
             onComplete()
         }) {
-            Text("Get Started")
+            Text("Save my first event")
                 .font(.rubik(.regular, size: 14))
                 .foregroundColor(Color(hex: "11104B"))
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
                 .background(
                     Capsule()
-                        .fill(Color(hex: "F8F7F1"))
+                        .fill(Color(hex: "E7FF63"))
                 )
         }
     }
@@ -219,8 +258,18 @@ private extension OnboardingView {
     
     func goToNextPage() {
         if currentPage < totalPages - 1 {
-            withAnimation {
+            direction = .forward
+            withAnimation(.easeInOut(duration: 0.5)) {
                 currentPage += 1
+            }
+        }
+    }
+    
+    func goToPreviousPage() {
+        if currentPage > 0 {
+            direction = .backward
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentPage -= 1
             }
         }
     }
