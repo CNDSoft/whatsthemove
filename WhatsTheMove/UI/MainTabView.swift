@@ -36,7 +36,7 @@ private extension MainTabView {
     var tabContent: some View {
         switch selectedTab {
         case .home:
-            HomeEmptyView()
+            HomeView()
         case .saved:
             SavedEmptyView()
         case .profile:
@@ -124,13 +124,6 @@ private extension MainTabView {
 }
 
 // MARK: - Empty Tab Views
-
-private struct HomeEmptyView: View {
-    var body: some View {
-        Color(hex: "F8F7F1")
-            .ignoresSafeArea()
-    }
-}
 
 private struct SavedEmptyView: View {
     var body: some View {
