@@ -37,6 +37,7 @@ extension AppState {
         var hasCompletedOnboarding: Bool = false
         var userId: String?
         var email: String?
+        var events: [Event] = []
     }
 }
 

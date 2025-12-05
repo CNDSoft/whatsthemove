@@ -12,6 +12,7 @@ struct MainTabView: View {
     
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedTab: Tab = .home
+    @State private var showAddEvent: Bool = false
     
     enum Tab {
         case home
@@ -25,6 +26,10 @@ struct MainTabView: View {
             customTabBar
         }
         .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $showAddEvent) {
+            AddEventView()
+                .inject(injected)
+        }
     }
 }
 
@@ -110,7 +115,7 @@ private extension MainTabView {
     
     var addButton: some View {
         Button {
-            // Add action will be implemented later
+            showAddEvent = true
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 18, weight: .medium))
