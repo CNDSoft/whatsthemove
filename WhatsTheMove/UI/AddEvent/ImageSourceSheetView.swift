@@ -70,6 +70,7 @@ struct ImageSourceSheetView: View {
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
     }
 }
 

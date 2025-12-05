@@ -184,6 +184,7 @@ private extension AddEventView {
         )
         .presentationDetents([.height(160)])
         .presentationDragIndicator(.visible)
+        .presentationBackground(.white)
     }
     
     var categorySheet: some View {

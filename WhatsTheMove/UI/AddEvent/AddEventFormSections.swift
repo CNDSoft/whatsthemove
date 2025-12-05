@@ -20,7 +20,8 @@ struct EventNameSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 FormFieldLabel(text: "Event Name")
                 
-                TextField("Concert, festival, workshop...", text: $eventName)
+                TextField("", text: $eventName, prompt: Text("Concert, festival, workshop...")
+                    .foregroundColor(Color(hex: "55564F")))
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
             }
@@ -38,13 +39,13 @@ struct EventImageSection: View {
     
     var body: some View {
         FormRowContainer {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 12) {
                 FormFieldLabel(text: "Event Image")
                 
-                imageUploadArea
-                
-                if selectedImage != nil {
-                    selectedImagePreview
+                if let image = selectedImage {
+                    selectedImagePreview(image: image)
+                } else {
+                    imageUploadArea
                 }
             }
         }
@@ -53,9 +54,10 @@ struct EventImageSection: View {
     private var imageUploadArea: some View {
         Button(action: onUploadTapped) {
             VStack(spacing: 20) {
-                Image(systemName: "photo.on.rectangle.angled")
-                    .font(.system(size: 40))
-                    .foregroundColor(Color(hex: "55564F"))
+                Image("upload-image")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 104, height: 47)
                 
                 VStack(spacing: 0) {
                     Text("Upload an image")
@@ -70,6 +72,7 @@ struct EventImageSection: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 30)
             .padding(.horizontal, 10)
+            .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(style: StrokeStyle(lineWidth: 1, dash: [5]))
@@ -79,23 +82,21 @@ struct EventImageSection: View {
         .buttonStyle(.plain)
     }
     
-    private var selectedImagePreview: some View {
-        HStack(spacing: 15) {
-            if let image = selectedImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 50, height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
+    private func selectedImagePreview(image: UIImage) -> some View {
+        HStack(spacing: 12) {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("From my phone")
                     .font(.rubik(.regular, size: 14))
-                    .foregroundColor(Color(hex: "55564F"))
+                    .foregroundColor(Color(hex: "11104B"))
                 
-                Text("Selected")
-                    .font(.rubik(.regular, size: 14))
+                Text(formatImageSize(image))
+                    .font(.rubik(.regular, size: 12))
                     .foregroundColor(Color(hex: "55564F"))
             }
             
@@ -103,11 +104,20 @@ struct EventImageSection: View {
             
             Button(action: onDeleteTapped) {
                 Image(systemName: "trash")
-                    .font(.system(size: 16))
+                    .font(.system(size: 18))
                     .foregroundColor(Color(hex: "55564F"))
             }
             .buttonStyle(.plain)
         }
+    }
+    
+    private func formatImageSize(_ image: UIImage) -> String {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            return "Unknown size"
+        }
+        let sizeInBytes = Double(imageData.count)
+        let sizeInMB = sizeInBytes / (1024 * 1024)
+        return String(format: "%.1fMB", sizeInMB)
     }
 }
 
@@ -222,7 +232,8 @@ struct URLLinkSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 FormFieldLabel(text: "URL/Link")
                 
-                TextField("Paste Instagram, Facebook, or event link", text: $urlLink)
+                TextField("", text: $urlLink, prompt: Text("Paste Instagram, Facebook, or event link")
+                    .foregroundColor(Color(hex: "55564F")))
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
                     .keyboardType(.URL)
@@ -272,7 +283,8 @@ struct AdmissionSection: View {
                 Spacer()
                 
                 HStack(spacing: 5) {
-                    TextField("0", text: $admissionAmount)
+                    TextField("", text: $admissionAmount, prompt: Text("0")
+                        .foregroundColor(Color(hex: "55564F")))
                         .font(.rubik(.regular, size: 14))
                         .foregroundColor(Color(hex: "55564F"))
                         .keyboardType(.numberPad)
@@ -384,7 +396,8 @@ struct NotesSection: View {
         VStack(alignment: .leading, spacing: 10) {
             FormFieldLabel(text: "Notes")
             
-            TextField("Any additional details...", text: $notes, axis: .vertical)
+            TextField("", text: $notes, prompt: Text("Any additional details...")
+                .foregroundColor(Color(hex: "55564F")), axis: .vertical)
                 .font(.rubik(.regular, size: 14))
                 .foregroundColor(Color(hex: "55564F"))
                 .lineLimit(3...6)
