@@ -116,7 +116,7 @@ struct Event: Identifiable, Codable, Equatable {
 extension Event {
     
     var isValid: Bool {
-        return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && category != nil
     }
     
     var validationErrors: [String] {
@@ -126,8 +126,12 @@ extension Event {
             errors.append("Event name is required")
         }
         
-        if endTime < startTime {
-            errors.append("End time must be after start time")
+        if category == nil {
+            errors.append("Please select a category")
+        }
+        
+        if isEndTimeSameAsStartTime {
+            errors.append("End time must be different from start time")
         }
         
         if admission == .paid && (admissionAmount == nil || admissionAmount! <= 0) {
@@ -139,5 +143,12 @@ extension Event {
         }
         
         return errors
+    }
+    
+    private var isEndTimeSameAsStartTime: Bool {
+        let calendar = Calendar.current
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        return startComponents.hour == endComponents.hour && startComponents.minute == endComponents.minute
     }
 }

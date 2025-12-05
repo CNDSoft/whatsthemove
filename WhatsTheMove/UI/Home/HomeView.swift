@@ -12,6 +12,9 @@ struct HomeView: View {
     
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedFilter: EventFilter = .tonight
+    @State private var events: [Event] = []
+    @State private var isLoading: Bool = false
+    @State private var errorMessage: String?
     
     var body: some View {
         ZStack {
@@ -20,8 +23,53 @@ struct HomeView: View {
             
             VStack(spacing: 0) {
                 headerSection
-                emptyStateContent
+                eventListContent
             }
+        }
+        .onAppear {
+            loadEvents()
+        }
+    }
+    
+    private var filteredEvents: [Event] {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch selectedFilter {
+        case .tonight:
+            return events.filter { event in
+                calendar.isDateInToday(event.eventDate)
+            }
+        case .thisWeekend:
+            let weekday = calendar.component(.weekday, from: now)
+            let daysUntilSaturday = (7 - weekday) % 7
+            let daysUntilSunday = daysUntilSaturday + 1
+            
+            guard let saturday = calendar.date(byAdding: .day, value: daysUntilSaturday == 0 ? 0 : daysUntilSaturday, to: now),
+                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday == 1 ? 1 : daysUntilSunday, to: now) else {
+                return []
+            }
+            
+            return events.filter { event in
+                calendar.isDate(event.eventDate, inSameDayAs: saturday) ||
+                calendar.isDate(event.eventDate, inSameDayAs: sunday)
+            }
+        case .nextWeek:
+            guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
+                  let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
+                  let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) else {
+                return []
+            }
+            
+            return events.filter { event in
+                event.eventDate >= startOfNextWeek && event.eventDate <= endOfNextWeek
+            }
+        case .thisMonth:
+            return events.filter { event in
+                calendar.isDate(event.eventDate, equalTo: now, toGranularity: .month)
+            }
+        case .recentlySaved:
+            return events.sorted { $0.createdAt > $1.createdAt }
         }
     }
 }
@@ -127,31 +175,83 @@ private extension HomeView {
     }
     
     func filterPill(_ filter: EventFilter) -> some View {
-        Button {
+        let count = eventCount(for: filter)
+        let isSelected = selectedFilter == filter
+        
+        return Button {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedFilter = filter
             }
         } label: {
-            Text(filter.rawValue)
-                .font(.rubik(.regular, size: 14))
-                .foregroundColor(selectedFilter == filter ? Color(hex: "11104B") : Color(hex: "F8F7F1"))
-                .padding(.horizontal, 13)
-                .padding(.vertical, 5)
-                .frame(height: 34)
-                .background(
-                    selectedFilter == filter
-                        ? Color.white
-                        : Color.white.opacity(0.13)
-                )
-                .clipShape(Capsule())
+            HStack(spacing: 6) {
+                Text(filter.rawValue)
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(isSelected ? Color(hex: "11104B") : Color(hex: "F8F7F1"))
+                
+                if count > 0 {
+                    Text("\(count)")
+                        .font(.rubik(.regular, size: 12))
+                        .foregroundColor(Color(hex: "11104B"))
+                        .padding(.horizontal, 8)
+                        .frame(height: 24)
+                        .background(isSelected ? Color(hex: "E8E8FF") : Color(hex: "E7FF63"))
+                        .clipShape(Capsule())
+                }
+            }
+            .padding(.leading, 13)
+            .padding(.trailing, count > 0 ? 5 : 13)
+            .padding(.vertical, 5)
+            .frame(height: 34)
+            .background(
+                isSelected
+                    ? Color.white
+                    : Color.white.opacity(0.13)
+            )
+            .clipShape(Capsule())
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Empty State Content
+// MARK: - Event List Content
 
 private extension HomeView {
+    
+    @ViewBuilder
+    var eventListContent: some View {
+        if isLoading {
+            loadingView
+        } else if filteredEvents.isEmpty {
+            emptyStateContent
+        } else {
+            eventListView
+        }
+    }
+    
+    var loadingView: some View {
+        VStack {
+            Spacer()
+            ProgressView()
+                .scaleEffect(1.2)
+            Text("Loading events...")
+                .font(.rubik(.regular, size: 14))
+                .foregroundColor(Color(hex: "55564F"))
+                .padding(.top, 10)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    var eventListView: some View {
+        ScrollView {
+            LazyVStack(spacing: 1) {
+                ForEach(filteredEvents) { event in
+                    EventCardView(event: event)
+                }
+            }
+            .padding(.bottom, 100)
+        }
+    }
     
     var emptyStateContent: some View {
         VStack(spacing: 20) {
@@ -185,18 +285,69 @@ private extension HomeView {
             .aspectRatio(contentMode: .fit)
             .foregroundColor(Color(hex: "11104B").opacity(0.3))
     }
+}
+
+// MARK: - Side Effects
+
+private extension HomeView {
     
-    var eventCountBadge: some View {
-        Text("0")
-            .font(.rubik(.bold, size: 18))
-            .foregroundColor(Color(hex: "F8F7F1"))
-            .frame(width: 32, height: 32)
-            .background(Color(hex: "11104B"))
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(Color(hex: "F8F7F1"), lineWidth: 4)
-            )
+    func loadEvents() {
+        isLoading = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let fetchedEvents = try await injected.interactors.events.getAllEvents()
+                await MainActor.run {
+                    events = fetchedEvents
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    isLoading = false
+                    print("HomeView - Failed to load events: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    func eventCount(for filter: EventFilter) -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch filter {
+        case .tonight:
+            return events.filter { calendar.isDateInToday($0.eventDate) }.count
+        case .thisWeekend:
+            let weekday = calendar.component(.weekday, from: now)
+            let daysUntilSaturday = (7 - weekday) % 7
+            let daysUntilSunday = daysUntilSaturday + 1
+            
+            guard let saturday = calendar.date(byAdding: .day, value: daysUntilSaturday == 0 ? 0 : daysUntilSaturday, to: now),
+                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday == 1 ? 1 : daysUntilSunday, to: now) else {
+                return 0
+            }
+            
+            return events.filter { event in
+                calendar.isDate(event.eventDate, inSameDayAs: saturday) ||
+                calendar.isDate(event.eventDate, inSameDayAs: sunday)
+            }.count
+        case .nextWeek:
+            guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
+                  let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
+                  let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) else {
+                return 0
+            }
+            
+            return events.filter { event in
+                event.eventDate >= startOfNextWeek && event.eventDate <= endOfNextWeek
+            }.count
+        case .thisMonth:
+            return events.filter { calendar.isDate($0.eventDate, equalTo: now, toGranularity: .month) }.count
+        case .recentlySaved:
+            return events.count
+        }
     }
 }
 

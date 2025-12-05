@@ -21,8 +21,8 @@ struct AddEventView: View {
     @State private var selectedImage: UIImage?
     @State private var selectedImageItem: PhotosPickerItem?
     @State private var eventDate: Date = Date()
-    @State private var startTime: Date = Date()
-    @State private var endTime: Date = Date()
+    @State private var startTime: Date = Self.defaultStartTime
+    @State private var endTime: Date = Self.defaultEndTime
     @State private var urlLink: String = ""
     @State private var admission: AdmissionType = .free
     @State private var admissionAmount: String = ""
@@ -43,6 +43,18 @@ struct AddEventView: View {
     @State private var isSaving: Bool = false
     @State private var errorMessage: String?
     @State private var showError: Bool = false
+    
+    private static var defaultStartTime: Date {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.year, .month, .day, .hour], from: now)
+        guard let currentHour = calendar.date(from: components) else { return now }
+        return calendar.date(byAdding: .hour, value: 1, to: currentHour) ?? now
+    }
+    
+    private static var defaultEndTime: Date {
+        return Calendar.current.date(byAdding: .hour, value: 1, to: defaultStartTime) ?? defaultStartTime
+    }
     
     var body: some View {
         ZStack {
@@ -78,6 +90,7 @@ struct AddEventView: View {
         } message: {
             Text(errorMessage ?? "An error occurred")
         }
+        .preferredColorScheme(.light)
     }
 }
 
@@ -261,6 +274,12 @@ private extension AddEventView {
     func saveEvent() {
         guard let userId = injected.appState[\.userData.userId] else {
             errorMessage = "Please sign in to save events"
+            showError = true
+            return
+        }
+        
+        if selectedImage == nil {
+            errorMessage = "Please add an event image"
             showError = true
             return
         }

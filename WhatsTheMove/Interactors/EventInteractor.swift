@@ -13,6 +13,7 @@ protocol EventInteractor {
     func saveEvent(_ event: Event, image: UIImage?) async throws
     func getEvent(id: String) async throws -> Event?
     func getUserEvents() async throws -> [Event]
+    func getAllEvents() async throws -> [Event]
     func updateEvent(_ event: Event, newImage: UIImage?) async throws
     func deleteEvent(id: String) async throws
     func validateEvent(_ event: Event) -> [String]
@@ -33,10 +34,14 @@ struct RealEventInteractor: EventInteractor {
         
         var eventToSave = event
         
-//        if let image = image {
-//            let imageUrl = try await eventWebRepository.uploadEventImage(image, eventId: event.id)
-//            eventToSave.imageUrl = imageUrl
-//        }
+        if let image = image {
+            let imageUrl = try await eventWebRepository.uploadEventImage(
+                image,
+                userId: event.userId,
+                eventId: event.id
+            )
+            eventToSave.imageUrl = imageUrl
+        }
         
         try await eventWebRepository.createEvent(eventToSave)
         
@@ -76,6 +81,15 @@ struct RealEventInteractor: EventInteractor {
         return events
     }
     
+    func getAllEvents() async throws -> [Event] {
+        print("RealEventInteractor - Getting all events")
+        
+        let events = try await eventWebRepository.getAllEvents()
+        
+        print("RealEventInteractor - Retrieved \(events.count) total events")
+        return events
+    }
+    
     func updateEvent(_ event: Event, newImage: UIImage?) async throws {
         print("RealEventInteractor - Updating event: \(event.id)")
         
@@ -87,11 +101,15 @@ struct RealEventInteractor: EventInteractor {
         var eventToUpdate = event
         eventToUpdate.updatedAt = Date()
         
-//        if let image = newImage {
-//            let imageUrl = try await eventWebRepository.uploadEventImage(image, eventId: event.id)
-//            eventToUpdate.imageUrl = imageUrl
-//        }
-//        
+        if let image = newImage {
+            let imageUrl = try await eventWebRepository.uploadEventImage(
+                image,
+                userId: event.userId,
+                eventId: event.id
+            )
+            eventToUpdate.imageUrl = imageUrl
+        }
+        
         try await eventWebRepository.updateEvent(eventToUpdate)
         
         await MainActor.run {
@@ -107,6 +125,10 @@ struct RealEventInteractor: EventInteractor {
     
     func deleteEvent(id: String) async throws {
         print("RealEventInteractor - Deleting event: \(id)")
+        
+        if let event = try await eventWebRepository.getEvent(id: id) {
+            try await eventWebRepository.deleteEventImage(userId: event.userId, eventId: id)
+        }
         
         try await eventWebRepository.deleteEvent(id: id)
         
@@ -158,6 +180,11 @@ struct StubEventInteractor: EventInteractor {
     
     func getUserEvents() async throws -> [Event] {
         print("StubEventInteractor - Get user events stub")
+        return []
+    }
+    
+    func getAllEvents() async throws -> [Event] {
+        print("StubEventInteractor - Get all events stub")
         return []
     }
     

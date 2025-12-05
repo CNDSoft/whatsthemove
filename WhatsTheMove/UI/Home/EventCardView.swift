@@ -1,0 +1,375 @@
+//
+//  EventCardView.swift
+//  WhatsTheMove
+//
+//  Created by Cem Sertkaya on 12/5/24.
+//  Copyright © 2024 Cem Sertkaya. All rights reserved.
+//
+
+import SwiftUI
+
+struct EventCardView: View {
+    
+    let event: Event
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            eventInfoRow
+            actionButtonsRow
+            registrationWarning
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 15)
+        .background(Color.white)
+    }
+}
+
+// MARK: - Event Info Row
+
+private extension EventCardView {
+    
+    var eventInfoRow: some View {
+        HStack(alignment: .top, spacing: 13) {
+            eventImage
+            eventDetails
+            Spacer(minLength: 0)
+            moreButton
+        }
+    }
+    
+    var eventImage: some View {
+        ZStack(alignment: .topLeading) {
+            if let imageUrl = event.imageUrl, let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        imagePlaceholder
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        imagePlaceholder
+                    @unknown default:
+                        imagePlaceholder
+                    }
+                }
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            } else {
+                imagePlaceholder
+            }
+            
+            categoryBadge
+                .padding(7)
+        }
+        .frame(width: 100, height: 100)
+    }
+    
+    var imagePlaceholder: some View {
+        RoundedRectangle(cornerRadius: 10)
+            .fill(Color(hex: "F8F7F1"))
+            .frame(width: 100, height: 100)
+            .overlay(
+                Image(systemName: "photo")
+                    .font(.system(size: 24))
+                    .foregroundColor(Color(hex: "55564F").opacity(0.5))
+            )
+    }
+    
+    @ViewBuilder
+    var categoryBadge: some View {
+        if let category = event.category {
+            Image(category.iconName)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 27, height: 27)
+        }
+    }
+    
+    var eventDetails: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(event.name.uppercased())
+                .font(.rubik(.bold, size: 18))
+                .foregroundColor(Color(hex: "11104B"))
+                .lineLimit(1)
+            
+            tagsRow
+            dateRow
+        }
+        .padding(.top, 4)
+        .padding(.bottom, 10)
+    }
+    
+    var tagsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 5) {
+                statusTag
+                
+                if event.requiresRegistration {
+                    registrationTag
+                }
+                
+                if let category = event.category {
+                    categoryTag(category)
+                }
+                
+                admissionTag
+            }
+        }
+    }
+    
+    var statusTag: some View {
+        let config = statusConfig(for: event.status)
+        
+        return HStack(spacing: 6) {
+            Circle()
+                .fill(config.dotColor)
+                .frame(width: 5, height: 5)
+            
+            Text(event.status.rawValue)
+                .font(.rubik(.regular, size: 12))
+                .foregroundColor(config.textColor)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(config.backgroundColor)
+        .clipShape(Capsule())
+    }
+    
+    var registrationTag: some View {
+        HStack(spacing: 5) {
+            Text("Registration")
+                .font(.rubik(.regular, size: 12))
+                .foregroundColor(Color(hex: "FA7929"))
+            
+            Image(systemName: "exclamationmark.circle")
+                .font(.system(size: 10))
+                .foregroundColor(Color(hex: "FA7929"))
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(Color(hex: "FA7929").opacity(0.1))
+        .clipShape(Capsule())
+    }
+    
+    func categoryTag(_ category: EventCategory) -> some View {
+        HStack(spacing: 6) {
+            Image(category.iconName)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 12, height: 12)
+            
+            Text(category.rawValue)
+                .font(.rubik(.regular, size: 12))
+                .foregroundColor(Color(hex: "55564F"))
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(Color(hex: "F8F7F1"))
+        .clipShape(Capsule())
+    }
+    
+    var admissionTag: some View {
+        let text: String
+        if event.admission == .free {
+            text = "Free"
+        } else if let amount = event.admissionAmount {
+            text = "$\(Int(amount))"
+        } else {
+            text = "Paid"
+        }
+        
+        return Text(text)
+            .font(.rubik(.regular, size: 12))
+            .foregroundColor(Color(hex: "55564F"))
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Color(hex: "F8F7F1"))
+            .clipShape(Capsule())
+    }
+    
+    var dateRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "calendar")
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "55564F"))
+            
+            HStack(spacing: 7) {
+                Text(formattedDate)
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+                
+                Circle()
+                    .fill(Color(hex: "55564F"))
+                    .frame(width: 3, height: 3)
+                
+                Text(formattedTime)
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+            }
+        }
+    }
+    
+    var moreButton: some View {
+        Button {
+            // More options action
+        } label: {
+            VStack(spacing: 3) {
+                ForEach(0..<3, id: \.self) { _ in
+                    Circle()
+                        .fill(Color(hex: "11104B").opacity(0.5))
+                        .frame(width: 2.3, height: 2.3)
+                }
+            }
+            .padding(.top, 8)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    func statusConfig(for status: EventStatus) -> (backgroundColor: Color, textColor: Color, dotColor: Color) {
+        switch status {
+        case .interested:
+            return (Color(hex: "FFF0FB"), Color(hex: "B86AA1"), Color(hex: "B86AA1"))
+        case .going:
+            return (Color(hex: "45DFAE").opacity(0.1), Color(hex: "2D9674"), Color(hex: "2D9674"))
+        case .waitlisted:
+            return (Color(hex: "FA7929").opacity(0.1), Color(hex: "FA7929"), Color(hex: "FA7929"))
+        }
+    }
+    
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter.string(from: event.eventDate)
+    }
+    
+    var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mma"
+        return formatter.string(from: event.startTime).lowercased()
+    }
+}
+
+// MARK: - Action Buttons
+
+private extension EventCardView {
+    
+    var actionButtonsRow: some View {
+        HStack(spacing: 5) {
+            calendarButton
+            viewDetailsButton
+        }
+    }
+    
+    var calendarButton: some View {
+        Button {
+            // Add to calendar action
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 14))
+                
+                Text("Calendar")
+                    .font(.rubik(.regular, size: 12))
+            }
+            .foregroundColor(Color(hex: "11104B"))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(Color(hex: "F8F7F1"))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+    
+    var viewDetailsButton: some View {
+        Button {
+            // View details action
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "link")
+                    .font(.system(size: 14))
+                
+                Text("View details")
+                    .font(.rubik(.regular, size: 12))
+            }
+            .foregroundColor(Color(hex: "11104B"))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(Color(hex: "E8E8FF"))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Registration Warning
+
+private extension EventCardView {
+    
+    @ViewBuilder
+    var registrationWarning: some View {
+        if event.requiresRegistration, let deadline = event.registrationDeadline {
+            let daysUntil = Calendar.current.dateComponents([.day], from: Date(), to: deadline).day ?? 0
+            
+            if daysUntil >= 0 && daysUntil <= 7 {
+                HStack(spacing: 8) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(hex: "F25454"))
+                    
+                    Text(registrationDeadlineText(daysUntil: daysUntil))
+                        .font(.rubik(.regular, size: 12))
+                        .foregroundColor(Color(hex: "F25454"))
+                    
+                    Spacer()
+                    
+                    Button {
+                        // Dismiss warning
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundColor(Color(hex: "F25454"))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(Color(hex: "F25454").opacity(0.05))
+                .clipShape(Capsule())
+            }
+        }
+    }
+    
+    func registrationDeadlineText(daysUntil: Int) -> String {
+        switch daysUntil {
+        case 0:
+            return "Register today"
+        case 1:
+            return "Register by tomorrow"
+        default:
+            return "Register in \(daysUntil) days"
+        }
+    }
+}
+
+// MARK: - Previews
+
+#Preview {
+    EventCardView(
+        event: Event(
+            userId: "test",
+            name: "Cooking Class",
+            eventDate: Date(),
+            startTime: Date(),
+            endTime: Date(),
+            admission: .free,
+            requiresRegistration: true,
+            registrationDeadline: Calendar.current.date(byAdding: .day, value: 1, to: Date()),
+            category: .food,
+            status: .interested
+        )
+    )
+}
+

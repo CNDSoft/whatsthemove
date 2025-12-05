@@ -8,23 +8,25 @@
 
 import Foundation
 import FirebaseFirestore
-import UIKit
+import FirebaseStorage
+import UIKit 
 
 protocol EventWebRepository {
     func createEvent(_ event: Event) async throws
     func getEvent(id: String) async throws -> Event?
     func getEvents(forUserId userId: String) async throws -> [Event]
+    func getAllEvents() async throws -> [Event]
     func updateEvent(_ event: Event) async throws
     func deleteEvent(id: String) async throws
-    func saveEventImageLocally(_ image: UIImage, eventId: String) throws -> String
-    func deleteEventImageLocally(eventId: String)
+    func uploadEventImage(_ image: UIImage, userId: String, eventId: String) async throws -> String
+    func deleteEventImage(userId: String, eventId: String) async throws
 }
 
 struct RealEventWebRepository: EventWebRepository {
     
     private let db = Firestore.firestore()
+    private let storage = Storage.storage()
     private let collectionName = "events"
-    private let fileManager = FileManager.default
     
     func createEvent(_ event: Event) async throws {
         print("RealEventWebRepository - Creating event: \(event.id)")
@@ -58,14 +60,27 @@ struct RealEventWebRepository: EventWebRepository {
         
         let snapshot = try await db.collection(collectionName)
             .whereField("userId", isEqualTo: userId)
-            .order(by: "eventDate", descending: false)
             .getDocuments()
         
         let events = snapshot.documents.compactMap { document -> Event? in
             Event.fromDictionary(document.data(), id: document.documentID)
-        }
+        }.sorted { $0.eventDate < $1.eventDate }
         
         print("RealEventWebRepository - Retrieved \(events.count) events")
+        return events
+    }
+    
+    func getAllEvents() async throws -> [Event] {
+        print("RealEventWebRepository - Getting all events")
+        
+        let snapshot = try await db.collection(collectionName)
+            .getDocuments()
+        
+        let events = snapshot.documents.compactMap { document -> Event? in
+            Event.fromDictionary(document.data(), id: document.documentID)
+        }.sorted { $0.eventDate < $1.eventDate }
+        
+        print("RealEventWebRepository - Retrieved \(events.count) total events")
         return events
     }
     
@@ -85,8 +100,6 @@ struct RealEventWebRepository: EventWebRepository {
     func deleteEvent(id: String) async throws {
         print("RealEventWebRepository - Deleting event: \(id)")
         
-        deleteEventImageLocally(eventId: id)
-        
         try await db.collection(collectionName)
             .document(id)
             .delete()
@@ -94,36 +107,60 @@ struct RealEventWebRepository: EventWebRepository {
         print("RealEventWebRepository - Event deleted successfully")
     }
     
-    func saveEventImageLocally(_ image: UIImage, eventId: String) throws -> String {
-        print("RealEventWebRepository - Saving image locally for event: \(eventId)")
+    func uploadEventImage(_ image: UIImage, userId: String, eventId: String) async throws -> String {
+        print("RealEventWebRepository - Uploading image for event: \(eventId)")
         
         guard let imageData = image.jpegData(compressionQuality: 0.7) else {
             throw EventRepositoryError.imageCompressionFailed
         }
         
-        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let eventsDirectory = documentsDirectory.appendingPathComponent("EventImages", isDirectory: true)
+        let storageRef = storage.reference()
+        let imagePath = "event_images/\(userId)/\(eventId).jpg"
+        let imageRef = storageRef.child(imagePath)
         
-        if !fileManager.fileExists(atPath: eventsDirectory.path) {
-            try fileManager.createDirectory(at: eventsDirectory, withIntermediateDirectories: true)
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            imageRef.putData(imageData, metadata: metadata) { _, error in
+                if let error = error {
+                    print("RealEventWebRepository - Upload failed: \(error.localizedDescription)")
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                imageRef.downloadURL { url, error in
+                    if let error = error {
+                        print("RealEventWebRepository - Failed to get download URL: \(error.localizedDescription)")
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    
+                    guard let downloadURL = url else {
+                        print("RealEventWebRepository - Download URL is nil")
+                        continuation.resume(throwing: EventRepositoryError.imageUploadFailed)
+                        return
+                    }
+                    
+                    print("RealEventWebRepository - Image uploaded successfully: \(downloadURL.absoluteString)")
+                    continuation.resume(returning: downloadURL.absoluteString)
+                }
+            }
         }
-        
-        let imagePath = eventsDirectory.appendingPathComponent("\(eventId).jpg")
-        try imageData.write(to: imagePath)
-        
-        print("RealEventWebRepository - Image saved locally: \(imagePath.path)")
-        return imagePath.path
     }
     
-    func deleteEventImageLocally(eventId: String) {
-        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let imagePath = documentsDirectory
-            .appendingPathComponent("EventImages", isDirectory: true)
-            .appendingPathComponent("\(eventId).jpg")
+    func deleteEventImage(userId: String, eventId: String) async throws {
+        print("RealEventWebRepository - Deleting image for event: \(eventId)")
         
-        if fileManager.fileExists(atPath: imagePath.path) {
-            try? fileManager.removeItem(at: imagePath)
-            print("RealEventWebRepository - Deleted local image for event: \(eventId)")
+        let storageRef = storage.reference()
+        let imagePath = "event_images/\(userId)/\(eventId).jpg"
+        let imageRef = storageRef.child(imagePath)
+        
+        do {
+            try await imageRef.delete()
+            print("RealEventWebRepository - Image deleted successfully")
+        } catch {
+            print("RealEventWebRepository - Image deletion failed or image not found: \(error.localizedDescription)")
         }
     }
 }
@@ -132,6 +169,7 @@ struct RealEventWebRepository: EventWebRepository {
 
 enum EventRepositoryError: LocalizedError {
     case imageCompressionFailed
+    case imageUploadFailed
     case eventNotFound
     case invalidData
     
@@ -139,6 +177,8 @@ enum EventRepositoryError: LocalizedError {
         switch self {
         case .imageCompressionFailed:
             return "Failed to compress image"
+        case .imageUploadFailed:
+            return "Failed to upload event image"
         case .eventNotFound:
             return "Event not found"
         case .invalidData:
@@ -257,6 +297,11 @@ struct StubEventWebRepository: EventWebRepository {
         return []
     }
     
+    func getAllEvents() async throws -> [Event] {
+        print("StubEventWebRepository - Get all events stub")
+        return []
+    }
+    
     func updateEvent(_ event: Event) async throws {
         print("StubEventWebRepository - Update event stub")
     }
@@ -265,12 +310,12 @@ struct StubEventWebRepository: EventWebRepository {
         print("StubEventWebRepository - Delete event stub")
     }
     
-    func saveEventImageLocally(_ image: UIImage, eventId: String) throws -> String {
-        print("StubEventWebRepository - Save image locally stub")
+    func uploadEventImage(_ image: UIImage, userId: String, eventId: String) async throws -> String {
+        print("StubEventWebRepository - Upload image stub")
         return ""
     }
     
-    func deleteEventImageLocally(eventId: String) {
-        print("StubEventWebRepository - Delete image locally stub")
+    func deleteEventImage(userId: String, eventId: String) async throws {
+        print("StubEventWebRepository - Delete image stub")
     }
 }
