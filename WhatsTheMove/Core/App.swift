@@ -118,6 +118,25 @@ private struct RootContent: View {
         
         if authStatus {
             try? await injected.interactors.users.loadStarredEventIds()
+            
+            do {
+                print("RootContent - Fetching events during launch")
+                let events = try await injected.interactors.events.getAllEvents(forceReload: true)
+                print("RootContent - Fetched \(events.count) events")
+                
+                let imageUrls = events.compactMap { event -> URL? in
+                    guard let imageUrlString = event.imageUrl else { return nil }
+                    return URL(string: imageUrlString)
+                }
+                
+                if !imageUrls.isEmpty {
+                    print("RootContent - Preloading \(imageUrls.count) event images")
+                    await injected.interactors.images.preloadImages(urls: imageUrls)
+                    print("RootContent - Finished preloading images")
+                }
+            } catch {
+                print("RootContent - Failed to fetch events or preload images: \(error.localizedDescription)")
+            }
         }
         
         let onboardingCompleted = UserDefaults.standard.bool(forKey: Self.onboardingCompletedKey)
@@ -125,6 +144,11 @@ private struct RootContent: View {
         injected.appState[\.userData.hasCompletedOnboarding] = onboardingCompleted
         
         try? await Task.sleep(nanoseconds: 1_000_000_000)
+        
+        await MainActor.run {
+            injected.appState[\.system.isLoadingInitialData] = false
+        }
+        
         showLaunchScreen = false
     }
     

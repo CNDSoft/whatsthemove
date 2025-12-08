@@ -28,6 +28,7 @@ extension AppState {
         var isActive: Bool = false
         var keyboardHeight: CGFloat = 0
         var showLaunchScreen: Bool = true
+        var isLoadingInitialData: Bool = true
     }
 }
 

@@ -246,6 +246,19 @@ private extension HomeView {
             return
         }
         
+        let cachedEvents = await MainActor.run {
+            injected.appState[\.userData.events]
+        }
+        
+        if !cachedEvents.isEmpty {
+            print("HomeView - Using \(cachedEvents.count) preloaded events from cache")
+            events = cachedEvents
+            hasLoadedEvents = true
+            canLoadMore = cachedEvents.count >= 20
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
