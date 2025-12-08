@@ -36,58 +36,7 @@ struct HomeView: View {
     }
     
     private var filteredEvents: [Event] {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        switch selectedFilter {
-        case .tonight:
-            return events.filter { event in
-                calendar.isDateInToday(event.eventDate)
-            }
-        case .thisWeekend:
-            let weekday = calendar.component(.weekday, from: now)
-            let daysUntilSaturday = (7 - weekday) % 7
-            let daysUntilSunday = daysUntilSaturday + 1
-            
-            guard let saturday = calendar.date(byAdding: .day, value: daysUntilSaturday == 0 ? 0 : daysUntilSaturday, to: now),
-                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday == 1 ? 1 : daysUntilSunday, to: now) else {
-                return []
-            }
-            
-            return events.filter { event in
-                calendar.isDate(event.eventDate, inSameDayAs: saturday) ||
-                calendar.isDate(event.eventDate, inSameDayAs: sunday)
-            }
-        case .nextWeek:
-            guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
-                  let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
-                  let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) else {
-                return []
-            }
-            
-            return events.filter { event in
-                event.eventDate >= startOfNextWeek && event.eventDate <= endOfNextWeek
-            }
-        case .thisMonth:
-            return events.filter { event in
-                calendar.isDate(event.eventDate, equalTo: now, toGranularity: .month)
-            }
-        case .recentlySaved:
-            return events.sorted { $0.createdAt > $1.createdAt }
-        }
-    }
-}
-
-// MARK: - Event Filter
-
-extension HomeView {
-    
-    enum EventFilter: String, CaseIterable {
-        case tonight = "Tonight"
-        case thisWeekend = "This Weekend"
-        case nextWeek = "Next Week"
-        case thisMonth = "This Month"
-        case recentlySaved = "Recently Saved"
+        injected.interactors.events.filterEvents(events, by: selectedFilter)
     }
 }
 
@@ -316,7 +265,7 @@ private extension HomeView {
                 await MainActor.run {
                     events = fetchedEvents
                     isLoading = false
-                    selectFirstNonEmptyFilter()
+                    selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
                 }
             } catch {
                 await MainActor.run {
@@ -328,52 +277,8 @@ private extension HomeView {
         }
     }
     
-    func selectFirstNonEmptyFilter() {
-        for filter in EventFilter.allCases {
-            if eventCount(for: filter) > 0 {
-                selectedFilter = filter
-                return
-            }
-        }
-        selectedFilter = .tonight
-    }
-    
     func eventCount(for filter: EventFilter) -> Int {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        switch filter {
-        case .tonight:
-            return events.filter { calendar.isDateInToday($0.eventDate) }.count
-        case .thisWeekend:
-            let weekday = calendar.component(.weekday, from: now)
-            let daysUntilSaturday = (7 - weekday) % 7
-            let daysUntilSunday = daysUntilSaturday + 1
-            
-            guard let saturday = calendar.date(byAdding: .day, value: daysUntilSaturday == 0 ? 0 : daysUntilSaturday, to: now),
-                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday == 1 ? 1 : daysUntilSunday, to: now) else {
-                return 0
-            }
-            
-            return events.filter { event in
-                calendar.isDate(event.eventDate, inSameDayAs: saturday) ||
-                calendar.isDate(event.eventDate, inSameDayAs: sunday)
-            }.count
-        case .nextWeek:
-            guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
-                  let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
-                  let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) else {
-                return 0
-            }
-            
-            return events.filter { event in
-                event.eventDate >= startOfNextWeek && event.eventDate <= endOfNextWeek
-            }.count
-        case .thisMonth:
-            return events.filter { calendar.isDate($0.eventDate, equalTo: now, toGranularity: .month) }.count
-        case .recentlySaved:
-            return events.count
-        }
+        injected.interactors.events.eventCount(events, for: filter)
     }
 }
 

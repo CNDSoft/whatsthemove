@@ -165,39 +165,61 @@ enum EventInteractorError: LocalizedError {
     }
 }
 
-// MARK: - Stub Interactor
+// MARK: - Event Filtering (Default Implementation)
 
-struct StubEventInteractor: EventInteractor {
+extension EventInteractor {
     
-    func saveEvent(_ event: Event, image: UIImage?) async throws {
-        print("StubEventInteractor - Save event stub")
+    func filterEvents(_ events: [Event], by filter: EventFilter) -> [Event] {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch filter {
+        case .tonight:
+            return events.filter { calendar.isDateInToday($0.eventDate) }
+            
+        case .thisWeekend:
+            let weekday = calendar.component(.weekday, from: now)
+            let daysUntilSaturday = (7 - weekday) % 7
+            let daysUntilSunday = daysUntilSaturday + 1
+            
+            guard let saturday = calendar.date(byAdding: .day, value: daysUntilSaturday == 0 ? 0 : daysUntilSaturday, to: now),
+                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday == 1 ? 1 : daysUntilSunday, to: now) else {
+                return []
+            }
+            
+            return events.filter { event in
+                calendar.isDate(event.eventDate, inSameDayAs: saturday) ||
+                calendar.isDate(event.eventDate, inSameDayAs: sunday)
+            }
+            
+        case .nextWeek:
+            guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
+                  let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
+                  let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) else {
+                return []
+            }
+            
+            return events.filter { $0.eventDate >= startOfNextWeek && $0.eventDate <= endOfNextWeek }
+            
+        case .thisMonth:
+            return events.filter { calendar.isDate($0.eventDate, equalTo: now, toGranularity: .month) }
+            
+        case .recentlySaved:
+            return events.sorted { $0.createdAt > $1.createdAt }
+        }
     }
     
-    func getEvent(id: String) async throws -> Event? {
-        print("StubEventInteractor - Get event stub")
-        return nil
+    func eventCount(_ events: [Event], for filter: EventFilter) -> Int {
+        return filterEvents(events, by: filter).count
     }
     
-    func getUserEvents() async throws -> [Event] {
-        print("StubEventInteractor - Get user events stub")
-        return []
-    }
-    
-    func getAllEvents() async throws -> [Event] {
-        print("StubEventInteractor - Get all events stub")
-        return []
-    }
-    
-    func updateEvent(_ event: Event, newImage: UIImage?) async throws {
-        print("StubEventInteractor - Update event stub")
-    }
-    
-    func deleteEvent(id: String) async throws {
-        print("StubEventInteractor - Delete event stub")
-    }
-    
-    func validateEvent(_ event: Event) -> [String] {
-        print("StubEventInteractor - Validate event stub")
-        return []
+    func firstNonEmptyFilter(for events: [Event]) -> EventFilter {
+        for filter in EventFilter.allCases {
+            if eventCount(events, for: filter) > 0 {
+                return filter
+            }
+        }
+        return .tonight
     }
 }
+

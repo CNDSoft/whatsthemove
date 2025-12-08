@@ -51,6 +51,16 @@ enum EventStatus: String, CaseIterable, Codable {
     case waitlisted = "Waitlisted"
 }
 
+// MARK: - EventFilter
+
+enum EventFilter: String, CaseIterable {
+    case tonight = "Tonight"
+    case thisWeekend = "This Weekend"
+    case nextWeek = "Next Week"
+    case thisMonth = "This Month"
+    case recentlySaved = "Recently Saved"
+}
+
 // MARK: - Event
 
 struct Event: Identifiable, Codable, Equatable, Hashable {
