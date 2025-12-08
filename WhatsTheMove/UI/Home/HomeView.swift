@@ -127,69 +127,14 @@ private extension HomeView {
                 .font(.rubik(.bold, size: 16))
                 .foregroundColor(.white)
                 .textCase(.uppercase)
+                .padding(.leading, 20)
             
-            filterPillsScrollView
-        }.padding(.leading, 20)
-    }
-    
-    var filterPillsScrollView: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(EventFilter.allCases, id: \.self) { filter in
-                        filterPill(filter)
-                            .id(filter)
-                }
-                }
-            }
-            .onChange(of: selectedFilter) { _, newFilter in
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    proxy.scrollTo(newFilter, anchor: .center)
-                }
-            }
-            .onAppear {
-                proxy.scrollTo(selectedFilter, anchor: .center)
-            }
-        }
-        .padding(.bottom, 20)
-    }
-    
-    func filterPill(_ filter: EventFilter) -> some View {
-        let count = eventCount(for: filter)
-        let isSelected = selectedFilter == filter
-        
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                selectedFilter = filter
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Text(filter.rawValue)
-                    .font(.rubik(.regular, size: 14))
-                    .foregroundColor(isSelected ? Color(hex: "11104B") : Color(hex: "F8F7F1"))
-                
-                if count > 0 {
-                    Text("\(count)")
-                        .font(.rubik(.regular, size: 12))
-                        .foregroundColor(Color(hex: "11104B"))
-                        .padding(.horizontal, 8)
-                        .frame(height: 24)
-                        .background(isSelected ? Color(hex: "E8E8FF") : Color(hex: "E7FF63"))
-                        .clipShape(Capsule())
-                }
-            }
-            .padding(.leading, 13)
-            .padding(.trailing, count > 0 ? 5 : 13)
-            .padding(.vertical, 5)
-            .frame(height: 34)
-            .background(
-                isSelected
-                    ? Color.white
-                    : Color.white.opacity(0.13)
+            FilterPillsView(
+                selectedFilter: $selectedFilter,
+                events: events
             )
-            .clipShape(Capsule())
+            .padding(.bottom, 20)
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -369,9 +314,6 @@ private extension HomeView {
         return true
     }
     
-    func eventCount(for filter: EventFilter) -> Int {
-        injected.interactors.events.eventCount(events, for: filter)
-    }
 }
 
 // MARK: - Previews
