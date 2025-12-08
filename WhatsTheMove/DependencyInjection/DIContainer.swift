@@ -41,13 +41,15 @@ extension DIContainer {
         let userPermissions: UserPermissionsInteractor
         let auth: AuthInteractor
         let events: EventInteractor
+        let users: UserInteractor
 
         static var stub: Self {
             .init(images: StubImagesInteractor(),
                   countries: StubCountriesInteractor(),
                   userPermissions: StubUserPermissionsInteractor(),
                   auth: StubAuthInteractor(),
-                  events: StubEventInteractor())
+                  events: StubEventInteractor(),
+                  users: StubUserInteractor())
         }
     }
 }

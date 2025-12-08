@@ -14,6 +14,8 @@ protocol UserWebRepository {
     func getUser(id: String) async throws -> User?
     func updateUser(_ user: User) async throws
     func deleteUser(id: String) async throws
+    func toggleStarredEvent(userId: String, eventId: String) async throws
+    func getStarredEventIds(userId: String) async throws -> [String]
 }
 
 struct RealUserWebRepository: UserWebRepository {
@@ -67,6 +69,50 @@ struct RealUserWebRepository: UserWebRepository {
         
         print("RealUserWebRepository - User deleted successfully")
     }
+    
+    func toggleStarredEvent(userId: String, eventId: String) async throws {
+        print("RealUserWebRepository - Toggling starred event: \(eventId) for user: \(userId)")
+        
+        let userRef = db.collection(collectionName).document(userId)
+        let document = try await userRef.getDocument()
+        
+        guard document.exists else {
+            throw UserWebRepositoryError.userNotFound
+        }
+        
+        let data = document.data() ?? [:]
+        var starredEventIds = (data["starredEventIds"] as? [String]) ?? []
+        
+        if let index = starredEventIds.firstIndex(of: eventId) {
+            starredEventIds.remove(at: index)
+            print("RealUserWebRepository - Removed event from starred")
+        } else {
+            starredEventIds.append(eventId)
+            print("RealUserWebRepository - Added event to starred")
+        }
+        
+        try await userRef.updateData(["starredEventIds": starredEventIds])
+        print("RealUserWebRepository - Starred event toggled successfully")
+    }
+    
+    func getStarredEventIds(userId: String) async throws -> [String] {
+        print("RealUserWebRepository - Getting starred events for user: \(userId)")
+        
+        let document = try await db.collection(collectionName)
+            .document(userId)
+            .getDocument()
+        
+        guard document.exists else {
+            print("RealUserWebRepository - User not found")
+            return []
+        }
+        
+        let data = document.data() ?? [:]
+        let starredEventIds = (data["starredEventIds"] as? [String]) ?? []
+        
+        print("RealUserWebRepository - Retrieved \(starredEventIds.count) starred events")
+        return starredEventIds
+    }
 }
 
 struct StubUserWebRepository: UserWebRepository {
@@ -87,7 +133,27 @@ struct StubUserWebRepository: UserWebRepository {
     func deleteUser(id: String) async throws {
         print("StubUserWebRepository - Delete user stub")
     }
+    
+    func toggleStarredEvent(userId: String, eventId: String) async throws {
+        print("StubUserWebRepository - Toggle starred event stub")
+    }
+    
+    func getStarredEventIds(userId: String) async throws -> [String] {
+        print("StubUserWebRepository - Get starred event IDs stub")
+        return []
+    }
 }
 
+// MARK: - UserWebRepositoryError
 
+enum UserWebRepositoryError: LocalizedError {
+    case userNotFound
+    
+    var errorDescription: String? {
+        switch self {
+        case .userNotFound:
+            return "User not found"
+        }
+    }
+}
 

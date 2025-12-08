@@ -7,12 +7,15 @@
 //
 
 import SwiftUI
+import Combine
 
 struct EventCardView: View {
     
     let event: Event
     @State private var showRegistrationDeadline: Bool = false
     @State private var showNoteOverlay: Bool = false
+    @State private var isStarred: Bool = false
+    @Environment(\.injected) private var injected: DIContainer
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -26,6 +29,16 @@ struct EventCardView: View {
         .fullScreenCover(isPresented: $showNoteOverlay) {
             noteOverlayView
         }
+        .onReceive(starredEventsUpdate) { starredIds in
+            isStarred = starredIds.contains(event.id)
+        }
+        .onAppear {
+            isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
+        }
+    }
+    
+    private var starredEventsUpdate: AnyPublisher<Set<String>, Never> {
+        injected.appState.updates(for: \.userData.starredEventIds)
     }
 }
 
@@ -58,7 +71,7 @@ private extension EventCardView {
                 imagePlaceholder
             }
             
-            categoryBadge
+            starButton
                 .padding(7)
         }
         .frame(width: 100, height: 100)
@@ -75,14 +88,20 @@ private extension EventCardView {
             )
     }
     
-    @ViewBuilder
-    var categoryBadge: some View {
-        if let category = event.category {
-            Image(category.iconName)
+    var starButton: some View {
+        let starImageName = isStarred ? "star-enabled" : "star-disabled"
+        
+        return Button {
+            Task {
+                try? await injected.interactors.users.toggleStarredEvent(eventId: event.id)
+            }
+        } label: {
+            Image(starImageName)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 27, height: 27)
         }
+        .buttonStyle(.plain)
     }
     
     var eventDetails: some View {

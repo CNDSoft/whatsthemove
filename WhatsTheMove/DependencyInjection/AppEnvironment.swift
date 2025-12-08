@@ -115,10 +115,14 @@ extension AppEnvironment {
         let events = RealEventInteractor(
             appState: appState,
             eventWebRepository: webRepositories.events)
+        let users = RealUserInteractor(
+            appState: appState,
+            userWebRepository: webRepositories.users)
         return .init(images: images,
                      countries: countries,
                      userPermissions: userPermissions,
                      auth: auth,
-                     events: events)
+                     events: events,
+                     users: users)
     }
 }

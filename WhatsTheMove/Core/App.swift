@@ -116,6 +116,10 @@ private struct RootContent: View {
         let authStatus = await injected.interactors.auth.checkAuthStatus()
         isAuthenticated = authStatus
         
+        if authStatus {
+            try? await injected.interactors.users.loadStarredEventIds()
+        }
+        
         let onboardingCompleted = UserDefaults.standard.bool(forKey: Self.onboardingCompletedKey)
         hasCompletedOnboarding = onboardingCompleted
         injected.appState[\.userData.hasCompletedOnboarding] = onboardingCompleted

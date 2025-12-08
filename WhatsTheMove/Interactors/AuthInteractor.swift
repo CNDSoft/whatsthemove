@@ -56,6 +56,7 @@ struct RealAuthInteractor: AuthInteractor {
             firstName: firstName,
             lastName: lastName,
             ageRange: ageRange,
+            starredEventIds: [],
             createdAt: now,
             updatedAt: now
         )

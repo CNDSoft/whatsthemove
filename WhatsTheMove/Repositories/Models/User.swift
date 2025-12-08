@@ -14,6 +14,7 @@ struct User: Codable, Equatable {
     let firstName: String
     let lastName: String
     let ageRange: String
+    var starredEventIds: [String]
     let createdAt: Date
     let updatedAt: Date
     
@@ -31,6 +32,7 @@ extension User {
             "firstName": firstName,
             "lastName": lastName,
             "ageRange": ageRange,
+            "starredEventIds": starredEventIds,
             "createdAt": createdAt,
             "updatedAt": updatedAt
         ]
@@ -44,6 +46,7 @@ extension User {
             return nil
         }
         
+        let starredEventIds = (data["starredEventIds"] as? [String]) ?? []
         let createdAt = (data["createdAt"] as? Date) ?? Date()
         let updatedAt = (data["updatedAt"] as? Date) ?? Date()
         
@@ -53,6 +56,7 @@ extension User {
             firstName: firstName,
             lastName: lastName,
             ageRange: ageRange,
+            starredEventIds: starredEventIds,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

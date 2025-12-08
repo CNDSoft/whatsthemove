@@ -7,11 +7,14 @@
 //
 
 import SwiftUI
+import Combine
 
 struct EventDetailView: View {
     
     let event: Event
+    @State private var isStarred: Bool = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.injected) private var injected: DIContainer
     
     var body: some View {
         GeometryReader { geometry in
@@ -32,6 +35,16 @@ struct EventDetailView: View {
             .ignoresSafeArea(edges: .top)
         }
         .navigationBarHidden(true)
+        .onReceive(starredEventsUpdate) { starredIds in
+            isStarred = starredIds.contains(event.id)
+        }
+        .onAppear {
+            isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
+        }
+    }
+    
+    private var starredEventsUpdate: AnyPublisher<Set<String>, Never> {
+        injected.appState.updates(for: \.userData.starredEventIds)
     }
 }
 
@@ -93,7 +106,7 @@ private extension EventDetailView {
                 endPoint: .bottom
             )
             
-            categoryBadge
+            starButton
                 .padding(20)
         }
         .frame(height: 280)
@@ -127,24 +140,20 @@ private extension EventDetailView {
             )
     }
     
-    @ViewBuilder
-    var categoryBadge: some View {
-        if let category = event.category {
-            HStack(spacing: 8) {
-                Image(category.iconName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
-                
-                Text(category.rawValue)
-                    .font(.rubik(.medium, size: 14))
-                    .foregroundColor(Color(hex: "11104B"))
+    var starButton: some View {
+        let starImageName = isStarred ? "star-enabled" : "star-disabled"
+        
+        return Button {
+            Task {
+                try? await injected.interactors.users.toggleStarredEvent(eventId: event.id)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(Color.white)
-            .clipShape(Capsule())
+        } label: {
+            Image(starImageName)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 44, height: 44)
         }
+        .buttonStyle(.plain)
     }
 }
 

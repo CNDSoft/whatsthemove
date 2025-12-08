@@ -38,6 +38,7 @@ extension AppState {
         var userId: String?
         var email: String?
         var events: [Event] = []
+        var starredEventIds: Set<String> = []
     }
 }
 
