@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var events: [Event] = []
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
+    @State private var hasLoadedEvents: Bool = false
     
     var body: some View {
         ZStack {
@@ -30,8 +31,11 @@ struct HomeView: View {
         .navigationDestination(for: Event.self) { event in
             EventDetailView(event: event)
         }
-        .onAppear {
-            loadEvents()
+        .task {
+            await loadEventsIfNeeded()
+        }
+        .refreshable {
+            await refreshEvents()
         }
     }
     
@@ -255,25 +259,40 @@ private extension HomeView {
 
 private extension HomeView {
     
-    func loadEvents() {
+    func loadEventsIfNeeded() async {
+        guard !hasLoadedEvents else {
+            print("HomeView - Events already loaded, skipping")
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
-        Task {
-            do {
-                let fetchedEvents = try await injected.interactors.events.getAllEvents()
-                await MainActor.run {
-                    events = fetchedEvents
-                    isLoading = false
-                    selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
-                }
-            } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    isLoading = false
-                    print("HomeView - Failed to load events: \(error.localizedDescription)")
-                }
-            }
+        do {
+            let fetchedEvents = try await injected.interactors.events.getAllEvents(forceReload: false)
+            events = fetchedEvents
+            isLoading = false
+            hasLoadedEvents = true
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
+            print("HomeView - Loaded \(fetchedEvents.count) events")
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            print("HomeView - Failed to load events: \(error.localizedDescription)")
+        }
+    }
+    
+    func refreshEvents() async {
+        print("HomeView - Refreshing events")
+        
+        do {
+            let fetchedEvents = try await injected.interactors.events.getAllEvents(forceReload: true)
+            events = fetchedEvents
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
+            print("HomeView - Refreshed \(fetchedEvents.count) events")
+        } catch {
+            errorMessage = error.localizedDescription
+            print("HomeView - Failed to refresh events: \(error.localizedDescription)")
         }
     }
     

@@ -25,7 +25,7 @@ struct StubEventInteractor: EventInteractor {
         return Self.previewEvents
     }
     
-    func getAllEvents() async throws -> [Event] {
+    func getAllEvents(forceReload: Bool = false) async throws -> [Event] {
         print("StubEventInteractor - Get all events stub")
         return Self.previewEvents
     }

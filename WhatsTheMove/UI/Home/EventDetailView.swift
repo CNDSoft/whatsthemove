@@ -102,19 +102,12 @@ private extension EventDetailView {
     var headerImage: some View {
         Group {
             if let imageUrl = event.imageUrl, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        imagePlaceholder
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        imagePlaceholder
-                    @unknown default:
-                        imagePlaceholder
-                    }
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    imagePlaceholder
                 }
             } else {
                 imagePlaceholder

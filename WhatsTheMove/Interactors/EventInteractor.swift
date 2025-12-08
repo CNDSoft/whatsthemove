@@ -13,7 +13,7 @@ protocol EventInteractor {
     func saveEvent(_ event: Event, image: UIImage?) async throws
     func getEvent(id: String) async throws -> Event?
     func getUserEvents() async throws -> [Event]
-    func getAllEvents() async throws -> [Event]
+    func getAllEvents(forceReload: Bool) async throws -> [Event]
     func updateEvent(_ event: Event, newImage: UIImage?) async throws
     func deleteEvent(id: String) async throws
     func validateEvent(_ event: Event) -> [String]
@@ -81,12 +81,25 @@ struct RealEventInteractor: EventInteractor {
         return events
     }
     
-    func getAllEvents() async throws -> [Event] {
-        print("RealEventInteractor - Getting all events")
+    func getAllEvents(forceReload: Bool = false) async throws -> [Event] {
+        print("RealEventInteractor - Getting all events (forceReload: \(forceReload))")
+        
+        let cachedEvents = await MainActor.run {
+            appState[\.userData.events]
+        }
+        
+        if !forceReload && !cachedEvents.isEmpty {
+            print("RealEventInteractor - Returning \(cachedEvents.count) cached events")
+            return cachedEvents
+        }
         
         let events = try await eventWebRepository.getAllEvents()
         
-        print("RealEventInteractor - Retrieved \(events.count) total events")
+        await MainActor.run {
+            appState[\.userData.events] = events
+        }
+        
+        print("RealEventInteractor - Retrieved and cached \(events.count) total events")
         return events
     }
     
