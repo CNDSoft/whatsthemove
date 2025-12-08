@@ -30,6 +30,11 @@ struct StubEventInteractor: EventInteractor {
         return Self.previewEvents
     }
     
+    func loadMoreEvents(currentEvents: [Event], pageSize: Int) async throws -> [Event] {
+        print("StubEventInteractor - Load more events stub")
+        return currentEvents
+    }
+    
     func updateEvent(_ event: Event, newImage: UIImage?) async throws {
         print("StubEventInteractor - Update event stub")
     }

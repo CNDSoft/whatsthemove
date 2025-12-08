@@ -11,6 +11,8 @@ import SwiftUI
 struct EventCardView: View {
     
     let event: Event
+    @State private var showRegistrationDeadline: Bool = false
+    @State private var showNoteOverlay: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -21,6 +23,9 @@ struct EventCardView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 15)
         .background(Color.white)
+        .fullScreenCover(isPresented: $showNoteOverlay) {
+            noteOverlayView
+        }
     }
 }
 
@@ -131,19 +136,37 @@ private extension EventCardView {
     }
     
     var registrationTag: some View {
-        HStack(spacing: 5) {
-            Text("Registration")
-                .font(.rubik(.regular, size: 12))
-                .foregroundColor(Color(hex: "FA7929"))
-            
-            Image(systemName: "exclamationmark.circle")
-                .font(.system(size: 10))
-                .foregroundColor(Color(hex: "FA7929"))
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showRegistrationDeadline.toggle()
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Text(registrationTagText)
+                    .font(.rubik(.regular, size: 12))
+                    .foregroundColor(Color(hex: "FA7929"))
+                
+                if !showRegistrationDeadline {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "FA7929"))
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Color(hex: "FA7929").opacity(0.1))
+            .clipShape(Capsule())
         }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .background(Color(hex: "FA7929").opacity(0.1))
-        .clipShape(Capsule())
+        .buttonStyle(.plain)
+    }
+    
+    var registrationTagText: String {
+        if showRegistrationDeadline, let deadline = event.registrationDeadline {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "Register by \(formatter.string(from: deadline))"
+        }
+        return "Registration"
     }
     
     func categoryTag(_ category: EventCategory) -> some View {
@@ -250,9 +273,41 @@ private extension EventCardView {
     
     var actionButtonsRow: some View {
         HStack(spacing: 5) {
+            if hasNotes {
+                noteButton
+            }
             calendarButton
             viewDetailsButton
         }
+    }
+    
+    var hasNotes: Bool {
+        if let notes = event.notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
+        return false
+    }
+    
+    var noteButton: some View {
+        Button {
+            showNoteOverlay = true
+        } label: {
+            HStack(spacing: 8) {
+                Image("note")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 14, height: 14)
+                
+                Text("Note")
+                    .font(.rubik(.regular, size: 12))
+            }
+            .foregroundColor(Color(hex: "11104B"))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(Color(hex: "F8F7F1"))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
     
     var calendarButton: some View {
@@ -345,6 +400,43 @@ private extension EventCardView {
     }
 }
 
+// MARK: - Note Overlay
+
+private extension EventCardView {
+    
+    var noteOverlayView: some View {
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Spacer()
+                
+                if let notes = event.notes {
+                    Text(notes)
+                        .font(.rubik(.regular, size: 24))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                
+                Spacer()
+                
+                Button {
+                    showNoteOverlay = false
+                } label: {
+                    Text("Close")
+                        .font(.rubik(.regular, size: 18))
+                        .foregroundColor(.white)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 60)
+            }
+        }
+    }
+}
+
 // MARK: - Previews
 
 #Preview {
@@ -359,6 +451,7 @@ private extension EventCardView {
             requiresRegistration: true,
             registrationDeadline: Calendar.current.date(byAdding: .day, value: 1, to: Date()),
             category: .food,
+            notes: "Going with John, Liz and Samantha",
             status: .interested
         )
     )

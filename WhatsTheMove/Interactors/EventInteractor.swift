@@ -14,6 +14,7 @@ protocol EventInteractor {
     func getEvent(id: String) async throws -> Event?
     func getUserEvents() async throws -> [Event]
     func getAllEvents(forceReload: Bool) async throws -> [Event]
+    func loadMoreEvents(currentEvents: [Event], pageSize: Int) async throws -> [Event]
     func updateEvent(_ event: Event, newImage: UIImage?) async throws
     func deleteEvent(id: String) async throws
     func validateEvent(_ event: Event) -> [String]
@@ -93,7 +94,7 @@ struct RealEventInteractor: EventInteractor {
             return cachedEvents
         }
         
-        let events = try await eventWebRepository.getAllEvents()
+        let events = try await eventWebRepository.getAllEvents(limit: 20, lastEventDate: nil)
         
         await MainActor.run {
             appState[\.userData.events] = events
@@ -101,6 +102,22 @@ struct RealEventInteractor: EventInteractor {
         
         print("RealEventInteractor - Retrieved and cached \(events.count) total events")
         return events
+    }
+    
+    func loadMoreEvents(currentEvents: [Event], pageSize: Int = 20) async throws -> [Event] {
+        print("RealEventInteractor - Loading more events (current count: \(currentEvents.count))")
+        
+        let lastEventDate = currentEvents.last?.eventDate
+        let newEvents = try await eventWebRepository.getAllEvents(limit: pageSize, lastEventDate: lastEventDate)
+        
+        let allEvents = currentEvents + newEvents
+        
+        await MainActor.run {
+            appState[\.userData.events] = allEvents
+        }
+        
+        print("RealEventInteractor - Loaded \(newEvents.count) new events, total: \(allEvents.count)")
+        return allEvents
     }
     
     func updateEvent(_ event: Event, newImage: UIImage?) async throws {

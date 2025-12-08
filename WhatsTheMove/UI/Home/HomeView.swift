@@ -14,8 +14,13 @@ struct HomeView: View {
     @State private var selectedFilter: EventFilter = .tonight
     @State private var events: [Event] = []
     @State private var isLoading: Bool = false
+    @State private var isLoadingMore: Bool = false
     @State private var errorMessage: String?
     @State private var hasLoadedEvents: Bool = false
+    @State private var canLoadMore: Bool = true
+    @State private var shouldRefetch: Bool = false
+    
+    @Binding var triggerRefetch: Bool
     
     var body: some View {
         ZStack {
@@ -36,6 +41,13 @@ struct HomeView: View {
         }
         .refreshable {
             await refreshEvents()
+        }
+        .onChange(of: triggerRefetch) { _, shouldRefetch in
+            if shouldRefetch {
+                Task {
+                    await refreshEvents()
+                }
+            }
         }
     }
     
@@ -127,7 +139,7 @@ private extension HomeView {
                     ForEach(EventFilter.allCases, id: \.self) { filter in
                         filterPill(filter)
                             .id(filter)
-                    }
+                }
                 }
             }
             .onChange(of: selectedFilter) { _, newFilter in
@@ -215,10 +227,34 @@ private extension HomeView {
             LazyVStack(spacing: 1) {
                 ForEach(filteredEvents) { event in
                     EventCardView(event: event)
+                        .onAppear {
+                            if shouldLoadMore(for: event) {
+                                Task {
+                                    await loadMoreEvents()
+                                }
+                            }
+                        }
+                }
+                
+                if isLoadingMore {
+                    loadingMoreView
                 }
             }
             .padding(.bottom, 100)
         }
+    }
+    
+    var loadingMoreView: some View {
+        HStack {
+            Spacer()
+            ProgressView()
+                .scaleEffect(0.8)
+            Text("Loading more events...")
+                .font(.rubik(.regular, size: 12))
+                .foregroundColor(Color(hex: "55564F"))
+            Spacer()
+        }
+        .padding(.vertical, 20)
     }
     
     var emptyStateContent: some View {
@@ -273,6 +309,7 @@ private extension HomeView {
             events = fetchedEvents
             isLoading = false
             hasLoadedEvents = true
+            canLoadMore = fetchedEvents.count >= 20
             selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
             print("HomeView - Loaded \(fetchedEvents.count) events")
         } catch {
@@ -288,12 +325,48 @@ private extension HomeView {
         do {
             let fetchedEvents = try await injected.interactors.events.getAllEvents(forceReload: true)
             events = fetchedEvents
+            canLoadMore = fetchedEvents.count >= 20
             selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
             print("HomeView - Refreshed \(fetchedEvents.count) events")
         } catch {
             errorMessage = error.localizedDescription
             print("HomeView - Failed to refresh events: \(error.localizedDescription)")
         }
+    }
+    
+    func loadMoreEvents() async {
+        guard !isLoadingMore, canLoadMore else {
+            print("HomeView - Already loading more or no more events to load")
+            return
+        }
+        
+        isLoadingMore = true
+        print("HomeView - Loading more events")
+        
+        do {
+            let updatedEvents = try await injected.interactors.events.loadMoreEvents(currentEvents: events, pageSize: 20)
+            
+            let newEventsCount = updatedEvents.count - events.count
+            events = updatedEvents
+            canLoadMore = newEventsCount >= 20
+            isLoadingMore = false
+            
+            print("HomeView - Loaded \(newEventsCount) more events, total: \(updatedEvents.count)")
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoadingMore = false
+            print("HomeView - Failed to load more events: \(error.localizedDescription)")
+        }
+    }
+    
+    func shouldLoadMore(for event: Event) -> Bool {
+        guard let lastEvent = events.last,
+              event.id == lastEvent.id,
+              canLoadMore,
+              !isLoadingMore else {
+            return false
+        }
+        return true
     }
     
     func eventCount(for filter: EventFilter) -> Int {
@@ -305,7 +378,7 @@ private extension HomeView {
 
 #Preview {
     NavigationStack {
-        HomeView()
+        HomeView(triggerRefetch: .constant(false))
     }
     .inject(DIContainer(appState: AppState(), interactors: .stub))
 }

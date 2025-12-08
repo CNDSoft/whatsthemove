@@ -13,6 +13,7 @@ struct MainTabView: View {
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedTab: Tab = .home
     @State private var showAddEvent: Bool = false
+    @State private var shouldRefetchEvents: Bool = false
     
     enum Tab {
         case home
@@ -28,7 +29,12 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showAddEvent) {
+        .sheet(isPresented: $showAddEvent, onDismiss: {
+            shouldRefetchEvents = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                shouldRefetchEvents = false
+            }
+        }) {
             AddEventView()
                 .inject(injected)
         }
@@ -43,7 +49,7 @@ private extension MainTabView {
     var tabContent: some View {
         switch selectedTab {
         case .home:
-            HomeView()
+            HomeView(triggerRefetch: $shouldRefetchEvents)
         case .saved:
             SavedEmptyView()
         case .profile:
