@@ -168,11 +168,22 @@ private extension HomeView {
     }
     
     var filterPillsScrollView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(EventFilter.allCases, id: \.self) { filter in
-                    filterPill(filter)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(EventFilter.allCases, id: \.self) { filter in
+                        filterPill(filter)
+                            .id(filter)
+                    }
                 }
+            }
+            .onChange(of: selectedFilter) { _, newFilter in
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    proxy.scrollTo(newFilter, anchor: .center)
+                }
+            }
+            .onAppear {
+                proxy.scrollTo(selectedFilter, anchor: .center)
             }
         }
         .padding(.bottom, 20)
@@ -305,6 +316,7 @@ private extension HomeView {
                 await MainActor.run {
                     events = fetchedEvents
                     isLoading = false
+                    selectFirstNonEmptyFilter()
                 }
             } catch {
                 await MainActor.run {
@@ -314,6 +326,16 @@ private extension HomeView {
                 }
             }
         }
+    }
+    
+    func selectFirstNonEmptyFilter() {
+        for filter in EventFilter.allCases {
+            if eventCount(for: filter) > 0 {
+                selectedFilter = filter
+                return
+            }
+        }
+        selectedFilter = .tonight
     }
     
     func eventCount(for filter: EventFilter) -> Int {
