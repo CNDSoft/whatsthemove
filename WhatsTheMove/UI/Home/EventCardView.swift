@@ -283,9 +283,7 @@ private extension EventCardView {
     }
     
     var viewDetailsButton: some View {
-        Button {
-            // View details action
-        } label: {
+        NavigationLink(value: event) {
             HStack(spacing: 8) {
                 Image(systemName: "link")
                     .font(.system(size: 14))
@@ -372,4 +370,6 @@ private extension EventCardView {
         )
     )
 }
+
+
 

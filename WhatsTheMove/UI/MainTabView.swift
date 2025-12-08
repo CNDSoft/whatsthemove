@@ -21,9 +21,11 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            tabContent
-            customTabBar
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                tabContent
+                customTabBar
+            }
         }
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $showAddEvent) {

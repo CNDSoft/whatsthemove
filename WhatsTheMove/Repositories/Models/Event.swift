@@ -53,7 +53,7 @@ enum EventStatus: String, CaseIterable, Codable {
 
 // MARK: - Event
 
-struct Event: Identifiable, Codable, Equatable {
+struct Event: Identifiable, Codable, Equatable, Hashable {
     let id: String
     let userId: String
     var name: String

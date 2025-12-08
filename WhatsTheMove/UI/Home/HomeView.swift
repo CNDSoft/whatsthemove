@@ -26,6 +26,10 @@ struct HomeView: View {
                 eventListContent
             }
         }
+        .navigationBarHidden(true)
+        .navigationDestination(for: Event.self) { event in
+            EventDetailView(event: event)
+        }
         .onAppear {
             loadEvents()
         }
@@ -354,7 +358,9 @@ private extension HomeView {
 // MARK: - Previews
 
 #Preview {
-    HomeView()
-        .inject(DIContainer(appState: AppState(), interactors: .stub))
+    NavigationStack {
+        HomeView()
+    }
+    .inject(DIContainer(appState: AppState(), interactors: .stub))
 }
 
