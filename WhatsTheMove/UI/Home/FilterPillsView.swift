@@ -26,6 +26,7 @@ struct FilterPillsView: View {
                 }
                 .padding(.leading, 20)
             }
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
             .clipped()
             .onChange(of: selectedFilter) { _, newFilter in
                 withAnimation(.easeInOut(duration: 0.3)) {
