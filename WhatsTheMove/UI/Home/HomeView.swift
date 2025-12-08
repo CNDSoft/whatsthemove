@@ -57,7 +57,7 @@ private extension HomeView {
                 .frame(width: geometry.size.width, alignment: .leading)
             }
         }
-        .frame(height: 250).edgesIgnoringSafeArea(.top)
+        .frame(height: 180).edgesIgnoringSafeArea(.top)
     }
     
     func headerBackground(width: CGFloat) -> some View {
