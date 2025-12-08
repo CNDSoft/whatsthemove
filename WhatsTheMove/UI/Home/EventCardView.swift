@@ -15,6 +15,9 @@ struct EventCardView: View {
     @State private var showRegistrationDeadline: Bool = false
     @State private var showNoteOverlay: Bool = false
     @State private var isStarred: Bool = false
+    @State private var showMoreAlert: Bool = false
+    @State private var showCalendarAlert: Bool = false
+    @State private var showDismissWarningAlert: Bool = false
     @Environment(\.injected) private var injected: DIContainer
     
     var body: some View {
@@ -35,6 +38,9 @@ struct EventCardView: View {
         .onAppear {
             isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
         }
+        .underDevelopmentAlert(isPresented: $showMoreAlert)
+        .underDevelopmentAlert(isPresented: $showCalendarAlert)
+        .underDevelopmentAlert(isPresented: $showDismissWarningAlert)
     }
     
     private var starredEventsUpdate: AnyPublisher<Set<String>, Never> {
@@ -248,7 +254,7 @@ private extension EventCardView {
     
     var moreButton: some View {
         Button {
-            // More options action
+            showMoreAlert = true
         } label: {
             VStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { _ in
@@ -331,7 +337,7 @@ private extension EventCardView {
     
     var calendarButton: some View {
         Button {
-            // Add to calendar action
+            showCalendarAlert = true
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle")
@@ -390,7 +396,7 @@ private extension EventCardView {
                     Spacer()
                     
                     Button {
-                        // Dismiss warning
+                        showDismissWarningAlert = true
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 8, weight: .medium))

@@ -19,6 +19,7 @@ struct HomeView: View {
     @State private var hasLoadedEvents: Bool = false
     @State private var canLoadMore: Bool = true
     @State private var shouldRefetch: Bool = false
+    @State private var showNotificationAlert: Bool = false
     
     @Binding var triggerRefetch: Bool
     
@@ -49,6 +50,7 @@ struct HomeView: View {
                 }
             }
         }
+        .underDevelopmentAlert(isPresented: $showNotificationAlert)
     }
     
     private var filteredEvents: [Event] {
@@ -113,7 +115,7 @@ private extension HomeView {
     
     var notificationButton: some View {
         Button {
-            // Notification action will be implemented later
+            showNotificationAlert = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)

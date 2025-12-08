@@ -13,6 +13,8 @@ struct EventDetailView: View {
     
     let event: Event
     @State private var isStarred: Bool = false
+    @State private var showMoreAlert: Bool = false
+    @State private var showAddToCalendarAlert: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.injected) private var injected: DIContainer
     
@@ -41,6 +43,8 @@ struct EventDetailView: View {
         .onAppear {
             isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
         }
+        .underDevelopmentAlert(isPresented: $showMoreAlert)
+        .underDevelopmentAlert(isPresented: $showAddToCalendarAlert)
     }
     
     private var starredEventsUpdate: AnyPublisher<Set<String>, Never> {
@@ -79,7 +83,7 @@ private extension EventDetailView {
     
     var moreButton: some View {
         Button {
-            // More options action
+            showMoreAlert = true
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 16, weight: .semibold))
@@ -514,7 +518,7 @@ private extension EventDetailView {
     
     var addToCalendarButton: some View {
         Button {
-            // Add to calendar action
+            showAddToCalendarAlert = true
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "calendar.badge.plus")
