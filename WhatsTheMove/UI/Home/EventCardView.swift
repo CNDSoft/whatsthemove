@@ -119,6 +119,10 @@ private extension EventCardView {
             
             tagsRow
             dateRow
+            
+            if let location = event.location, !location.isEmpty {
+                locationRow(location)
+            }
         }
         .padding(.top, 4)
         .padding(.bottom, 10)
@@ -249,6 +253,19 @@ private extension EventCardView {
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
             }
+        }
+    }
+    
+    func locationRow(_ location: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "mappin.circle")
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "55564F"))
+            
+            Text(location)
+                .font(.rubik(.regular, size: 14))
+                .foregroundColor(Color(hex: "55564F"))
+                .lineLimit(1)
         }
     }
     
@@ -477,6 +494,7 @@ private extension EventCardView {
             registrationDeadline: Calendar.current.date(byAdding: .day, value: 1, to: Date()),
             category: .food,
             notes: "Going with John, Liz and Samantha",
+            location: "Central Park, New York, NY",
             status: .interested
         )
     )

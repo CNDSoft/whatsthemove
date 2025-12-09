@@ -252,6 +252,10 @@ extension Event {
             dict["notes"] = notes
         }
         
+        if let location = location, !location.isEmpty {
+            dict["location"] = location
+        }
+        
         return dict
     }
     
@@ -279,6 +283,7 @@ extension Event {
         let categoryRaw = dict["category"] as? String
         let category = categoryRaw.flatMap { EventCategory(rawValue: $0) }
         let notes = dict["notes"] as? String
+        let location = dict["location"] as? String
         
         return Event(
             id: id,
@@ -295,6 +300,7 @@ extension Event {
             registrationDeadline: registrationDeadline,
             category: category,
             notes: notes,
+            location: location,
             status: status,
             createdAt: createdAtTimestamp.dateValue(),
             updatedAt: updatedAtTimestamp.dateValue()

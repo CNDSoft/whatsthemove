@@ -170,6 +170,10 @@ private extension EventDetailView {
             titleAndTagsSection
             dateTimeSection
             
+            if let location = event.location, !location.isEmpty {
+                locationSection(location)
+            }
+            
             if event.urlLink != nil {
                 urlSection
             }
@@ -325,6 +329,37 @@ private extension EventDetailView {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.white)
         .cornerRadius(12)
+    }
+}
+
+// MARK: - Location Section
+
+private extension EventDetailView {
+    
+    func locationSection(_ location: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Location")
+            
+            HStack(spacing: 12) {
+                Image(systemName: "mappin.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(hex: "11104B"))
+                
+                Text(location)
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "11104B"))
+                    .lineLimit(2)
+                
+                Spacer()
+                
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+            }
+            .padding(14)
+            .background(Color.white)
+            .cornerRadius(12)
+        }
     }
 }
 
@@ -612,6 +647,7 @@ private extension EventDetailView {
                 registrationDeadline: Calendar.current.date(byAdding: .day, value: 2, to: Date()),
                 category: .music,
                 notes: "Bring your own blanket and snacks. No outside drinks allowed. Parking available on site.",
+                location: "Central Park, New York, NY",
                 status: .going
             )
         )

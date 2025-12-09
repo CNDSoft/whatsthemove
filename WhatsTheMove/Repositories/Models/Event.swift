@@ -78,6 +78,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
     var registrationDeadline: Date?
     var category: EventCategory?
     var notes: String?
+    var location: String?
     var status: EventStatus
     let createdAt: Date
     var updatedAt: Date
@@ -97,6 +98,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         registrationDeadline: Date? = nil,
         category: EventCategory? = nil,
         notes: String? = nil,
+        location: String? = nil,
         status: EventStatus = .interested,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -115,6 +117,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         self.registrationDeadline = registrationDeadline
         self.category = category
         self.notes = notes
+        self.location = location
         self.status = status
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -126,7 +129,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
 extension Event {
     
     var isValid: Bool {
-        return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && category != nil
+        return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     var validationErrors: [String] {
@@ -134,10 +137,6 @@ extension Event {
         
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Event name is required")
-        }
-        
-        if category == nil {
-            errors.append("Please select a category")
         }
         
         if isEndTimeSameAsStartTime {

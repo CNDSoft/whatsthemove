@@ -28,6 +28,7 @@ struct AddEventView: View {
     @State private var admissionAmount: String = ""
     @State private var requiresRegistration: Bool = false
     @State private var registrationDeadline: Date = Date()
+    @State private var location: String = ""
     @State private var selectedCategory: EventCategory?
     @State private var notes: String = ""
     @State private var status: EventStatus = .interested
@@ -164,6 +165,7 @@ private extension AddEventView {
                     registrationDeadline: $registrationDeadline,
                     showDeadlinePicker: $showDeadlinePicker
                 )
+                LocationSection(location: $location)
                 CategorySection(
                     selectedCategory: $selectedCategory,
                     onDropdownTapped: { showCategoryPicker = true }
@@ -278,12 +280,6 @@ private extension AddEventView {
             return
         }
         
-        if selectedImage == nil {
-            errorMessage = "Please add an event image"
-            showError = true
-            return
-        }
-        
         let event = createEvent(userId: userId)
         let validationErrors = injected.interactors.events.validateEvent(event)
         
@@ -328,6 +324,7 @@ private extension AddEventView {
             registrationDeadline: requiresRegistration ? registrationDeadline : nil,
             category: selectedCategory,
             notes: notes.isEmpty ? nil : notes,
+            location: location.isEmpty ? nil : location,
             status: status
         )
     }

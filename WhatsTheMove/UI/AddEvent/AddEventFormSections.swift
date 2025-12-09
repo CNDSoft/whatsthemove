@@ -8,6 +8,7 @@
 
 import SwiftUI
 import PhotosUI
+import MapKit
 
 // MARK: - EventNameSection
 
@@ -407,6 +408,126 @@ struct NotesSection: View {
         .padding(.top, 15)
         .padding(.bottom, 65)
         .background(Color.white)
+    }
+}
+
+// MARK: - LocationSection
+
+struct LocationSection: View {
+    
+    @Binding var location: String
+    @StateObject private var searchService = LocationSearchService()
+    @FocusState private var isTextFieldFocused: Bool
+    
+    var body: some View {
+        FormRowContainer {
+            VStack(alignment: .leading, spacing: 0) {
+                FormFieldLabel(text: "Location")
+                
+                ZStack(alignment: .topLeading) {
+                    TextField("", text: $searchService.searchQuery, prompt: Text("Venue, Address, City...")
+                        .foregroundColor(Color(hex: "55564F")))
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "55564F"))
+                        .focused($isTextFieldFocused)
+                        .onSubmit {
+                            if let firstResult = searchService.searchResults.first {
+                                selectLocation(firstResult)
+                            }
+                        }
+                    
+                    if !searchService.searchResults.isEmpty && isTextFieldFocused {
+                        searchResultsOverlay
+                    }
+                }
+                
+                if !location.isEmpty && !isTextFieldFocused {
+                    selectedLocationView
+                }
+            }
+        }
+        .onChange(of: searchService.searchQuery) { _, newValue in
+            if newValue.isEmpty {
+                location = ""
+            }
+        }
+    }
+    
+    private var searchResultsOverlay: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer()
+                .frame(height: 35)
+            
+            VStack(spacing: 0) {
+                ForEach(searchService.searchResults.prefix(5), id: \.self) { result in
+                    Button {
+                        selectLocation(result)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(result.title)
+                                .font(.rubik(.medium, size: 14))
+                                .foregroundColor(Color(hex: "11104B"))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            if !result.subtitle.isEmpty {
+                                Text(result.subtitle)
+                                    .font(.rubik(.regular, size: 12))
+                                    .foregroundColor(Color(hex: "55564F"))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color.white)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    if result != searchService.searchResults.prefix(5).last {
+                        Divider()
+                            .background(Color(hex: "EFEEE7"))
+                    }
+                }
+            }
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+        }
+    }
+    
+    private var selectedLocationView: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "mappin.circle.fill")
+                .font(.system(size: 16))
+                .foregroundColor(Color(hex: "11104B"))
+            
+            Text(location)
+                .font(.rubik(.regular, size: 14))
+                .foregroundColor(Color(hex: "11104B"))
+                .lineLimit(2)
+            
+            Spacer()
+            
+            Button {
+                clearLocation()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(Color(hex: "55564F"))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.top, 8)
+    }
+    
+    private func selectLocation(_ completion: MKLocalSearchCompletion) {
+        location = searchService.selectLocation(completion)
+        searchService.searchQuery = location
+        isTextFieldFocused = false
+    }
+    
+    private func clearLocation() {
+        location = ""
+        searchService.clearSearch()
     }
 }
 
