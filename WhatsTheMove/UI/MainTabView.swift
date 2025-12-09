@@ -12,6 +12,7 @@ struct MainTabView: View {
     
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedTab: Tab = .home
+    @State private var showAddEventOptions: Bool = false
     @State private var showAddEvent: Bool = false
     @State private var shouldRefetchEvents: Bool = false
     
@@ -29,6 +30,24 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $showAddEventOptions) {
+            AddEventOptionsSheet(
+                onManualEntryTapped: {
+                    showAddEventOptions = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showAddEvent = true
+                    }
+                },
+                onShareFromAppTapped: {
+                    showAddEventOptions = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showUnderDevelopmentAlert = true
+                    }
+                }
+            )
+            .presentationDetents([.height(140)])
+            .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showAddEvent, onDismiss: {
             shouldRefetchEvents = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
