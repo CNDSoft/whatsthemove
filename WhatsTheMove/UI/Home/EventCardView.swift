@@ -77,7 +77,9 @@ private extension EventCardView {
             eventImage
             eventDetails
             Spacer(minLength: 0)
-            moreButton
+            if showActions {
+                moreButton
+            }
         }
     }
     
