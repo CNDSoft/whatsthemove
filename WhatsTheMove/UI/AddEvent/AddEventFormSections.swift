@@ -214,9 +214,25 @@ struct TimeSection: View {
     
     var body: some View {
         FormRowContainer {
-            HStack(alignment: .top) {
-                startTimeField
-                endTimeField
+            VStack(spacing: 0) {
+                HStack(alignment: .top) {
+                    startTimeField
+                    endTimeField
+                }
+                
+                if showStartTimePicker {
+                    DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .padding(.top, 10)
+                }
+                
+                if showEndTimePicker {
+                    DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .padding(.top, 10)
+                }
             }
         }
     }
@@ -226,17 +242,12 @@ struct TimeSection: View {
             FormFieldLabel(text: "Start Time")
             
             Button {
+                showEndTimePicker = false
                 showStartTimePicker.toggle()
             } label: {
                 FormFieldValue(text: formatTime(startTime))
             }
             .buttonStyle(.plain)
-            
-            if showStartTimePicker {
-                DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel)
-                    .labelsHidden()
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -246,17 +257,12 @@ struct TimeSection: View {
             FormFieldLabel(text: "End Time")
             
             Button {
+                showStartTimePicker = false
                 showEndTimePicker.toggle()
             } label: {
                 FormFieldValue(text: formatTime(endTime))
             }
             .buttonStyle(.plain)
-            
-            if showEndTimePicker {
-                DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel)
-                    .labelsHidden()
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
