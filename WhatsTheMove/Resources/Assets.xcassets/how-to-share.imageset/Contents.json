@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "how-to-share.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

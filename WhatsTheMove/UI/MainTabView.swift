@@ -15,6 +15,7 @@ struct MainTabView: View {
     @State private var showAddEventOptions: Bool = false
     @State private var showAddEvent: Bool = false
     @State private var shouldRefetchEvents: Bool = false
+    @State private var showHowToShareSheet: Bool = false
     
     enum Tab {
         case home
@@ -41,7 +42,7 @@ struct MainTabView: View {
                 onShareFromAppTapped: {
                     showAddEventOptions = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showUnderDevelopmentAlert = true
+                        showHowToShareSheet = true
                     }
                 }
             )
@@ -57,6 +58,11 @@ struct MainTabView: View {
             AddEventView()
                 .inject(injected)
         }
+        .sheet(isPresented: $showHowToShareSheet) {
+            HowToShareEventsSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
 
@@ -70,7 +76,7 @@ private extension MainTabView {
         case .home:
             HomeView(triggerRefetch: $shouldRefetchEvents)
         case .saved:
-            SavedEmptyView()
+            SavedEventsView(triggerRefetch: $shouldRefetchEvents)
         case .profile:
             ProfileView()
         }
@@ -142,7 +148,7 @@ private extension MainTabView {
     
     var addButton: some View {
         Button {
-            showAddEvent = true
+            showAddEventOptions = true
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 18, weight: .medium))
@@ -154,16 +160,6 @@ private extension MainTabView {
         .buttonStyle(.plain)
     }
 }
-
-// MARK: - Empty Tab Views
-
-private struct SavedEmptyView: View {
-    var body: some View {
-        Color(hex: "F8F7F1")
-            .ignoresSafeArea()
-    }
-}
-
 
 // MARK: - Previews
 
