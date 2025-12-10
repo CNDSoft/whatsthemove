@@ -11,6 +11,7 @@ import SwiftUI
 struct HowToShareEventsSheet: View {
     
     @Environment(\.dismiss) private var dismiss
+    @State private var showShareSheet = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -36,6 +37,9 @@ struct HowToShareEventsSheet: View {
         .background(Color(hex: "F8F7F1"))
         .presentationBackground(Color(hex: "F8F7F1"))
         .preferredColorScheme(.light)
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: ["https://www.example.com"])
+        }
     }
 }
 
@@ -201,7 +205,7 @@ private extension HowToShareEventsSheet {
     
     var bottomButton: some View {
         Button {
-            dismiss()
+            showShareSheet = true
         } label: {
             Text("Open the Share Menu")
                 .font(.rubik(.regular, size: 14))
@@ -216,6 +220,20 @@ private extension HowToShareEventsSheet {
     }
 }
 
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+    }
+}
+
 // MARK: - Previews
 
 #Preview {
@@ -223,3 +241,4 @@ private extension HowToShareEventsSheet {
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
 }
+

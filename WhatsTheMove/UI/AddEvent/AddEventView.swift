@@ -14,24 +14,27 @@ import UIKit
 
 struct AddEventView: View {
     
+    let mode: EventFormMode
+    
     @Environment(\.injected) private var injected: DIContainer
     @Environment(\.dismiss) private var dismiss
     
-    @State private var eventName: String = ""
+    @State private var eventName: String
     @State private var selectedImage: UIImage?
     @State private var selectedImageItem: PhotosPickerItem?
-    @State private var eventDate: Date = Date()
-    @State private var startTime: Date = Self.defaultStartTime
-    @State private var endTime: Date = Self.defaultEndTime
-    @State private var urlLink: String = ""
-    @State private var admission: AdmissionType = .free
-    @State private var admissionAmount: String = ""
-    @State private var requiresRegistration: Bool = false
-    @State private var registrationDeadline: Date = Date()
-    @State private var location: String = ""
+    @State private var existingImageUrl: String?
+    @State private var eventDate: Date
+    @State private var startTime: Date
+    @State private var endTime: Date
+    @State private var urlLink: String
+    @State private var admission: AdmissionType
+    @State private var admissionAmount: String
+    @State private var requiresRegistration: Bool
+    @State private var registrationDeadline: Date
+    @State private var location: String
     @State private var selectedCategory: EventCategory?
-    @State private var notes: String = ""
-    @State private var status: EventStatus = .interested
+    @State private var notes: String
+    @State private var status: EventStatus
     
     @State private var showCategoryPicker: Bool = false
     @State private var showDatePicker: Bool = false
@@ -55,6 +58,43 @@ struct AddEventView: View {
     
     private static var defaultEndTime: Date {
         return Calendar.current.date(byAdding: .hour, value: 1, to: defaultStartTime) ?? defaultStartTime
+    }
+    
+    init(mode: EventFormMode = .add) {
+        self.mode = mode
+        
+        switch mode {
+        case .add:
+            _eventName = State(initialValue: "")
+            _eventDate = State(initialValue: Date())
+            _startTime = State(initialValue: Self.defaultStartTime)
+            _endTime = State(initialValue: Self.defaultEndTime)
+            _urlLink = State(initialValue: "")
+            _admission = State(initialValue: .free)
+            _admissionAmount = State(initialValue: "")
+            _requiresRegistration = State(initialValue: false)
+            _registrationDeadline = State(initialValue: Date())
+            _location = State(initialValue: "")
+            _selectedCategory = State(initialValue: nil)
+            _notes = State(initialValue: "")
+            _status = State(initialValue: .interested)
+            
+        case .edit(let event):
+            _eventName = State(initialValue: event.name)
+            _eventDate = State(initialValue: event.eventDate)
+            _startTime = State(initialValue: event.startTime)
+            _endTime = State(initialValue: event.endTime)
+            _urlLink = State(initialValue: event.urlLink ?? "")
+            _admission = State(initialValue: event.admission)
+            _admissionAmount = State(initialValue: event.admissionAmount != nil ? String(Int(event.admissionAmount!)) : "")
+            _requiresRegistration = State(initialValue: event.requiresRegistration)
+            _registrationDeadline = State(initialValue: event.registrationDeadline ?? Date())
+            _location = State(initialValue: event.location ?? "")
+            _selectedCategory = State(initialValue: event.category)
+            _notes = State(initialValue: event.notes ?? "")
+            _status = State(initialValue: event.status)
+            _existingImageUrl = State(initialValue: event.imageUrl)
+        }
     }
     
     var body: some View {
@@ -102,7 +142,7 @@ private extension AddEventView {
     var headerView: some View {
         VStack(spacing: 10) {
             HStack {
-                Text("SAVE A NEW EVENT")
+                Text(headerTitle)
                     .font(.rubik(.extraBold, size: 20))
                     .foregroundColor(Color(hex: "11104B"))
                     .textCase(.uppercase)
@@ -115,6 +155,15 @@ private extension AddEventView {
         .padding(.horizontal, 20)
         .padding(.vertical, 15)
         .background(Color(hex: "EFEEE7"))
+    }
+    
+    var headerTitle: String {
+        switch mode {
+        case .add:
+            return "SAVE A NEW EVENT"
+        case .edit:
+            return "EDIT EVENT"
+        }
     }
     
     var closeButton: some View {
@@ -145,10 +194,12 @@ private extension AddEventView {
                 EventNameSection(eventName: $eventName)
                 EventImageSection(
                     selectedImage: $selectedImage,
+                    existingImageUrl: existingImageUrl,
                     onUploadTapped: { showImageSourceSheet = true },
                     onDeleteTapped: {
                         selectedImage = nil
                         selectedImageItem = nil
+                        existingImageUrl = nil
                     }
                 )
                 DateSection(eventDate: $eventDate, showDatePicker: $showDatePicker)
@@ -221,7 +272,7 @@ private extension AddEventView {
         Button {
             saveEvent()
         } label: {
-            Text("Save Event")
+            Text(saveButtonText)
                 .font(.rubik(.regular, size: 14))
                 .foregroundColor(Color(hex: "F8F7F1"))
                 .frame(maxWidth: .infinity)
@@ -233,6 +284,15 @@ private extension AddEventView {
         .disabled(isSaving)
         .padding(.horizontal, 20)
         .padding(.vertical, 15)
+    }
+    
+    var saveButtonText: String {
+        switch mode {
+        case .add:
+            return "Save Event"
+        case .edit:
+            return "Update Event"
+        }
     }
     
     var savingOverlay: some View {
@@ -268,6 +328,7 @@ private extension AddEventView {
                let image = UIImage(data: data) {
                 await MainActor.run {
                     selectedImage = image
+                    existingImageUrl = nil
                 }
             }
         }
@@ -280,7 +341,14 @@ private extension AddEventView {
             return
         }
         
-        let event = createEvent(userId: userId)
+        let event: Event
+        switch mode {
+        case .add:
+            event = createEvent(userId: userId)
+        case .edit(let existingEvent):
+            event = createEvent(userId: userId, existingEventId: existingEvent.id, existingImageUrl: existingEvent.imageUrl)
+        }
+        
         let validationErrors = injected.interactors.events.validateEvent(event)
         
         guard validationErrors.isEmpty else {
@@ -293,7 +361,13 @@ private extension AddEventView {
         
         Task {
             do {
-                try await injected.interactors.events.saveEvent(event, image: selectedImage)
+                switch mode {
+                case .add:
+                    try await injected.interactors.events.saveEvent(event, image: selectedImage)
+                case .edit:
+                    try await injected.interactors.events.updateEvent(event, newImage: selectedImage)
+                }
+                
                 await MainActor.run {
                     isSaving = false
                     dismiss()
@@ -308,12 +382,14 @@ private extension AddEventView {
         }
     }
     
-    func createEvent(userId: String) -> Event {
+    func createEvent(userId: String, existingEventId: String? = nil, existingImageUrl: String? = nil) -> Event {
         let amount = Double(admissionAmount)
         
         return Event(
+            id: existingEventId ?? UUID().uuidString,
             userId: userId,
             name: eventName,
+            imageUrl: existingImageUrl,
             eventDate: eventDate,
             startTime: startTime,
             endTime: endTime,

@@ -12,10 +12,15 @@ import Combine
 struct EventCardView: View {
     
     let event: Event
+    var showActions: Bool = false
+    var onEdit: ((Event) -> Void)? = nil
+    var onDelete: ((Event) -> Void)? = nil
+    
     @State private var showRegistrationDeadline: Bool = false
     @State private var showNoteOverlay: Bool = false
     @State private var isStarred: Bool = false
     @State private var showMoreAlert: Bool = false
+    @State private var showActionsSheet: Bool = false
     @State private var showCalendarAlert: Bool = false
     @State private var showDismissWarningAlert: Bool = false
     @Environment(\.injected) private var injected: DIContainer
@@ -37,6 +42,21 @@ struct EventCardView: View {
         }
         .onAppear {
             isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
+        }
+        .sheet(isPresented: $showActionsSheet) {
+            EventActionsSheet(
+                onEditTapped: {
+                    showActionsSheet = false
+                    onEdit?(event)
+                },
+                onDeleteTapped: {
+                    showActionsSheet = false
+                    onDelete?(event)
+                }
+            )
+            .presentationDetents([.height(113)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.white)
         }
         .underDevelopmentAlert(isPresented: $showMoreAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
@@ -271,7 +291,11 @@ private extension EventCardView {
     
     var moreButton: some View {
         Button {
-            showMoreAlert = true
+            if showActions {
+                showActionsSheet = true
+            } else {
+                showMoreAlert = true
+            }
         } label: {
             VStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { _ in
@@ -280,7 +304,8 @@ private extension EventCardView {
                         .frame(width: 2.3, height: 2.3)
                 }
             }
-            .padding(.top, 8)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

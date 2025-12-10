@@ -35,6 +35,7 @@ struct EventNameSection: View {
 struct EventImageSection: View {
     
     @Binding var selectedImage: UIImage?
+    var existingImageUrl: String?
     let onUploadTapped: () -> Void
     let onDeleteTapped: () -> Void
     
@@ -45,6 +46,8 @@ struct EventImageSection: View {
                 
                 if let image = selectedImage {
                     selectedImagePreview(image: image)
+                } else if let urlString = existingImageUrl, let url = URL(string: urlString) {
+                    existingImagePreview(url: url)
                 } else {
                     imageUploadArea
                 }
@@ -81,6 +84,49 @@ struct EventImageSection: View {
             )
         }
         .buttonStyle(.plain)
+    }
+    
+    private func existingImagePreview(url: URL) -> some View {
+        HStack(spacing: 12) {
+            CachedAsyncImage(url: url) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(hex: "F8F7F1"))
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        ProgressView()
+                    )
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Event Image")
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "11104B"))
+                
+                Text("From saved event")
+                    .font(.rubik(.regular, size: 12))
+                    .foregroundColor(Color(hex: "55564F"))
+            }
+            
+            Spacer()
+            
+            Button {
+                onDeleteTapped()
+            } label: {
+                Image(systemName: "trash")
+                    .font(.system(size: 16))
+                    .foregroundColor(Color(hex: "F25454"))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
     
     private func selectedImagePreview(image: UIImage) -> some View {
