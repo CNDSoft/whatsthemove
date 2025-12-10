@@ -203,24 +203,31 @@ extension EventInteractor {
         let calendar = Calendar.current
         let now = Date()
         
+        let futureEvents = events.filter { $0.eventDate >= now }
+        
         switch filter {
         case .tonight:
-            return events.filter { calendar.isDateInToday($0.eventDate) }
+            return futureEvents
+                .filter { calendar.isDateInToday($0.eventDate) }
+                .sorted { $0.eventDate < $1.eventDate }
             
         case .thisWeekend:
             let weekday = calendar.component(.weekday, from: now)
-            let daysUntilSaturday = (7 - weekday) % 7
-            let daysUntilSunday = daysUntilSaturday + 1
+            let daysUntilFriday = (6 - weekday + 7) % 7
+            let daysUntilSunday = (1 - weekday + 7) % 7
             
-            guard let saturday = calendar.date(byAdding: .day, value: daysUntilSaturday == 0 ? 0 : daysUntilSaturday, to: now),
-                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday == 1 ? 1 : daysUntilSunday, to: now) else {
+            guard let friday = calendar.date(byAdding: .day, value: daysUntilFriday, to: now),
+                  let sunday = calendar.date(byAdding: .day, value: daysUntilSunday, to: now),
+                  let fridayStart = calendar.startOfDay(for: friday) as Date?,
+                  let sundayEnd = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: sunday) else {
                 return []
             }
             
-            return events.filter { event in
-                calendar.isDate(event.eventDate, inSameDayAs: saturday) ||
-                calendar.isDate(event.eventDate, inSameDayAs: sunday)
-            }
+            return futureEvents
+                .filter { event in
+                    event.eventDate >= fridayStart && event.eventDate <= sundayEnd
+                }
+                .sorted { $0.eventDate < $1.eventDate }
             
         case .nextWeek:
             guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
@@ -229,13 +236,25 @@ extension EventInteractor {
                 return []
             }
             
-            return events.filter { $0.eventDate >= startOfNextWeek && $0.eventDate <= endOfNextWeek }
+            return futureEvents
+                .filter { $0.eventDate >= startOfNextWeek && $0.eventDate <= endOfNextWeek }
+                .sorted { $0.eventDate < $1.eventDate }
             
         case .thisMonth:
-            return events.filter { calendar.isDate($0.eventDate, equalTo: now, toGranularity: .month) }
+            return futureEvents
+                .filter { calendar.isDate($0.eventDate, equalTo: now, toGranularity: .month) }
+                .sorted { $0.eventDate < $1.eventDate }
             
         case .recentlySaved:
-            return events.sorted { $0.createdAt > $1.createdAt }
+            guard let fiveDaysAgo = calendar.date(byAdding: .day, value: -5, to: now) else {
+                return []
+            }
+            
+            return futureEvents
+                .filter { $0.createdAt >= fiveDaysAgo }
+                .sorted { $0.createdAt > $1.createdAt }
+                .prefix(5)
+                .map { $0 }
         }
     }
     

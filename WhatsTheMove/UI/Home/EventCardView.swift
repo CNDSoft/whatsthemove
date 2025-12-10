@@ -265,14 +265,19 @@ private extension EventCardView {
                 Text(formattedDate)
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
+                    .lineLimit(1)
+                    .fixedSize()
                 
                 Circle()
                     .fill(Color(hex: "55564F"))
                     .frame(width: 3, height: 3)
+                    .fixedSize()
                 
                 Text(formattedTime)
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
         }
     }
@@ -331,7 +336,9 @@ private extension EventCardView {
     var formattedTime: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mma"
-        return formatter.string(from: event.startTime).lowercased()
+        let startTimeString = formatter.string(from: event.startTime).lowercased()
+        let endTimeString = formatter.string(from: event.endTime).lowercased()
+        return "\(startTimeString) - \(endTimeString)"
     }
 }
 
