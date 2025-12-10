@@ -93,7 +93,7 @@ private extension MainTabView {
             addButton
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 30)
+        .padding(.bottom, 15)
     }
     
     var tabBarPill: some View {
