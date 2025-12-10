@@ -252,18 +252,6 @@ private extension SavedEventsView {
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                 }
-                
-                if !searchQuery.isEmpty {
-                    Button {
-                        searchQuery = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(hex: "F8F7F1").opacity(0.5))
-                    }
-                    .buttonStyle(.plain)
-                    .transition(.scale.combined(with: .opacity))
-                }
             }
             .padding(.leading, 15)
             .padding(.trailing, 6)
