@@ -61,10 +61,11 @@ struct SavedEventsView: View {
                 selectedCategory: $selectedCategory,
                 onDismiss: {
                     showCategorySheet = false
-                }
+                },
+                availableCategories: availableCategories
             )
-            .presentationDetents([.height(390)])
-            .presentationDragIndicator(.hidden)
+            .presentationDetents([.height(calculateSheetHeight())])
+            .presentationDragIndicator(.visible)
             .presentationBackground(.white)
         }
         .sheet(item: $eventToEdit, onDismiss: {
@@ -513,6 +514,19 @@ private extension SavedEventsView {
                 print("SavedEventsView - Failed to delete event: \(error.localizedDescription)")
             }
         }
+    }
+    
+    func calculateSheetHeight() -> CGFloat {
+        let categoryCount = availableCategories.count
+        let topPadding: CGFloat = 10 + 19
+        let dragIndicatorHeight: CGFloat = 5
+        let categoryRowHeight: CGFloat = 40
+        let categorySpacing: CGFloat = 19
+        let bottomPadding: CGFloat = 20
+        
+        let totalHeight = topPadding + dragIndicatorHeight + (CGFloat(categoryCount) * categoryRowHeight) + (CGFloat(max(0, categoryCount - 1)) * categorySpacing) + bottomPadding
+        
+        return min(totalHeight, 500)
     }
 }
 

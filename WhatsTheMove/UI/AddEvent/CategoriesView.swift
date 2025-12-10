@@ -12,12 +12,11 @@ struct CategoriesView: View {
     
     @Binding var selectedCategory: EventCategory?
     var onDismiss: (() -> Void)?
+    var availableCategories: [EventCategory]?
     
     var body: some View {
-        VStack(spacing: 0) {
-            dragIndicator
-            categoryList
-        }
+
+        categoryList
         .padding(.top, 10)
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
@@ -42,8 +41,10 @@ private extension CategoriesView {
     }
     
     var categoryList: some View {
-        VStack(spacing: 19) {
-            ForEach(EventCategory.allCases, id: \.self) { category in
+        let categoriesToShow = availableCategories ?? Array(EventCategory.allCases)
+        
+        return VStack(spacing: 19) {
+            ForEach(categoriesToShow, id: \.self) { category in
                 categoryRow(category)
             }
         }
