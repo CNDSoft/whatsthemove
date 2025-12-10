@@ -12,9 +12,12 @@ import Combine
 struct EventDetailView: View {
     
     let event: Event
+    var onEdit: ((Event) -> Void)? = nil
+    var onDelete: ((Event) -> Void)? = nil
+    
     @State private var isStarred: Bool = false
-    @State private var showMoreAlert: Bool = false
     @State private var showAddToCalendarAlert: Bool = false
+    @State private var showActionsSheet: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.injected) private var injected: DIContainer
     
@@ -43,7 +46,21 @@ struct EventDetailView: View {
         .onAppear {
             isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
         }
-        .underDevelopmentAlert(isPresented: $showMoreAlert)
+        .sheet(isPresented: $showActionsSheet) {
+            EventActionsSheet(
+                onEditTapped: {
+                    showActionsSheet = false
+                    onEdit?(event)
+                },
+                onDeleteTapped: {
+                    showActionsSheet = false
+                    onDelete?(event)
+                }
+            )
+            .presentationDetents([.height(113)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.white)
+        }
         .underDevelopmentAlert(isPresented: $showAddToCalendarAlert)
     }
     
@@ -60,11 +77,21 @@ private extension EventDetailView {
         HStack {
             backButton
             Spacer()
-            moreButton
+            /*
+            if isCurrentUserEventOwner {
+                moreButton
+            }*/
         }
         .padding(.horizontal, 20)
         .padding(.top, safeAreaTop + 10)
         .frame(maxWidth: .infinity, alignment: .top)
+    }
+    
+    var isCurrentUserEventOwner: Bool {
+        guard let currentUserId = injected.appState[\.userData.userId] else {
+            return false
+        }
+        return currentUserId == event.userId
     }
     
     var backButton: some View {
@@ -83,7 +110,7 @@ private extension EventDetailView {
     
     var moreButton: some View {
         Button {
-            showMoreAlert = true
+            showActionsSheet = true
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 16, weight: .semibold))
