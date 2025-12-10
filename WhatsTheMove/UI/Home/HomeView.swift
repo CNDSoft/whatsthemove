@@ -54,7 +54,11 @@ struct HomeView: View {
     }
     
     private var filteredEvents: [Event] {
-        injected.interactors.events.filterEvents(events, by: selectedFilter)
+        let filtered = injected.interactors.events.filterEvents(events, by: selectedFilter)
+        guard let currentUserId = injected.appState[\.userData.userId] else {
+            return filtered
+        }
+        return filtered.filter { $0.userId != currentUserId }
     }
 }
 
@@ -131,7 +135,7 @@ private extension HomeView {
                 .textCase(.uppercase)
                 .padding(.leading, 20)
             
-            FilterPillsView(
+            EventFilterPillsView(
                 selectedFilter: $selectedFilter,
                 events: events
             )

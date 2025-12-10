@@ -253,3 +253,54 @@ extension EventInteractor {
     }
 }
 
+// MARK: - Saved Events Filtering
+
+extension EventInteractor {
+    
+    func filterUserEvents(
+        _ events: [Event],
+        by filter: SavedFilterType,
+        userId: String,
+        starredIds: Set<String>
+    ) -> [Event] {
+        let userEvents = events.filter { $0.userId == userId }
+        
+        switch filter {
+        case .allEvents:
+            return userEvents.sorted { $0.eventDate < $1.eventDate }
+        case .favorites:
+            return userEvents.filter { starredIds.contains($0.id) }
+                .sorted { $0.eventDate < $1.eventDate }
+        case .pastEvents:
+            let now = Date()
+            return userEvents.filter { $0.eventDate < now }
+                .sorted { $0.eventDate > $1.eventDate }
+        }
+    }
+    
+    func searchEvents(_ events: [Event], query: String) -> [Event] {
+        guard !query.isEmpty else { return events }
+        
+        let lowercasedQuery = query.lowercased()
+        return events.filter { event in
+            event.name.lowercased().contains(lowercasedQuery) ||
+            event.notes?.lowercased().contains(lowercasedQuery) == true ||
+            event.location?.lowercased().contains(lowercasedQuery) == true
+        }
+    }
+    
+    func getAvailableCategories(from events: [Event]) -> [EventCategory] {
+        let categories = Set(events.compactMap { $0.category })
+        return EventCategory.allCases.filter { categories.contains($0) }
+    }
+    
+    func userEventCount(
+        _ events: [Event],
+        for filter: SavedFilterType,
+        userId: String,
+        starredIds: Set<String>
+    ) -> Int {
+        return filterUserEvents(events, by: filter, userId: userId, starredIds: starredIds).count
+    }
+}
+
