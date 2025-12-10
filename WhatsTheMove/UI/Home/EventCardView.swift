@@ -135,7 +135,6 @@ private extension EventCardView {
             Text(event.name.uppercased())
                 .font(.rubik(.bold, size: 18))
                 .foregroundColor(Color(hex: "11104B"))
-                .lineLimit(1)
             
             tagsRow
             dateRow
@@ -144,7 +143,6 @@ private extension EventCardView {
                 locationRow(location)
             }
         }
-        .padding(.top, 4)
         .padding(.bottom, 10)
     }
     
@@ -164,6 +162,7 @@ private extension EventCardView {
                 admissionTag
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     var statusTag: some View {
@@ -304,7 +303,7 @@ private extension EventCardView {
                         .frame(width: 2.3, height: 2.3)
                 }
             }
-            .frame(width: 44, height: 44)
+            .padding(8)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
