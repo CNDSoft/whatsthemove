@@ -40,9 +40,6 @@ struct HomeView: View {
         .task {
             await loadEventsIfNeeded()
         }
-        .refreshable {
-            await refreshEvents()
-        }
         .onChange(of: triggerRefetch) { _, shouldRefetch in
             if shouldRefetch {
                 Task {
@@ -195,6 +192,9 @@ private extension HomeView {
                 }
             }
             .padding(.bottom, 100)
+        }
+        .refreshable {
+            await refreshEvents()
         }
     }
     
