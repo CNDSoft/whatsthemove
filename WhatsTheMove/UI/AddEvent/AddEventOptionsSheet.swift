@@ -36,7 +36,7 @@ private extension AddEventOptionsSheet {
             Spacer()
         }
         .padding(.horizontal, 20)
-        .padding(.top, 12)
+        .padding(.top, 20)
         .padding(.bottom, 4)
     }
 }
