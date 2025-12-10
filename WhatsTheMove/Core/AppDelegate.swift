@@ -62,6 +62,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, ObservableObject 
         Self.systemEventsHandler = systemEventsHandler
     }
 
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        if let urlContext = connectionOptions.urlContexts.first {
+            systemEventsHandler?.sceneOpenURLContexts([urlContext])
+        }
+    }
+
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         systemEventsHandler?.sceneOpenURLContexts(URLContexts)
     }

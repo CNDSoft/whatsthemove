@@ -68,18 +68,28 @@ struct MainTabView: View {
                 .presentationDragIndicator(.visible)
         }
         .onReceive(showAddEventFromShareUpdate) { shouldShow in
+            handleShowAddEventFromShare(shouldShow)
+        }
+        .onAppear {
+            let shouldShow = injected.appState[\.routing.showAddEventFromShare]
             if shouldShow {
-                injected.appState[\.routing.showAddEventFromShare] = false
-                
-                let capturedData = injected.appState[\.routing.sharedEventData]
-                sharedEventData = capturedData
-                showAddEvent = true
+                handleShowAddEventFromShare(shouldShow)
             }
         }
     }
     
     private var showAddEventFromShareUpdate: AnyPublisher<Bool, Never> {
         injected.appState.updates(for: \.routing.showAddEventFromShare)
+    }
+    
+    private func handleShowAddEventFromShare(_ shouldShow: Bool) {
+        guard shouldShow else { return }
+        
+        injected.appState[\.routing.showAddEventFromShare] = false
+        
+        let capturedData = injected.appState[\.routing.sharedEventData]
+        sharedEventData = capturedData
+        showAddEvent = true
     }
 }
 
