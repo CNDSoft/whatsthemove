@@ -60,23 +60,33 @@ struct AddEventView: View {
         return Calendar.current.date(byAdding: .hour, value: 1, to: defaultStartTime) ?? defaultStartTime
     }
     
-    init(mode: EventFormMode = .add) {
+    init(mode: EventFormMode = .add, sharedData: SharedEventData? = nil) {
         self.mode = mode
         
         switch mode {
         case .add:
-            _eventName = State(initialValue: "")
+            let title = sharedData?.title ?? ""
+            let url = sharedData?.urlLink ?? ""
+            let description = sharedData?.description ?? ""
+            
+            let imageFromData: UIImage? = {
+                guard let imageData = sharedData?.imageData else { return nil }
+                return UIImage(data: imageData)
+            }()
+            
+            _eventName = State(initialValue: title)
+            _selectedImage = State(initialValue: imageFromData)
             _eventDate = State(initialValue: Date())
             _startTime = State(initialValue: Self.defaultStartTime)
             _endTime = State(initialValue: Self.defaultEndTime)
-            _urlLink = State(initialValue: "")
+            _urlLink = State(initialValue: url)
             _admission = State(initialValue: .free)
             _admissionAmount = State(initialValue: "")
             _requiresRegistration = State(initialValue: false)
             _registrationDeadline = State(initialValue: Date())
             _location = State(initialValue: "")
             _selectedCategory = State(initialValue: nil)
-            _notes = State(initialValue: "")
+            _notes = State(initialValue: description)
             _status = State(initialValue: .interested)
             
         case .edit(let event):
@@ -131,7 +141,32 @@ struct AddEventView: View {
         } message: {
             Text(errorMessage ?? "An error occurred")
         }
+        .onAppear {
+            loadSharedData()
+        }
         .preferredColorScheme(.light)
+    }
+    
+    private func loadSharedData() {
+        guard case .add = mode else { return }
+        guard let data = injected.appState[\.routing.sharedEventData] else { return }
+        
+        if let title = data.title, !title.isEmpty {
+            eventName = title
+        }
+        
+        if let url = data.urlLink, !url.isEmpty {
+            urlLink = url
+        }
+        
+        if let desc = data.description, !desc.isEmpty {
+            notes = desc
+        }
+        
+        if let imageData = data.imageData, let image = UIImage(data: imageData) {
+            selectedImage = image
+            existingImageUrl = nil
+        }
     }
 }
 

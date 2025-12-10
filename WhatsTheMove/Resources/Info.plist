@@ -30,6 +30,19 @@
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>WhatsTheMove needs camera access to take photos for your events and profile.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.whatsthemove.urlscheme</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wtm</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
 

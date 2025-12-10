@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4819F10E2CDF5819003CA0AE /* EnvironmentOverrides in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F10D2CDF5819003CA0AE /* EnvironmentOverrides */; };
 		4819F1172CDF6DD4003CA0AE /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F1162CDF6DD4003CA0AE /* ViewInspector */; };
+		4E83771D2EE9AF6900FE7AC1 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4EC1692E2ED866A000DBBFD4 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4EC1692D2ED866A000DBBFD4 /* FirebaseAuth */; };
 		4EC169302ED866A000DBBFD4 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4EC1692F2ED866A000DBBFD4 /* FirebaseCore */; };
 		4EC169322ED866A000DBBFD4 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 4EC169312ED866A000DBBFD4 /* FirebaseFirestore */; };
@@ -23,14 +24,51 @@
 			remoteGlobalIDString = 488734162CDCA2DB00B400A3;
 			remoteInfo = WhatsTheMove;
 		};
+		4E83771B2EE9AF6900FE7AC1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4887340F2CDCA2DB00B400A3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4E8377122EE9AF6900FE7AC1;
+			remoteInfo = ShareExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4E83771E2EE9AF6900FE7AC1 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				4E83771D2EE9AF6900FE7AC1 /* ShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		488734172CDCA2DB00B400A3 /* WhatsTheMove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhatsTheMove.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		488734292CDCA2DD00B400A3 /* UnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4E8377222EE9AF6900FE7AC1 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4E8377122EE9AF6900FE7AC1 /* ShareExtension */;
+		};
+		4E8377242EE9B10C00FE7AC1 /* Exceptions for "WhatsTheMove" folder in "ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Utilities/MetadataExtractor.swift,
+				Utilities/SharedEventData.swift,
+			);
+			target = 4E8377122EE9AF6900FE7AC1 /* ShareExtension */;
+		};
 		4EC166842ED840B100DBBFD4 /* Exceptions for "WhatsTheMove" folder in "WhatsTheMove" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -45,6 +83,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				4EC166842ED840B100DBBFD4 /* Exceptions for "WhatsTheMove" folder in "WhatsTheMove" target */,
+				4E8377242EE9B10C00FE7AC1 /* Exceptions for "WhatsTheMove" folder in "ShareExtension" target */,
 			);
 			path = WhatsTheMove;
 			sourceTree = "<group>";
@@ -52,6 +91,14 @@
 		4887342C2CDCA2DD00B400A3 /* UnitTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = UnitTests;
+			sourceTree = "<group>";
+		};
+		4E8377142EE9AF6900FE7AC1 /* ShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4E8377222EE9AF6900FE7AC1 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */,
+			);
+			path = ShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -77,6 +124,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4E8377102EE9AF6900FE7AC1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -85,6 +139,7 @@
 			children = (
 				488734192CDCA2DB00B400A3 /* WhatsTheMove */,
 				4887342C2CDCA2DD00B400A3 /* UnitTests */,
+				4E8377142EE9AF6900FE7AC1 /* ShareExtension */,
 				488734182CDCA2DB00B400A3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +149,7 @@
 			children = (
 				488734172CDCA2DB00B400A3 /* WhatsTheMove.app */,
 				488734292CDCA2DD00B400A3 /* UnitTests.xctest */,
+				4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,10 +164,12 @@
 				488734132CDCA2DB00B400A3 /* Sources */,
 				488734142CDCA2DB00B400A3 /* Frameworks */,
 				488734152CDCA2DB00B400A3 /* Resources */,
+				4E83771E2EE9AF6900FE7AC1 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				4E83771C2EE9AF6900FE7AC1 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				488734192CDCA2DB00B400A3 /* WhatsTheMove */,
@@ -152,6 +210,28 @@
 			productReference = 488734292CDCA2DD00B400A3 /* UnitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		4E8377122EE9AF6900FE7AC1 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4E8377212EE9AF6900FE7AC1 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				4E83770F2EE9AF6900FE7AC1 /* Sources */,
+				4E8377102EE9AF6900FE7AC1 /* Frameworks */,
+				4E8377112EE9AF6900FE7AC1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				4E8377142EE9AF6900FE7AC1 /* ShareExtension */,
+			);
+			name = ShareExtension;
+			packageProductDependencies = (
+			);
+			productName = ShareExtension;
+			productReference = 4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -159,7 +239,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1610;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 1610;
 				ORGANIZATIONNAME = "Alexey Naumov";
 				TargetAttributes = {
@@ -169,6 +249,9 @@
 					488734282CDCA2DD00B400A3 = {
 						CreatedOnToolsVersion = 16.1;
 						TestTargetID = 488734162CDCA2DB00B400A3;
+					};
+					4E8377122EE9AF6900FE7AC1 = {
+						CreatedOnToolsVersion = 26.1;
 					};
 				};
 			};
@@ -195,6 +278,7 @@
 			targets = (
 				488734162CDCA2DB00B400A3 /* WhatsTheMove */,
 				488734282CDCA2DD00B400A3 /* UnitTests */,
+				4E8377122EE9AF6900FE7AC1 /* ShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -208,6 +292,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		488734272CDCA2DD00B400A3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E8377112EE9AF6900FE7AC1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -231,6 +322,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4E83770F2EE9AF6900FE7AC1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -238,6 +336,11 @@
 			isa = PBXTargetDependency;
 			target = 488734162CDCA2DB00B400A3 /* WhatsTheMove */;
 			targetProxy = 4887342A2CDCA2DD00B400A3 /* PBXContainerItemProxy */;
+		};
+		4E83771C2EE9AF6900FE7AC1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4E8377122EE9AF6900FE7AC1 /* ShareExtension */;
+			targetProxy = 4E83771B2EE9AF6900FE7AC1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -467,6 +570,64 @@
 			};
 			name = Release;
 		};
+		4E83771F2EE9AF6900FE7AC1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3SP8XS39C8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShareExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Alexey Naumov. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cnd.whatsthemove.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4E8377202EE9AF6900FE7AC1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3SP8XS39C8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShareExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Alexey Naumov. All rights reserved.";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cnd.whatsthemove.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -493,6 +654,15 @@
 			buildConfigurations = (
 				488734412CDCA2DD00B400A3 /* Debug */,
 				488734422CDCA2DD00B400A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4E8377212EE9AF6900FE7AC1 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E83771F2EE9AF6900FE7AC1 /* Debug */,
+				4E8377202EE9AF6900FE7AC1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct MainTabView: View {
     
@@ -16,6 +17,7 @@ struct MainTabView: View {
     @State private var showAddEvent: Bool = false
     @State private var shouldRefetchEvents: Bool = false
     @State private var showHowToShareSheet: Bool = false
+    @State private var sharedEventData: SharedEventData? = nil
     
     enum Tab {
         case home
@@ -51,18 +53,33 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $showAddEvent, onDismiss: {
             shouldRefetchEvents = true
+            sharedEventData = nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 shouldRefetchEvents = false
             }
         }) {
-            AddEventView()
+            AddEventView(sharedData: sharedEventData)
                 .inject(injected)
+                .id(sharedEventData?.imageData?.count ?? 0)
         }
         .sheet(isPresented: $showHowToShareSheet) {
             HowToShareEventsSheet()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .onReceive(showAddEventFromShareUpdate) { shouldShow in
+            if shouldShow {
+                injected.appState[\.routing.showAddEventFromShare] = false
+                
+                let capturedData = injected.appState[\.routing.sharedEventData]
+                sharedEventData = capturedData
+                showAddEvent = true
+            }
+        }
+    }
+    
+    private var showAddEventFromShareUpdate: AnyPublisher<Bool, Never> {
+        injected.appState.updates(for: \.routing.showAddEventFromShare)
     }
 }
 

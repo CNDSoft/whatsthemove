@@ -20,6 +20,8 @@ extension AppState {
     struct ViewRouting: Equatable {
         var countriesList = CountriesList.Routing()
         var countryDetails = CountryDetails.Routing()
+        var showAddEventFromShare: Bool = false
+        var sharedEventData: SharedEventData? = nil
     }
 }
 

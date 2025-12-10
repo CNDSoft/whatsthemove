@@ -11,8 +11,16 @@ import Foundation
 enum DeepLink: Equatable {
     
     case showCountryFlag(alpha3Code: String)
+    case addEventFromShare(SharedEventData)
 
     init?(url: URL) {
+        if url.scheme == "wtm" {
+            if let deepLink = URLSchemeHandler.handleURL(url) {
+                self = deepLink
+                return
+            }
+        }
+        
         guard
             let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
             components.host == "www.example.com",
@@ -51,11 +59,22 @@ struct RealDeepLinksHandler: DeepLinksHandler {
                     $0.routing.countryDetails.detailsSheet = true
                 }
             }
-            /*
-             SwiftUI is unable to perform complex navigation involving
-             simultaneous dismissal or older screens and presenting new ones.
-             A work around is to perform the navigation in two steps:
-             */
+            let defaultRouting = AppState.ViewRouting()
+            if container.appState.value.routing != defaultRouting {
+                self.container.appState[\.routing] = defaultRouting
+                let delay: DispatchTime = .now() + (ProcessInfo.processInfo.isRunningTests ? 0 : 1.5)
+                DispatchQueue.main.asyncAfter(deadline: delay, execute: routeToDestination)
+            } else {
+                routeToDestination()
+            }
+            
+        case let .addEventFromShare(sharedData):
+            let routeToDestination = {
+                self.container.appState.bulkUpdate {
+                    $0.routing.sharedEventData = sharedData
+                    $0.routing.showAddEventFromShare = true
+                }
+            }
             let defaultRouting = AppState.ViewRouting()
             if container.appState.value.routing != defaultRouting {
                 self.container.appState[\.routing] = defaultRouting
