@@ -51,7 +51,7 @@ private extension OnboardingPage2 {
 private extension OnboardingPage2 {
     
     var illustrationSection: some View {
-        Image("onboardin2")
+        Image("onboarding2")
             .resizable()
             .scaledToFit()
             .frame(height: 240)

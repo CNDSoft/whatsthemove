@@ -11,20 +11,19 @@ import SwiftUI
 struct OnboardingPage5: View {
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 30) {
             Spacer()
                 .frame(height: 100)
             
             titleSection
-                .padding(.horizontal, 40)
             
-            eventCardSection
+            illustrationSection
             
-            benefitsSection
-                .padding(.horizontal, 40)
+            descriptionSection
             
             Spacer()
         }
+        .padding(.horizontal, 40)
     }
 }
 
@@ -33,34 +32,37 @@ struct OnboardingPage5: View {
 private extension OnboardingPage5 {
     
     var titleSection: some View {
-        Text("Turn on notifications")
+        Text("Find events when you need them")
             .font(.rubik(.bold, size: 32))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
             .tracking(-0.64)
+            .lineSpacing(2)
     }
 }
 
-// MARK: - Event Card Section
+// MARK: - Illustration Section
 
 private extension OnboardingPage5 {
     
-    var eventCardSection: some View {
-        Image("onboarding5_1")
+    var illustrationSection: some View {
+        Image("onboarding5")
             .resizable()
+            .frame(width: 295, height: 240)
             .scaledToFit()
-            .frame(maxWidth: .infinity)
     }
 }
 
-// MARK: - Benefits Section
+// MARK: - Description Section
 
 private extension OnboardingPage5 {
     
-    var benefitsSection: some View {
-        Image("onboarding5_2")
-            .resizable()
-            .scaledToFit()
+    var descriptionSection: some View {
+        Text("No more scrolling through screenshots. Filter by when you're free and instantly see your options of things to do.")
+            .font(.rubik(.regular, size: 14))
+            .foregroundColor(Color(hex: "11104B"))
+            .multilineTextAlignment(.center)
+            .lineSpacing(3)
     }
 }
 

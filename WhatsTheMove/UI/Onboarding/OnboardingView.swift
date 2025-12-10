@@ -19,7 +19,7 @@ struct OnboardingView: View {
     var onConnectGoogleCalendar: (() -> Void)?
     var onConnectAppleCalendar: (() -> Void)?
     
-    private let totalPages = 7
+    private let totalPages = 8
     
     var body: some View {
         ZStack {
@@ -62,7 +62,10 @@ struct OnboardingView: View {
                 OnboardingPage5()
                     .transition(pageTransition)
             case 5:
-                OnboardingPage6(
+                OnboardingPage6()
+                    .transition(pageTransition)
+            case 6:
+                OnboardingPage7(
                     onConnectGoogle: {
                         onConnectGoogleCalendar?()
                         goToNextPage()
@@ -73,8 +76,8 @@ struct OnboardingView: View {
                     }
                 )
                 .transition(pageTransition)
-            case 6:
-                OnboardingPage7()
+            case 7:
+                OnboardingPage8()
                     .transition(pageTransition)
             default:
                 EmptyView()
@@ -113,7 +116,7 @@ private extension OnboardingView {
 private extension OnboardingView {
     
     var backgroundColor: Color {
-        currentPage == 6 ? Color(hex: "11104B") : Color(hex: "F8F7F1")
+        currentPage == 7 ? Color(hex: "11104B") : Color(hex: "F8F7F1")
     }
 }
 
@@ -218,8 +221,10 @@ private extension OnboardingView {
         case 2:
             return "Allow Camera Access"
         case 3:
-            return "Love it"
+            return "Open the Share Menu"
         case 4:
+            return "Love it"
+        case 5:
             return "Enable notifications"
         default:
             return "Next"
@@ -227,12 +232,12 @@ private extension OnboardingView {
     }
     
     var shouldShowPrimaryButton: Bool {
-        currentPage != 5
+        currentPage != 6
     }
     
     var shouldShowSkipButton: Bool {
         switch currentPage {
-        case 1, 2, 4, 5:
+        case 1, 2, 3, 5, 6:
             return true
         default:
             return false
@@ -244,7 +249,12 @@ private extension OnboardingView {
         case 2:
             onRequestCameraAccess?()
             goToNextPage()
-        case 4:
+        case 3:
+            if let url = URL(string: "App-prefs:root=General") {
+                UIApplication.shared.open(url)
+            }
+            goToNextPage()
+        case 5:
             onRequestNotifications?()
             goToNextPage()
         default:
