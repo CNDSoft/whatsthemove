@@ -38,7 +38,10 @@ struct SavedEventsView: View {
                     pastEventsBanner
                 }
                 
-                categorySelector
+                if hasEventsWithCategories {
+                    categorySelector
+                }
+                
                 eventListContent
             }
         }
@@ -62,7 +65,8 @@ struct SavedEventsView: View {
                 onDismiss: {
                     showCategorySheet = false
                 },
-                availableCategories: availableCategories
+                availableCategories: availableCategories,
+                showAllCategoriesOption: true
             )
             .presentationDetents([.height(calculateSheetHeight())])
             .presentationDragIndicator(.visible)
@@ -118,6 +122,31 @@ struct SavedEventsView: View {
         }
         
         return filtered
+    }
+    
+    private var eventsInCurrentFilter: [Event] {
+        guard let currentUserId = injected.appState[\.userData.userId] else {
+            return []
+        }
+        
+        let starredIds = injected.appState[\.userData.starredEventIds]
+        
+        var filtered = injected.interactors.events.filterUserEvents(
+            events,
+            by: selectedFilter,
+            userId: currentUserId,
+            starredIds: starredIds
+        )
+        
+        if !searchQuery.isEmpty {
+            filtered = injected.interactors.events.searchEvents(filtered, query: searchQuery)
+        }
+        
+        return filtered
+    }
+    
+    private var hasEventsWithCategories: Bool {
+        return eventsInCurrentFilter.contains { $0.category != nil }
     }
     
     private var availableCategories: [EventCategory] {
@@ -517,7 +546,7 @@ private extension SavedEventsView {
     }
     
     func calculateSheetHeight() -> CGFloat {
-        let categoryCount = availableCategories.count
+        let categoryCount = availableCategories.count + 1
         let topPadding: CGFloat = 10 + 19
         let dragIndicatorHeight: CGFloat = 5
         let categoryRowHeight: CGFloat = 40

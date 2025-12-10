@@ -13,6 +13,7 @@ struct CategoriesView: View {
     @Binding var selectedCategory: EventCategory?
     var onDismiss: (() -> Void)?
     var availableCategories: [EventCategory]?
+    var showAllCategoriesOption: Bool = false
     
     var body: some View {
 
@@ -44,10 +45,38 @@ private extension CategoriesView {
         let categoriesToShow = availableCategories ?? Array(EventCategory.allCases)
         
         return VStack(spacing: 19) {
+            if showAllCategoriesOption {
+                allCategoriesRow
+            }
+            
             ForEach(categoriesToShow, id: \.self) { category in
                 categoryRow(category)
             }
         }
+    }
+    
+    var allCategoriesRow: some View {
+        Button {
+            selectedCategory = nil
+            onDismiss?()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "square.grid.2x2")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 20, height: 20)
+                    .foregroundColor(Color(hex: "11104B"))
+                
+                Text("All Categories")
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "11104B"))
+                
+                Spacer()
+                
+                radioIndicator(isSelected: selectedCategory == nil)
+            }
+        }
+        .buttonStyle(.plain)
     }
     
     func categoryRow(_ category: EventCategory) -> some View {
