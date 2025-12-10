@@ -80,3 +80,4 @@ extension LocationSearchService: MKLocalSearchCompleterDelegate {
         }
     }
 }
+

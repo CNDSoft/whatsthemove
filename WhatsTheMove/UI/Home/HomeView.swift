@@ -53,12 +53,15 @@ struct HomeView: View {
         .underDevelopmentAlert(isPresented: $showNotificationAlert)
     }
     
-    private var filteredEvents: [Event] {
-        let filtered = injected.interactors.events.filterEvents(events, by: selectedFilter)
+    private var eventsExcludingCurrentUser: [Event] {
         guard let currentUserId = injected.appState[\.userData.userId] else {
-            return filtered
+            return events
         }
-        return filtered.filter { $0.userId != currentUserId }
+        return events.filter { $0.userId != currentUserId }
+    }
+    
+    private var filteredEvents: [Event] {
+        return injected.interactors.events.filterEvents(eventsExcludingCurrentUser, by: selectedFilter)
     }
 }
 
@@ -137,7 +140,7 @@ private extension HomeView {
             
             EventFilterPillsView(
                 selectedFilter: $selectedFilter,
-                events: events
+                events: eventsExcludingCurrentUser
             )
             .padding(.bottom, 20)
         }
@@ -261,7 +264,7 @@ private extension HomeView {
             events = cachedEvents
             hasLoadedEvents = true
             canLoadMore = cachedEvents.count >= 20
-            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: eventsExcludingCurrentUser)
             return
         }
         
@@ -274,7 +277,7 @@ private extension HomeView {
             isLoading = false
             hasLoadedEvents = true
             canLoadMore = fetchedEvents.count >= 20
-            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: eventsExcludingCurrentUser)
             print("HomeView - Loaded \(fetchedEvents.count) events")
         } catch {
             errorMessage = error.localizedDescription
@@ -290,7 +293,7 @@ private extension HomeView {
             let fetchedEvents = try await injected.interactors.events.getAllEvents(forceReload: true)
             events = fetchedEvents
             canLoadMore = fetchedEvents.count >= 20
-            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: eventsExcludingCurrentUser)
             print("HomeView - Refreshed \(fetchedEvents.count) events")
         } catch {
             errorMessage = error.localizedDescription

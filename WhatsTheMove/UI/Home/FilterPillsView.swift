@@ -40,7 +40,8 @@ struct FilterPillsView<FilterType: RawRepresentable & Hashable & CaseIterable>: 
                 }
                 .padding(.leading, 20)
             }
-            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            .scrollDisabled(true)
             .clipped()
             .onChange(of: selectedFilter) { _, newFilter in
                 withAnimation(.easeInOut(duration: 0.3)) {
