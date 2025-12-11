@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     
+    @Environment(\.safeAreaInsets) private var safeAreaInsets
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedFilter: EventFilter = .tonight
     @State private var events: [Event] = []
@@ -101,20 +102,19 @@ private extension HomeView {
                 .frame(width: geometry.size.width, alignment: .leading)
             }
         }
-        .frame(height: 180).edgesIgnoringSafeArea(.top)
+        .frame(height: 225 - safeAreaInsets.top)
+        .edgesIgnoringSafeArea(.top)
     }
     
     func headerBackground(width: CGFloat) -> some View {
         ZStack {
-            Image("header")
+            Image("saved-events-header")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: 250)
+                .frame(width: width, height: 225)
                 .clipped()
-            
-            Color.black.opacity(0.5)
         }
-        .frame(width: width, height: 250)
+        .frame(width: width, height: 225)
     }
     
     var headerTopRow: some View {

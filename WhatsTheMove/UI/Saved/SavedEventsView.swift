@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SavedEventsView: View {
     
+    @Environment(\.safeAreaInsets) private var safeAreaInsets
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedFilter: SavedFilterType = .allEvents
     @State private var selectedCategory: EventCategory? = nil
@@ -172,19 +173,17 @@ private extension SavedEventsView {
                 .frame(width: geometry.size.width, alignment: .leading)
             }
         }
-        .frame(height: 190)
+        .frame(height: 250 - safeAreaInsets.top)
         .edgesIgnoringSafeArea(.top)
     }
     
     func headerBackground(width: CGFloat) -> some View {
         ZStack {
-            Image("header")
+            Image("saved-events-header")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: width, height: 250)
                 .clipped()
-            
-            Color.black.opacity(0.5)
         }
         .frame(width: width, height: 250)
     }
