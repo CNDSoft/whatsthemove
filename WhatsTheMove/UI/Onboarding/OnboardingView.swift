@@ -237,7 +237,7 @@ private extension OnboardingView {
     
     var shouldShowSkipButton: Bool {
         switch currentPage {
-        case 1, 2, 3, 5, 6:
+        case 2, 3, 5, 6:
             return true
         default:
             return false
