@@ -17,6 +17,7 @@ protocol AuthInteractor {
     func checkAuthStatus() async -> Bool
     func resetPassword(email: String) async throws
     func changePassword(currentPassword: String, newPassword: String) async throws
+    func changeEmail(newEmail: String, currentPassword: String) async throws
 }
 
 struct RealAuthInteractor: AuthInteractor {
@@ -152,6 +153,25 @@ struct RealAuthInteractor: AuthInteractor {
         
         print("RealAuthInteractor - Password changed successfully")
     }
+    
+    func changeEmail(newEmail: String, currentPassword: String) async throws {
+        print("RealAuthInteractor - Changing email to: \(newEmail)")
+        
+        guard let user = Auth.auth().currentUser, let currentEmail = user.email else {
+            throw AuthInteractorError.userNotAuthenticated
+        }
+        
+        let credential = EmailAuthProvider.credential(withEmail: currentEmail, password: currentPassword)
+        try await user.reauthenticate(with: credential)
+        
+        try await user.updateEmail(to: newEmail)
+        
+        await MainActor.run {
+            appState[\.userData.email] = newEmail
+        }
+        
+        print("RealAuthInteractor - Email changed successfully")
+    }
 }
 
 struct StubAuthInteractor: AuthInteractor {
@@ -179,6 +199,10 @@ struct StubAuthInteractor: AuthInteractor {
     
     func changePassword(currentPassword: String, newPassword: String) async throws {
         print("StubAuthInteractor - Change password stub")
+    }
+    
+    func changeEmail(newEmail: String, currentPassword: String) async throws {
+        print("StubAuthInteractor - Change email stub")
     }
 }
 

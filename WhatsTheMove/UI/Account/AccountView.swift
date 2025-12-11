@@ -7,12 +7,17 @@
 //
 
 import SwiftUI
+import Combine
 
 struct AccountView: View {
     
     @Environment(\.safeAreaInsets) private var safeAreaInsets
     @Environment(\.injected) private var injected: DIContainer
     @State private var isSigningOut: Bool = false
+    
+    @State private var firstName: String = ""
+    @State private var lastName: String = ""
+    @State private var email: String = ""
     
     @State private var calendarConnected: Bool = false
     @State private var includeSourceLinks: Bool = true
@@ -47,6 +52,16 @@ struct AccountView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            firstName = injected.appState[\.userData.firstName] ?? ""
+            lastName = injected.appState[\.userData.lastName] ?? ""
+            email = injected.appState[\.userData.email] ?? ""
+        }
+        .onReceive(userDataUpdate) { userData in
+            firstName = userData.firstName ?? ""
+            lastName = userData.lastName ?? ""
+            email = userData.email ?? ""
+        }
         .underDevelopmentAlert(isPresented: $showNotificationAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
         .underDevelopmentAlert(isPresented: $showSourceLinksAlert)
@@ -56,6 +71,10 @@ struct AccountView: View {
         .underDevelopmentAlert(isPresented: $showFeedbackAlert)
         .underDevelopmentAlert(isPresented: $showRateAppAlert)
         .underDevelopmentAlert(isPresented: $showPrivacyPolicyAlert)
+    }
+    
+    private var userDataUpdate: AnyPublisher<AppState.UserData, Never> {
+        injected.appState.updates(for: \.userData)
     }
 }
 
@@ -184,17 +203,14 @@ private extension AccountView {
     }
     
     var displayName: String {
-        let firstName = injected.appState[\.userData.firstName] ?? "User"
-        let lastName = injected.appState[\.userData.lastName] ?? "Name"
-        return "\(firstName) \(lastName)"
+        let first = firstName.isEmpty ? "User" : firstName
+        let last = lastName.isEmpty ? "Name" : lastName
+        return "\(first) \(last)"
     }
     
     var userInitials: String {
-        let firstName = injected.appState[\.userData.firstName]
-        let lastName = injected.appState[\.userData.lastName]
-        
-        let firstInitial = firstName?.first?.uppercased() ?? "U"
-        let lastInitial = lastName?.first?.uppercased() ?? ""
+        let firstInitial = firstName.first?.uppercased() ?? "U"
+        let lastInitial = lastName.first?.uppercased() ?? ""
         
         return "\(firstInitial)\(lastInitial)"
     }
@@ -240,7 +256,7 @@ private extension AccountView {
                                 .font(.rubik(.regular, size: 13))
                                 .foregroundColor(Color(hex: "55564F"))
                             
-                            if let email = injected.appState[\.userData.email] {
+                            if !email.isEmpty {
                                 Text(email)
                                     .font(.rubik(.regular, size: 13))
                                     .foregroundColor(Color(hex: "55564F"))
