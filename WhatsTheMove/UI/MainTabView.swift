@@ -92,7 +92,7 @@ private extension MainTabView {
         case .saved:
             SavedEventsView(triggerRefetch: $shouldRefetchEvents)
         case .profile:
-            ProfileView()
+            AccountView()
         }
     }
 }
@@ -160,7 +160,7 @@ private extension MainTabView {
         HStack(spacing: 0) {
             tabItem(tab: .home, icon: "home", label: "Home")
             tabItem(tab: .saved, icon: "bookmark", label: "Saved")
-            tabItem(tab: .profile, icon: "profile", label: "Profile")
+            tabItem(tab: .profile, icon: "profile", label: "Account")
         }
         .padding(3)
         .frame(width: 275, height: 50)
