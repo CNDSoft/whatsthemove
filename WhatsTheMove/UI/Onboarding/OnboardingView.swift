@@ -29,10 +29,8 @@ struct OnboardingView: View {
                 .animation(.easeInOut(duration: 0.4), value: currentPage)
             
             VStack(spacing: 0) {
-                ZStack {
-                    pageContent
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                pageContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 if currentPage < totalPages - 1 {
                     bottomSection

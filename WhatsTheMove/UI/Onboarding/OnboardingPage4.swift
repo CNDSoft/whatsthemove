@@ -29,7 +29,6 @@ private extension OnboardingPage4 {
     var contentSection: some View {
         VStack(spacing: 20) {
             Spacer()
-                .frame(height: 160)
             
             titleSection
             

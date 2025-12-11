@@ -13,7 +13,6 @@ struct OnboardingPage2: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-                .frame(height: 100)
             
             titleSection
             
