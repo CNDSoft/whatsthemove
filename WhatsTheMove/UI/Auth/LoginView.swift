@@ -284,7 +284,7 @@ private extension LoginView {
 
 // MARK: - Login Form Field
 
-private struct LoginFormField: View {
+struct LoginFormField: View {
     
     let label: String
     let placeholder: String

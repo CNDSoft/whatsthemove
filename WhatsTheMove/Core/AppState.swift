@@ -42,6 +42,7 @@ extension AppState {
         var email: String?
         var firstName: String?
         var lastName: String?
+        var phoneNumber: String?
         var events: [Event] = []
         var starredEventIds: Set<String> = []
         var lastSavedEventId: String?

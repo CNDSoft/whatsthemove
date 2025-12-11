@@ -28,7 +28,6 @@ struct AccountView: View {
     
     @State private var showNotificationAlert: Bool = false
     @State private var showCalendarAlert: Bool = false
-    @State private var showEditProfileAlert: Bool = false
     @State private var showSourceLinksAlert: Bool = false
     @State private var showRegistrationAlert: Bool = false
     @State private var showSystemNotificationsAlert: Bool = false
@@ -50,7 +49,6 @@ struct AccountView: View {
         .navigationBarHidden(true)
         .underDevelopmentAlert(isPresented: $showNotificationAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
-        .underDevelopmentAlert(isPresented: $showEditProfileAlert)
         .underDevelopmentAlert(isPresented: $showSourceLinksAlert)
         .underDevelopmentAlert(isPresented: $showRegistrationAlert)
         .underDevelopmentAlert(isPresented: $showSystemNotificationsAlert)
@@ -159,8 +157,8 @@ private extension AccountView {
             
             Spacer()
             
-            Button {
-                showEditProfileAlert = true
+            NavigationLink {
+                ProfileView()
             } label: {
                 Text("Edit Profile")
                     .font(.rubik(.regular, size: 14))

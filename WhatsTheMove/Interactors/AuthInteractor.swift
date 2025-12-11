@@ -16,6 +16,7 @@ protocol AuthInteractor {
     func signOut() async throws
     func checkAuthStatus() async -> Bool
     func resetPassword(email: String) async throws
+    func changePassword(currentPassword: String, newPassword: String) async throws
 }
 
 struct RealAuthInteractor: AuthInteractor {
@@ -39,6 +40,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.userId] = firebaseUser.uid
             appState[\.userData.firstName] = user?.firstName
             appState[\.userData.lastName] = user?.lastName
+            appState[\.userData.phoneNumber] = user?.phoneNumber
         }
     }
     
@@ -60,6 +62,7 @@ struct RealAuthInteractor: AuthInteractor {
             firstName: firstName,
             lastName: lastName,
             ageRange: ageRange,
+            phoneNumber: nil,
             starredEventIds: [],
             createdAt: now,
             updatedAt: now
@@ -91,6 +94,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.userId] = nil
             appState[\.userData.firstName] = nil
             appState[\.userData.lastName] = nil
+            appState[\.userData.phoneNumber] = nil
         }
     }
     
@@ -108,6 +112,7 @@ struct RealAuthInteractor: AuthInteractor {
                 appState[\.userData.userId] = currentUser.uid
                 appState[\.userData.firstName] = user?.firstName
                 appState[\.userData.lastName] = user?.lastName
+                appState[\.userData.phoneNumber] = user?.phoneNumber
             }
             return true
         }
@@ -120,6 +125,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.userId] = nil
             appState[\.userData.firstName] = nil
             appState[\.userData.lastName] = nil
+            appState[\.userData.phoneNumber] = nil
         }
         return false
     }
@@ -130,6 +136,21 @@ struct RealAuthInteractor: AuthInteractor {
         try await Auth.auth().sendPasswordReset(withEmail: email)
         
         print("RealAuthInteractor - Password reset email sent")
+    }
+    
+    func changePassword(currentPassword: String, newPassword: String) async throws {
+        print("RealAuthInteractor - Changing password")
+        
+        guard let user = Auth.auth().currentUser, let email = user.email else {
+            throw AuthInteractorError.userNotAuthenticated
+        }
+        
+        let credential = EmailAuthProvider.credential(withEmail: email, password: currentPassword)
+        try await user.reauthenticate(with: credential)
+        
+        try await user.updatePassword(to: newPassword)
+        
+        print("RealAuthInteractor - Password changed successfully")
     }
 }
 
@@ -154,5 +175,23 @@ struct StubAuthInteractor: AuthInteractor {
     
     func resetPassword(email: String) async throws {
         print("StubAuthInteractor - Reset password stub")
+    }
+    
+    func changePassword(currentPassword: String, newPassword: String) async throws {
+        print("StubAuthInteractor - Change password stub")
+    }
+}
+
+enum AuthInteractorError: LocalizedError {
+    case userNotAuthenticated
+    case invalidCurrentPassword
+    
+    var errorDescription: String? {
+        switch self {
+        case .userNotAuthenticated:
+            return "User is not authenticated"
+        case .invalidCurrentPassword:
+            return "Current password is incorrect"
+        }
     }
 }
