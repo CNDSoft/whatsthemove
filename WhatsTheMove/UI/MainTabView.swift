@@ -136,7 +136,7 @@ private extension MainTabView {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .shadow(color: Color.black.opacity(0.15), radius: 7, x: 0, y: 0)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 80)
+                .padding(.bottom, 95)
             }
         }
         .transition(.opacity)
@@ -153,7 +153,7 @@ private extension MainTabView {
             addButton
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 15)
+        .padding(.bottom, 30)
     }
     
     var tabBarPill: some View {
