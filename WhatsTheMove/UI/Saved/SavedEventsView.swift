@@ -150,12 +150,7 @@ struct SavedEventsView: View {
     }
     
     private var availableCategories: [EventCategory] {
-        guard let currentUserId = injected.appState[\.userData.userId] else {
-            return []
-        }
-        
-        let userEvents = events.filter { $0.userId == currentUserId }
-        return injected.interactors.events.getAvailableCategories(from: userEvents)
+        return injected.interactors.events.getAvailableCategories(from: eventsInCurrentFilter)
     }
 }
 

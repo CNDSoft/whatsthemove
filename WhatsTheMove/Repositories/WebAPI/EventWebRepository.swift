@@ -15,8 +15,6 @@ protocol EventWebRepository {
     func createEvent(_ event: Event) async throws
     func getEvent(id: String) async throws -> Event?
     func getEvents(forUserId userId: String) async throws -> [Event]
-    func getAllEvents() async throws -> [Event]
-    func getAllEvents(limit: Int, lastEventDate: Date?) async throws -> [Event]
     func updateEvent(_ event: Event) async throws
     func deleteEvent(id: String) async throws
     func uploadEventImage(_ image: UIImage, userId: String, eventId: String) async throws -> String
@@ -67,43 +65,7 @@ struct RealEventWebRepository: EventWebRepository {
             Event.fromDictionary(document.data(), id: document.documentID)
         }.sorted { $0.eventDate < $1.eventDate }
         
-        print("RealEventWebRepository - Retrieved \(events.count) events")
-        return events
-    }
-    
-    func getAllEvents() async throws -> [Event] {
-        print("RealEventWebRepository - Getting all events")
-        
-        let snapshot = try await db.collection(collectionName)
-            .getDocuments()
-        
-        let events = snapshot.documents.compactMap { document -> Event? in
-            Event.fromDictionary(document.data(), id: document.documentID)
-        }.sorted { $0.eventDate < $1.eventDate }
-        
-        print("RealEventWebRepository - Retrieved \(events.count) total events")
-        return events
-    }
-    
-    func getAllEvents(limit: Int, lastEventDate: Date?) async throws -> [Event] {
-        print("RealEventWebRepository - Getting paginated events (limit: \(limit), lastEventDate: \(String(describing: lastEventDate)))")
-        
-        var query = db.collection(collectionName)
-            .order(by: "eventDate")
-        
-        if let lastEventDate = lastEventDate {
-            query = query.start(after: [Timestamp(date: lastEventDate)])
-        }
-        
-        query = query.limit(to: limit)
-        
-        let snapshot = try await query.getDocuments()
-        
-        let events = snapshot.documents.compactMap { document -> Event? in
-            Event.fromDictionary(document.data(), id: document.documentID)
-        }
-        
-        print("RealEventWebRepository - Retrieved \(events.count) paginated events")
+        print("RealEventWebRepository - Retrieved \(events.count) events for user")
         return events
     }
     
@@ -328,17 +290,7 @@ struct StubEventWebRepository: EventWebRepository {
     }
     
     func getEvents(forUserId userId: String) async throws -> [Event] {
-        print("StubEventWebRepository - Get events stub")
-        return []
-    }
-    
-    func getAllEvents() async throws -> [Event] {
-        print("StubEventWebRepository - Get all events stub")
-        return []
-    }
-    
-    func getAllEvents(limit: Int, lastEventDate: Date?) async throws -> [Event] {
-        print("StubEventWebRepository - Get paginated events stub")
+        print("StubEventWebRepository - Get events for user: \(userId)")
         return []
     }
     

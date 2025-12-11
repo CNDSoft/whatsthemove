@@ -289,17 +289,15 @@ extension EventInteractor {
         userId: String,
         starredIds: Set<String>
     ) -> [Event] {
-        let userEvents = events.filter { $0.userId == userId }
-        
         switch filter {
         case .allEvents:
-            return userEvents.sorted { $0.eventDate < $1.eventDate }
+            return events.sorted { $0.eventDate < $1.eventDate }
         case .favorites:
-            return userEvents.filter { starredIds.contains($0.id) }
+            return events.filter { starredIds.contains($0.id) }
                 .sorted { $0.eventDate < $1.eventDate }
         case .pastEvents:
             let now = Date()
-            return userEvents.filter { $0.eventDate < now }
+            return events.filter { $0.eventDate < now }
                 .sorted { $0.eventDate > $1.eventDate }
         }
     }
