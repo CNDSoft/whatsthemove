@@ -49,7 +49,7 @@ private extension OnboardingPage3 {
         Image("onboarding3")
             .resizable()
             .scaledToFit()
-            .frame(width: 320, height: 165)
+            .frame(width: 340, height: 160)
     }
 }
 
