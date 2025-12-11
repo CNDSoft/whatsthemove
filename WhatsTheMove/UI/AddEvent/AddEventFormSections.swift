@@ -172,7 +172,7 @@ struct EventImageSection: View {
 
 struct DateSection: View {
     
-    @Binding var eventDate: Date
+    @Binding var eventDate: Date?
     @Binding var showDatePicker: Bool
     
     var body: some View {
@@ -181,14 +181,17 @@ struct DateSection: View {
                 FormFieldLabel(text: "Date")
                 
                 Button {
+                    if eventDate == nil {
+                        eventDate = Date()
+                    }
                     showDatePicker.toggle()
                 } label: {
-                    FormFieldValue(text: formatDate(eventDate))
+                    FormFieldValue(text: eventDate != nil ? formatDate(eventDate!) : "Select date")
                 }
                 .buttonStyle(.plain)
                 
-                if showDatePicker {
-                    DatePicker("", selection: $eventDate, displayedComponents: .date)
+                if showDatePicker, let date = Binding($eventDate) {
+                    DatePicker("", selection: date, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                         .labelsHidden()
                 }
@@ -207,8 +210,8 @@ struct DateSection: View {
 
 struct TimeSection: View {
     
-    @Binding var startTime: Date
-    @Binding var endTime: Date
+    @Binding var startTime: Date?
+    @Binding var endTime: Date?
     @Binding var showStartTimePicker: Bool
     @Binding var showEndTimePicker: Bool
     
@@ -220,15 +223,15 @@ struct TimeSection: View {
                     endTimeField
                 }
                 
-                if showStartTimePicker {
-                    DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                if showStartTimePicker, let time = Binding($startTime) {
+                    DatePicker("", selection: time, displayedComponents: .hourAndMinute)
                         .datePickerStyle(.wheel)
                         .labelsHidden()
                         .padding(.top, 10)
                 }
                 
-                if showEndTimePicker {
-                    DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                if showEndTimePicker, let time = Binding($endTime) {
+                    DatePicker("", selection: time, displayedComponents: .hourAndMinute)
                         .datePickerStyle(.wheel)
                         .labelsHidden()
                         .padding(.top, 10)
@@ -242,10 +245,13 @@ struct TimeSection: View {
             FormFieldLabel(text: "Start Time")
             
             Button {
+                if startTime == nil {
+                    startTime = Date()
+                }
                 showEndTimePicker = false
                 showStartTimePicker.toggle()
             } label: {
-                FormFieldValue(text: formatTime(startTime))
+                FormFieldValue(text: startTime != nil ? formatTime(startTime!) : "Select time")
             }
             .buttonStyle(.plain)
         }
@@ -257,10 +263,13 @@ struct TimeSection: View {
             FormFieldLabel(text: "End Time")
             
             Button {
+                if endTime == nil {
+                    endTime = Date()
+                }
                 showStartTimePicker = false
                 showEndTimePicker.toggle()
             } label: {
-                FormFieldValue(text: formatTime(endTime))
+                FormFieldValue(text: endTime != nil ? formatTime(endTime!) : "Select time")
             }
             .buttonStyle(.plain)
         }
@@ -358,17 +367,20 @@ struct AdmissionSection: View {
 struct RegistrationSection: View {
     
     @Binding var requiresRegistration: Bool
-    @Binding var registrationDeadline: Date
+    @Binding var registrationDeadline: Date?
     @Binding var showDeadlinePicker: Bool
     
     var body: some View {
         FormRowContainer {
             VStack(alignment: .leading, spacing: 10) {
-                FormFieldLabel(text: "Requires Registration")
+                FormFieldLabel(text: "Registration Required")
                 
                 HStack(spacing: 10) {
                     RadioButton(title: "Yes", isSelected: requiresRegistration) {
                         requiresRegistration = true
+                        if registrationDeadline == nil {
+                            registrationDeadline = Date()
+                        }
                     }
                     
                     RadioButton(title: "No", isSelected: !requiresRegistration) {
@@ -379,8 +391,12 @@ struct RegistrationSection: View {
                 if requiresRegistration {
                     deadlineInputField
                     
-                    if showDeadlinePicker {
-                        DatePicker("", selection: $registrationDeadline, displayedComponents: .date)
+                    Text("Optional: Date by which you need to register")
+                        .font(.rubik(.regular, size: 12))
+                        .foregroundColor(Color(hex: "55564F"))
+                    
+                    if showDeadlinePicker, let deadline = Binding($registrationDeadline) {
+                        DatePicker("", selection: deadline, displayedComponents: .date)
                             .datePickerStyle(.graphical)
                             .labelsHidden()
                     }
@@ -399,9 +415,12 @@ struct RegistrationSection: View {
                 Spacer()
                 
                 Button {
+                    if registrationDeadline == nil {
+                        registrationDeadline = Date()
+                    }
                     showDeadlinePicker.toggle()
                 } label: {
-                    Text(formatDeadline(registrationDeadline))
+                    Text(registrationDeadline != nil ? formatDeadline(registrationDeadline!) : "Select deadline")
                         .font(.rubik(.regular, size: 14))
                         .foregroundColor(Color(hex: "55564F"))
                 }

@@ -23,14 +23,14 @@ struct AddEventView: View {
     @State private var selectedImage: UIImage?
     @State private var selectedImageItem: PhotosPickerItem?
     @State private var existingImageUrl: String?
-    @State private var eventDate: Date
-    @State private var startTime: Date
-    @State private var endTime: Date
+    @State private var eventDate: Date?
+    @State private var startTime: Date?
+    @State private var endTime: Date?
     @State private var urlLink: String
     @State private var admission: AdmissionType
     @State private var admissionAmount: String
     @State private var requiresRegistration: Bool
-    @State private var registrationDeadline: Date
+    @State private var registrationDeadline: Date?
     @State private var location: String
     @State private var selectedCategory: EventCategory?
     @State private var notes: String
@@ -48,18 +48,6 @@ struct AddEventView: View {
     @State private var errorMessage: String?
     @State private var showError: Bool = false
     
-    private static var defaultStartTime: Date {
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.year, .month, .day, .hour], from: now)
-        guard let currentHour = calendar.date(from: components) else { return now }
-        return calendar.date(byAdding: .hour, value: 1, to: currentHour) ?? now
-    }
-    
-    private static var defaultEndTime: Date {
-        return Calendar.current.date(byAdding: .hour, value: 1, to: defaultStartTime) ?? defaultStartTime
-    }
-    
     init(mode: EventFormMode = .add, sharedData: SharedEventData? = nil) {
         self.mode = mode
         
@@ -76,14 +64,14 @@ struct AddEventView: View {
             
             _eventName = State(initialValue: title)
             _selectedImage = State(initialValue: imageFromData)
-            _eventDate = State(initialValue: Date())
-            _startTime = State(initialValue: Self.defaultStartTime)
-            _endTime = State(initialValue: Self.defaultEndTime)
+            _eventDate = State(initialValue: nil)
+            _startTime = State(initialValue: nil)
+            _endTime = State(initialValue: nil)
             _urlLink = State(initialValue: url)
             _admission = State(initialValue: .free)
             _admissionAmount = State(initialValue: "")
             _requiresRegistration = State(initialValue: false)
-            _registrationDeadline = State(initialValue: Date())
+            _registrationDeadline = State(initialValue: nil)
             _location = State(initialValue: "")
             _selectedCategory = State(initialValue: nil)
             _notes = State(initialValue: description)
@@ -98,7 +86,7 @@ struct AddEventView: View {
             _admission = State(initialValue: event.admission)
             _admissionAmount = State(initialValue: event.admissionAmount != nil ? String(Int(event.admissionAmount!)) : "")
             _requiresRegistration = State(initialValue: event.requiresRegistration)
-            _registrationDeadline = State(initialValue: event.registrationDeadline ?? Date())
+            _registrationDeadline = State(initialValue: event.registrationDeadline)
             _location = State(initialValue: event.location ?? "")
             _selectedCategory = State(initialValue: event.category)
             _notes = State(initialValue: event.notes ?? "")
@@ -376,6 +364,12 @@ private extension AddEventView {
             return
         }
         
+        guard eventDate != nil else {
+            errorMessage = "Event date is required"
+            showError = true
+            return
+        }
+        
         let event: Event
         switch mode {
         case .add:
@@ -420,12 +414,16 @@ private extension AddEventView {
     func createEvent(userId: String, existingEventId: String? = nil, existingImageUrl: String? = nil) -> Event {
         let amount = Double(admissionAmount)
         
+        guard let date = eventDate else {
+            fatalError("Event date is required")
+        }
+        
         return Event(
             id: existingEventId ?? UUID().uuidString,
             userId: userId,
             name: eventName,
             imageUrl: existingImageUrl,
-            eventDate: eventDate,
+            eventDate: date,
             startTime: startTime,
             endTime: endTime,
             urlLink: urlLink.isEmpty ? nil : urlLink,

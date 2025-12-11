@@ -280,16 +280,18 @@ private extension EventCardView {
                     .lineLimit(1)
                     .fixedSize()
                 
-                Circle()
-                    .fill(Color(hex: "55564F"))
-                    .frame(width: 3, height: 3)
-                    .fixedSize()
-                
-                Text(formattedTime)
-                    .font(.rubik(.regular, size: 14))
-                    .foregroundColor(Color(hex: "55564F"))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                if let timeString = formattedTime {
+                    Circle()
+                        .fill(Color(hex: "55564F"))
+                        .frame(width: 3, height: 3)
+                        .fixedSize()
+                    
+                    Text(timeString)
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "55564F"))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
             }
         }
     }
@@ -345,11 +347,14 @@ private extension EventCardView {
         return formatter.string(from: event.eventDate)
     }
     
-    var formattedTime: String {
+    var formattedTime: String? {
+        guard let start = event.startTime, let end = event.endTime else {
+            return nil
+        }
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mma"
-        let startTimeString = formatter.string(from: event.startTime).lowercased()
-        let endTimeString = formatter.string(from: event.endTime).lowercased()
+        let startTimeString = formatter.string(from: start).lowercased()
+        let endTimeString = formatter.string(from: end).lowercased()
         return "\(startTimeString) - \(endTimeString)"
     }
 }

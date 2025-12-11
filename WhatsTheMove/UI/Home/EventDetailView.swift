@@ -309,7 +309,9 @@ private extension EventDetailView {
             
             HStack(spacing: 16) {
                 dateInfoCard
-                timeInfoCard
+                if event.startTime != nil && event.endTime != nil {
+                    timeInfoCard
+                }
             }
         }
     }
@@ -644,15 +646,17 @@ private extension EventDetailView {
     }
     
     var formattedStartTime: String {
+        guard let startTime = event.startTime else { return "" }
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
-        return formatter.string(from: event.startTime)
+        return formatter.string(from: startTime)
     }
     
     var formattedEndTime: String {
+        guard let endTime = event.endTime else { return "" }
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
-        return formatter.string(from: event.endTime)
+        return formatter.string(from: endTime)
     }
 }
 

@@ -219,8 +219,6 @@ extension Event {
             "userId": userId,
             "name": name,
             "eventDate": Timestamp(date: eventDate),
-            "startTime": Timestamp(date: startTime),
-            "endTime": Timestamp(date: endTime),
             "admission": admission.rawValue,
             "requiresRegistration": requiresRegistration,
             "status": status.rawValue,
@@ -230,6 +228,14 @@ extension Event {
         
         if let imageUrl = imageUrl {
             dict["imageUrl"] = imageUrl
+        }
+        
+        if let startTime = startTime {
+            dict["startTime"] = Timestamp(date: startTime)
+        }
+        
+        if let endTime = endTime {
+            dict["endTime"] = Timestamp(date: endTime)
         }
         
         if let urlLink = urlLink, !urlLink.isEmpty {
@@ -263,8 +269,6 @@ extension Event {
         guard let userId = dict["userId"] as? String,
               let name = dict["name"] as? String,
               let eventDateTimestamp = dict["eventDate"] as? Timestamp,
-              let startTimeTimestamp = dict["startTime"] as? Timestamp,
-              let endTimeTimestamp = dict["endTime"] as? Timestamp,
               let admissionRaw = dict["admission"] as? String,
               let admission = AdmissionType(rawValue: admissionRaw),
               let requiresRegistration = dict["requiresRegistration"] as? Bool,
@@ -277,6 +281,8 @@ extension Event {
         }
         
         let imageUrl = dict["imageUrl"] as? String
+        let startTime = (dict["startTime"] as? Timestamp)?.dateValue()
+        let endTime = (dict["endTime"] as? Timestamp)?.dateValue()
         let urlLink = dict["urlLink"] as? String
         let admissionAmount = dict["admissionAmount"] as? Double
         let registrationDeadline = (dict["registrationDeadline"] as? Timestamp)?.dateValue()
@@ -291,8 +297,8 @@ extension Event {
             name: name,
             imageUrl: imageUrl,
             eventDate: eventDateTimestamp.dateValue(),
-            startTime: startTimeTimestamp.dateValue(),
-            endTime: endTimeTimestamp.dateValue(),
+            startTime: startTime,
+            endTime: endTime,
             urlLink: urlLink,
             admission: admission,
             admissionAmount: admissionAmount,

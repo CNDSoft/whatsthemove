@@ -69,8 +69,8 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
     var name: String
     var imageUrl: String?
     var eventDate: Date
-    var startTime: Date
-    var endTime: Date
+    var startTime: Date?
+    var endTime: Date?
     var urlLink: String?
     var admission: AdmissionType
     var admissionAmount: Double?
@@ -89,8 +89,8 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         name: String,
         imageUrl: String? = nil,
         eventDate: Date,
-        startTime: Date,
-        endTime: Date,
+        startTime: Date? = nil,
+        endTime: Date? = nil,
         urlLink: String? = nil,
         admission: AdmissionType = .free,
         admissionAmount: Double? = nil,
@@ -139,7 +139,7 @@ extension Event {
             errors.append("Event name is required")
         }
         
-        if isEndTimeSameAsStartTime {
+        if let start = startTime, let end = endTime, isEndTimeSameAsStartTime(start: start, end: end) {
             errors.append("End time must be different from start time")
         }
         
@@ -147,17 +147,13 @@ extension Event {
             errors.append("Admission amount is required for paid events")
         }
         
-        if requiresRegistration && registrationDeadline == nil {
-            errors.append("Registration deadline is required")
-        }
-        
         return errors
     }
     
-    private var isEndTimeSameAsStartTime: Bool {
+    private func isEndTimeSameAsStartTime(start: Date, end: Date) -> Bool {
         let calendar = Calendar.current
-        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
-        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        let startComponents = calendar.dateComponents([.hour, .minute], from: start)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: end)
         return startComponents.hour == endComponents.hour && startComponents.minute == endComponents.minute
     }
 }
