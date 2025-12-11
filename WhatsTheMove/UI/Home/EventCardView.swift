@@ -18,6 +18,7 @@ struct EventCardView: View {
     
     @State private var showRegistrationDeadline: Bool = false
     @State private var showNoteOverlay: Bool = false
+    @State private var showExpandedImage: Bool = false
     @State private var isStarred: Bool = false
     @State private var showMoreAlert: Bool = false
     @State private var showActionsSheet: Bool = false
@@ -37,6 +38,9 @@ struct EventCardView: View {
         .background(Color.white)
         .fullScreenCover(isPresented: $showNoteOverlay) {
             noteOverlayView
+        }
+        .fullScreenCover(isPresented: $showExpandedImage) {
+            expandedImageView
         }
         .onReceive(starredEventsUpdate) { starredIds in
             isStarred = starredIds.contains(event.id)
@@ -99,6 +103,9 @@ private extension EventCardView {
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 } placeholder: {
                     imagePlaceholder
+                }
+                .onTapGesture {
+                    showExpandedImage = true
                 }
             } else {
                 imagePlaceholder
@@ -527,6 +534,39 @@ private extension EventCardView {
                 .buttonStyle(.plain)
                 .padding(.bottom, 60)
             }
+        }
+    }
+}
+
+// MARK: - Expanded Image View
+
+private extension EventCardView {
+    
+    var expandedImageView: some View {
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                if let imageUrl = event.imageUrl, let url = URL(string: imageUrl) {
+                    ZoomableImageView(url: url)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                
+                Button {
+                    showExpandedImage = false
+                } label: {
+                    Text("Close")
+                        .font(.rubik(.regular, size: 18))
+                        .foregroundColor(.white)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, 40)
+            }
+        }
+        .onTapGesture {
+            showExpandedImage = false
         }
     }
 }
