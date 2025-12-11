@@ -66,7 +66,7 @@ private extension AuthView {
                 .scaledToFit()
                 .frame(height: 92)
             
-            Text("Save events you discover. Never run out of things to do")
+            Text("Save events you\n discover. Never run\n out of things to do")
                 .font(.rubik(.bold, size: 28))
                 .foregroundColor(Color(hex: "F8F7F1"))
                 .multilineTextAlignment(.center)
