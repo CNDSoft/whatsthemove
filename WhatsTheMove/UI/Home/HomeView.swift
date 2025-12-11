@@ -20,6 +20,10 @@ struct HomeView: View {
     @State private var canLoadMore: Bool = true
     @State private var shouldRefetch: Bool = false
     @State private var showNotificationAlert: Bool = false
+    @State private var eventToEdit: Event?
+    @State private var showDeleteConfirmation: Bool = false
+    @State private var eventToDelete: Event?
+    @State private var isDeleting: Bool = false
     
     @Binding var triggerRefetch: Bool
     
@@ -47,18 +51,36 @@ struct HomeView: View {
                 }
             }
         }
+        .sheet(item: $eventToEdit, onDismiss: {
+            Task {
+                await refreshEvents()
+            }
+        }) { event in
+            AddEventView(mode: .edit(event))
+                .inject(injected)
+        }
+        .alert("Delete Event", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                eventToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let event = eventToDelete {
+                    deleteEvent(event)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this event? This action cannot be undone.")
+        }
+        .overlay {
+            if isDeleting {
+                deletingOverlay
+            }
+        }
         .underDevelopmentAlert(isPresented: $showNotificationAlert)
     }
     
-    private var eventsExcludingCurrentUser: [Event] {
-        guard let currentUserId = injected.appState[\.userData.userId] else {
-            return events
-        }
-        return events.filter { $0.userId != currentUserId }
-    }
-    
     private var filteredEvents: [Event] {
-        return injected.interactors.events.filterEvents(eventsExcludingCurrentUser, by: selectedFilter)
+        return injected.interactors.events.filterEvents(events, by: selectedFilter)
     }
 }
 
@@ -137,7 +159,7 @@ private extension HomeView {
             
             EventFilterPillsView(
                 selectedFilter: $selectedFilter,
-                events: eventsExcludingCurrentUser
+                events: events
             )
             .padding(.bottom, 20)
         }
@@ -177,14 +199,24 @@ private extension HomeView {
         ScrollView {
             LazyVStack(spacing: 1) {
                 ForEach(filteredEvents) { event in
-                    EventCardView(event: event)
-                        .onAppear {
-                            if shouldLoadMore(for: event) {
-                                Task {
-                                    await loadMoreEvents()
-                                }
+                    EventCardView(
+                        event: event,
+                        showActions: true,
+                        onEdit: { event in
+                            eventToEdit = event
+                        },
+                        onDelete: { event in
+                            eventToDelete = event
+                            showDeleteConfirmation = true
+                        }
+                    )
+                    .onAppear {
+                        if shouldLoadMore(for: event) {
+                            Task {
+                                await loadMoreEvents()
                             }
                         }
+                    }
                 }
                 
                 if isLoadingMore {
@@ -243,7 +275,28 @@ private extension HomeView {
             .aspectRatio(contentMode: .fit)
             .foregroundColor(Color(hex: "11104B").opacity(0.3))
     }
+    
+    var deletingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .tint(.white)
+                
+                Text("Deleting event...")
+                    .font(.rubik(.medium, size: 16))
+                    .foregroundColor(.white)
+            }
+            .padding(30)
+            .background(Color(hex: "11104B"))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
 }
+
 
 // MARK: - Side Effects
 
@@ -264,7 +317,7 @@ private extension HomeView {
             events = cachedEvents
             hasLoadedEvents = true
             canLoadMore = cachedEvents.count >= 20
-            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: eventsExcludingCurrentUser)
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
             return
         }
         
@@ -277,7 +330,7 @@ private extension HomeView {
             isLoading = false
             hasLoadedEvents = true
             canLoadMore = fetchedEvents.count >= 20
-            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: eventsExcludingCurrentUser)
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
             print("HomeView - Loaded \(fetchedEvents.count) events")
         } catch {
             errorMessage = error.localizedDescription
@@ -293,7 +346,7 @@ private extension HomeView {
             let fetchedEvents = try await injected.interactors.events.getAllEvents(forceReload: true)
             events = fetchedEvents
             canLoadMore = fetchedEvents.count >= 20
-            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: eventsExcludingCurrentUser)
+            selectedFilter = injected.interactors.events.firstNonEmptyFilter(for: events)
             print("HomeView - Refreshed \(fetchedEvents.count) events")
         } catch {
             errorMessage = error.localizedDescription
@@ -336,6 +389,30 @@ private extension HomeView {
         return true
     }
     
+    func deleteEvent(_ event: Event) {
+        isDeleting = true
+        
+        Task {
+            do {
+                try await injected.interactors.events.deleteEvent(id: event.id)
+                await refreshEvents()
+                
+                await MainActor.run {
+                    isDeleting = false
+                    eventToDelete = nil
+                }
+                
+                print("HomeView - Event deleted successfully: \(event.id)")
+            } catch {
+                await MainActor.run {
+                    isDeleting = false
+                    errorMessage = error.localizedDescription
+                    eventToDelete = nil
+                }
+                print("HomeView - Failed to delete event: \(error.localizedDescription)")
+            }
+        }
+    }
 }
 
 // MARK: - Previews

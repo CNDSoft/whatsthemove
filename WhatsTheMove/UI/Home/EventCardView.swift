@@ -23,6 +23,7 @@ struct EventCardView: View {
     @State private var showActionsSheet: Bool = false
     @State private var showCalendarAlert: Bool = false
     @State private var showDismissWarningAlert: Bool = false
+    @State private var showEventFormForDetails: Bool = false
     @Environment(\.injected) private var injected: DIContainer
     
     var body: some View {
@@ -57,6 +58,10 @@ struct EventCardView: View {
             .presentationDetents([.height(113)])
             .presentationDragIndicator(.visible)
             .presentationBackground(.white)
+        }
+        .sheet(isPresented: $showEventFormForDetails) {
+            AddEventView(mode: .edit(event))
+                .inject(injected)
         }
         .underDevelopmentAlert(isPresented: $showMoreAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
@@ -406,21 +411,35 @@ private extension EventCardView {
     }
     
     var viewDetailsButton: some View {
-        NavigationLink(value: event) {
-            HStack(spacing: 8) {
-                Image(systemName: "link")
-                    .font(.system(size: 14))
-                
-                Text("View details")
-                    .font(.rubik(.regular, size: 12))
+        Group {
+            if let urlString = event.urlLink, !urlString.isEmpty, let url = URL(string: urlString) {
+                Link(destination: url) {
+                    viewDetailsButtonContent
+                }
+            } else {
+                Button {
+                    showEventFormForDetails = true
+                } label: {
+                    viewDetailsButtonContent
+                }
+                .buttonStyle(.plain)
             }
-            .foregroundColor(Color(hex: "11104B"))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(Color(hex: "E8E8FF"))
-            .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+    }
+    
+    var viewDetailsButtonContent: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "link")
+                .font(.system(size: 14))
+            
+            Text("View details")
+                .font(.rubik(.regular, size: 12))
+        }
+        .foregroundColor(Color(hex: "11104B"))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(Color(hex: "E8E8FF"))
+        .clipShape(Capsule())
     }
 }
 

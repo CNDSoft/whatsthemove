@@ -94,30 +94,37 @@ struct RealEventInteractor: EventInteractor {
             return cachedEvents
         }
         
-        let events = try await eventWebRepository.getAllEvents(limit: 20, lastEventDate: nil)
+        guard let userId = appState[\.userData.userId] else {
+            print("RealEventInteractor - No user ID found, returning empty array")
+            return []
+        }
+        
+        let events = try await eventWebRepository.getEvents(forUserId: userId)
         
         await MainActor.run {
             appState[\.userData.events] = events
         }
         
-        print("RealEventInteractor - Retrieved and cached \(events.count) total events")
+        print("RealEventInteractor - Retrieved and cached \(events.count) user events")
         return events
     }
     
     func loadMoreEvents(currentEvents: [Event], pageSize: Int = 20) async throws -> [Event] {
         print("RealEventInteractor - Loading more events (current count: \(currentEvents.count))")
         
-        let lastEventDate = currentEvents.last?.eventDate
-        let newEvents = try await eventWebRepository.getAllEvents(limit: pageSize, lastEventDate: lastEventDate)
-        
-        let allEvents = currentEvents + newEvents
-        
-        await MainActor.run {
-            appState[\.userData.events] = allEvents
+        guard let userId = appState[\.userData.userId] else {
+            print("RealEventInteractor - No user ID found")
+            return currentEvents
         }
         
-        print("RealEventInteractor - Loaded \(newEvents.count) new events, total: \(allEvents.count)")
-        return allEvents
+        let allUserEvents = try await eventWebRepository.getEvents(forUserId: userId)
+        
+        await MainActor.run {
+            appState[\.userData.events] = allUserEvents
+        }
+        
+        print("RealEventInteractor - Loaded all user events, total: \(allUserEvents.count)")
+        return allUserEvents
     }
     
     func updateEvent(_ event: Event, newImage: UIImage?) async throws {
