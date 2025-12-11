@@ -40,6 +40,8 @@ extension AppState {
         var hasCompletedOnboarding: Bool = false
         var userId: String?
         var email: String?
+        var firstName: String?
+        var lastName: String?
         var events: [Event] = []
         var starredEventIds: Set<String> = []
         var lastSavedEventId: String?

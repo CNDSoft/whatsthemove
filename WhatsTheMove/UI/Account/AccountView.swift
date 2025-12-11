@@ -10,6 +10,7 @@ import SwiftUI
 
 struct AccountView: View {
     
+    @Environment(\.safeAreaInsets) private var safeAreaInsets
     @Environment(\.injected) private var injected: DIContainer
     @State private var isSigningOut: Bool = false
     
@@ -41,8 +42,12 @@ struct AccountView: View {
             Color(hex: "F8F7F1")
                 .ignoresSafeArea()
             
-            content
+            VStack(spacing: 0) {
+                headerSection
+                accountContent
+            }
         }
+        .navigationBarHidden(true)
         .underDevelopmentAlert(isPresented: $showNotificationAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
         .underDevelopmentAlert(isPresented: $showEditProfileAlert)
@@ -56,24 +61,20 @@ struct AccountView: View {
     }
 }
 
-// MARK: - Content
+// MARK: - Account Content
 
 private extension AccountView {
     
-    var content: some View {
+    var accountContent: some View {
         ScrollView {
-            VStack(spacing: 0) {
-                header
-                
-                VStack(spacing: 5) {
-                    profileSection
-                    calendarExportSection
-                    notificationsSection
-                    dataPrivacySection
-                    supportInfoSection
-                    signOutSection
-                    footer
-                }
+            VStack(spacing: 5) {
+                profileSection
+                calendarExportSection
+                notificationsSection
+                dataPrivacySection
+                supportInfoSection
+                signOutSection
+                footer
             }
         }
         .scrollIndicators(.hidden)
@@ -84,48 +85,56 @@ private extension AccountView {
 
 private extension AccountView {
     
-    var header: some View {
-        ZStack(alignment: .topLeading) {
-            headerBackground
-            
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("ACCOUNT")
-                        .font(.rubik(.extraBold, size: 30))
-                        .foregroundColor(.white)
-                        .textCase(.uppercase)
-                    
-                    Spacer()
-                    
-                    Button {
-                        showNotificationAlert = true
-                    } label: {
-                        Image(systemName: "bell.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color(hex: "11104B"))
-                            .frame(width: 38, height: 38)
-                            .background(Color(hex: "E7FF63"))
-                            .clipShape(Circle())
-                    }
+    var headerSection: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .topLeading) {
+                headerBackground(width: geometry.size.width)
+                
+                VStack(alignment: .leading, spacing: 20) {
+                    headerTopRow.padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 20)
+                .padding(.top, 60)
+                .frame(width: geometry.size.width, alignment: .leading)
             }
         }
-        .frame(height: 90)
+        .frame(height: 118 - safeAreaInsets.top)
+        .edgesIgnoringSafeArea(.top)
     }
     
-    var headerBackground: some View {
-        Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [Color(hex: "5B5A8E"), Color(hex: "3E3D6B")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .overlay(Color.black.opacity(0.5))
+    func headerBackground(width: CGFloat) -> some View {
+        ZStack {
+            Image("saved-events-header")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: width, height: 225)
+                .clipped()
+        }
+        .frame(width: width, height: 118)
+    }
+    
+    var headerTopRow: some View {
+        HStack(alignment: .top) {
+            titleView
+            Spacer()
+            notificationButton
+        }
+    }
+    
+    var titleView: some View {
+        Text("ACCOUNT")
+            .font(.rubik(.extraBold, size: 30))
+            .foregroundColor(.white)
+            .textCase(.uppercase)
+    }
+    
+    var notificationButton: some View {
+        Button {
+            showNotificationAlert = true
+        } label: {
+            Image("bell")
+                .frame(width: 38, height: 38)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -138,13 +147,10 @@ private extension AccountView {
             avatarCircle
             
             VStack(alignment: .leading, spacing: 2) {
-                if let firstName = injected.appState[\.userData.userId] != nil ? "PATRICK" : "User",
-                   let lastName = injected.appState[\.userData.userId] != nil ? "DEVRU" : "Name" {
-                    Text("\(firstName) \(lastName)")
-                        .font(.rubik(.extraBold, size: 20))
-                        .foregroundColor(Color(hex: "11104B"))
-                        .textCase(.uppercase)
-                }
+                Text(displayName)
+                    .font(.rubik(.extraBold, size: 20))
+                    .foregroundColor(Color(hex: "11104B"))
+                    .textCase(.uppercase)
                 
                 Text("\(injected.appState[\.userData.starredEventIds].count) events saved")
                     .font(.rubik(.regular, size: 14))
@@ -179,11 +185,20 @@ private extension AccountView {
         }
     }
     
+    var displayName: String {
+        let firstName = injected.appState[\.userData.firstName] ?? "User"
+        let lastName = injected.appState[\.userData.lastName] ?? "Name"
+        return "\(firstName) \(lastName)"
+    }
+    
     var userInitials: String {
-        if injected.appState[\.userData.userId] != nil {
-            return "PD"
-        }
-        return "U"
+        let firstName = injected.appState[\.userData.firstName]
+        let lastName = injected.appState[\.userData.lastName]
+        
+        let firstInitial = firstName?.first?.uppercased() ?? "U"
+        let lastInitial = lastName?.first?.uppercased() ?? ""
+        
+        return "\(firstInitial)\(lastInitial)"
     }
 }
 

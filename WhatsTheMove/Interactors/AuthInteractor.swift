@@ -31,10 +31,14 @@ struct RealAuthInteractor: AuthInteractor {
         
         print("RealAuthInteractor - Sign in successful for user: \(firebaseUser.uid)")
         
+        let user = try await userWebRepository.getUser(id: firebaseUser.uid)
+        
         await MainActor.run {
             appState[\.userData.isAuthenticated] = true
             appState[\.userData.email] = firebaseUser.email
             appState[\.userData.userId] = firebaseUser.uid
+            appState[\.userData.firstName] = user?.firstName
+            appState[\.userData.lastName] = user?.lastName
         }
     }
     
@@ -69,6 +73,8 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.isAuthenticated] = true
             appState[\.userData.email] = firebaseUser.email
             appState[\.userData.userId] = firebaseUser.uid
+            appState[\.userData.firstName] = firstName
+            appState[\.userData.lastName] = lastName
         }
     }
     
@@ -83,6 +89,8 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.isAuthenticated] = false
             appState[\.userData.email] = nil
             appState[\.userData.userId] = nil
+            appState[\.userData.firstName] = nil
+            appState[\.userData.lastName] = nil
         }
     }
     
@@ -92,10 +100,14 @@ struct RealAuthInteractor: AuthInteractor {
         if let currentUser = Auth.auth().currentUser {
             print("RealAuthInteractor - User is authenticated: \(currentUser.uid)")
             
+            let user = try? await userWebRepository.getUser(id: currentUser.uid)
+            
             await MainActor.run {
                 appState[\.userData.isAuthenticated] = true
                 appState[\.userData.email] = currentUser.email
                 appState[\.userData.userId] = currentUser.uid
+                appState[\.userData.firstName] = user?.firstName
+                appState[\.userData.lastName] = user?.lastName
             }
             return true
         }
@@ -106,6 +118,8 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.isAuthenticated] = false
             appState[\.userData.email] = nil
             appState[\.userData.userId] = nil
+            appState[\.userData.firstName] = nil
+            appState[\.userData.lastName] = nil
         }
         return false
     }
