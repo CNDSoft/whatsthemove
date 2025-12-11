@@ -15,6 +15,13 @@ struct ProfileView: View {
     @Environment(\.safeAreaInsets) private var safeAreaInsets
     
     @State private var showCloseAccountAlert: Bool = false
+    @State private var firstName: String = ""
+    @State private var lastName: String = ""
+    @State private var email: String = ""
+    @State private var phoneNumber: String = ""
+    @State private var isSaving: Bool = false
+    @State private var errorMessage: String?
+    @State private var showError: Bool = false
     
     var body: some View {
         ZStack {
@@ -27,15 +34,30 @@ struct ProfileView: View {
                     contentSection
                 }
                 .scrollIndicators(.hidden)
+                
+                if shouldShowSaveButton {
+                    saveButton
+                }
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            firstName = injected.appState[\.userData.firstName] ?? ""
+            lastName = injected.appState[\.userData.lastName] ?? ""
+            email = injected.appState[\.userData.email] ?? ""
+            phoneNumber = injected.appState[\.userData.phoneNumber] ?? ""
+        }
         .alert("Close Account", isPresented: $showCloseAccountAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Close Account", role: .destructive) {
             }
         } message: {
             Text("Are you sure you want to close your account? This action cannot be undone.")
+        }
+        .alert("Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage ?? "An error occurred")
         }
     }
 }
@@ -114,23 +136,58 @@ private extension ProfileView {
     
     var userInfoSection: some View {
         VStack(spacing: 1) {
-            infoRow(title: "First Name", value: injected.appState[\.userData.firstName] ?? "")
-            infoRow(title: "Last Name", value: injected.appState[\.userData.lastName] ?? "")
-            infoRow(title: "Email", value: injected.appState[\.userData.email] ?? "")
-            infoRow(title: "Phone Number", value: injected.appState[\.userData.phoneNumber] ?? "Add your phone number", isPlaceholder: injected.appState[\.userData.phoneNumber] == nil)
+            LoginFormField(
+                label: "First Name",
+                placeholder: "Enter first name",
+                text: $firstName
+            )
+            
+            LoginFormField(
+                label: "Last Name",
+                placeholder: "Enter last name",
+                text: $lastName
+            )
+            
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Email")
+                    .font(.rubik(.medium, size: 15))
+                    .foregroundColor(Color(hex: "11104B"))
+                    .lineSpacing(20 - 15)
+                
+                Text(email)
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+                    .lineSpacing(20 - 14)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 15)
+            .background(Color.white)
+            
+            phoneNumberRow
         }
         .background(Color(hex: "F4F4F4"))
     }
     
-    func infoRow(title: String, value: String, isPlaceholder: Bool = false) -> some View {
+    var phoneNumberRow: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title)
+            Text("Phone Number")
                 .font(.rubik(.medium, size: 15))
                 .foregroundColor(Color(hex: "11104B"))
+                .lineSpacing(20 - 15)
             
-            Text(value)
+            TextField("", text: $phoneNumber, prompt: Text("Add your phone number")
                 .font(.rubik(.regular, size: 14))
-                .foregroundColor(Color(hex: "55564F"))
+                .foregroundColor(Color(hex: "55564F")))
+                .font(.rubik(.regular, size: 14))
+                .foregroundColor(Color(hex: "11104B"))
+                .keyboardType(.phonePad)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .lineSpacing(20 - 14)
+                .onChange(of: phoneNumber) { _, newValue in
+                    phoneNumber = formatPhoneNumber(newValue)
+                }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
@@ -199,6 +256,101 @@ private extension ProfileView {
             .background(Color.white)
         }
         .buttonStyle(.plain)
+    }
+    
+    var saveButton: some View {
+        Button {
+            saveProfile()
+        } label: {
+            Text("Save Changes")
+                .font(.rubik(.regular, size: 14))
+                .foregroundColor(Color(hex: "F8F7F1"))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color(hex: "11104B"))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.top, 15)
+        .disabled(isSaving)
+        .opacity(isSaving ? 0.5 : 1)
+    }
+}
+
+// MARK: - Validation & Helpers
+
+private extension ProfileView {
+    
+    var hasChanges: Bool {
+        let currentFirstName = injected.appState[\.userData.firstName] ?? ""
+        let currentLastName = injected.appState[\.userData.lastName] ?? ""
+        let currentPhone = injected.appState[\.userData.phoneNumber] ?? ""
+        
+        return firstName != currentFirstName ||
+               lastName != currentLastName ||
+               phoneNumber != currentPhone
+    }
+    
+    var isFormValid: Bool {
+        !firstName.isEmpty &&
+        !lastName.isEmpty &&
+        (phoneNumber.isEmpty || isValidPhoneNumber(phoneNumber))
+    }
+    
+    var shouldShowSaveButton: Bool {
+        hasChanges && isFormValid
+    }
+    
+    func isValidPhoneNumber(_ phone: String) -> Bool {
+        let cleaned = phone.filter { $0.isNumber }
+        return cleaned.count >= 10
+    }
+    
+    func formatPhoneNumber(_ input: String) -> String {
+        let digits = input.filter { $0.isNumber }
+        
+        if digits.count > 15 {
+            return String(digits.prefix(15))
+        }
+        
+        return digits
+    }
+    
+    func saveProfile() {
+        print("ProfileView - Saving profile")
+        
+        guard !isSaving else { return }
+        guard isFormValid else { return }
+        
+        Task { await updateProfile() }
+    }
+    
+    func updateProfile() async {
+        await MainActor.run {
+            isSaving = true
+        }
+        
+        do {
+            try await injected.interactors.users.updateUserProfile(
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phoneNumber: phoneNumber.isEmpty ? nil : phoneNumber
+            )
+            
+            await MainActor.run {
+                isSaving = false
+                print("ProfileView - Profile updated successfully")
+            }
+        } catch {
+            await MainActor.run {
+                isSaving = false
+                errorMessage = error.localizedDescription
+                showError = true
+                print("ProfileView - Error updating profile: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

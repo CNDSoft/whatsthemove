@@ -12,7 +12,7 @@ protocol UserInteractor {
     func toggleStarredEvent(eventId: String) async throws
     func isEventStarred(eventId: String) -> Bool
     func loadStarredEventIds() async throws
-    func updateUserProfile(firstName: String, lastName: String, phoneNumber: String?) async throws
+    func updateUserProfile(firstName: String, lastName: String, email: String, phoneNumber: String?) async throws
 }
 
 struct RealUserInteractor: UserInteractor {
@@ -65,7 +65,7 @@ struct RealUserInteractor: UserInteractor {
         print("RealUserInteractor - Loaded \(starredEventIds.count) starred events")
     }
     
-    func updateUserProfile(firstName: String, lastName: String, phoneNumber: String?) async throws {
+    func updateUserProfile(firstName: String, lastName: String, email: String, phoneNumber: String?) async throws {
         print("RealUserInteractor - Updating user profile")
         
         guard let userId = await MainActor.run(body: { appState[\.userData.userId] }) else {
@@ -78,7 +78,7 @@ struct RealUserInteractor: UserInteractor {
         
         let updatedUser = User(
             id: user.id,
-            email: user.email,
+            email: email,
             firstName: firstName,
             lastName: lastName,
             ageRange: user.ageRange,
@@ -93,6 +93,7 @@ struct RealUserInteractor: UserInteractor {
         await MainActor.run {
             appState[\.userData.firstName] = firstName
             appState[\.userData.lastName] = lastName
+            appState[\.userData.email] = email
             appState[\.userData.phoneNumber] = phoneNumber
         }
         
@@ -115,7 +116,7 @@ struct StubUserInteractor: UserInteractor {
         print("StubUserInteractor - Load starred event IDs stub")
     }
     
-    func updateUserProfile(firstName: String, lastName: String, phoneNumber: String?) async throws {
+    func updateUserProfile(firstName: String, lastName: String, email: String, phoneNumber: String?) async throws {
         print("StubUserInteractor - Update user profile stub")
     }
 }
