@@ -320,6 +320,8 @@ private struct RegisterFormField: View {
     var keyboardType: UIKeyboardType = .default
     var isSecure: Bool = false
     
+    @State private var isPasswordVisible: Bool = false
+    
     private var placeholderText: Text {
         Text(placeholder)
             .font(.rubik(.regular, size: 14))
@@ -333,19 +335,32 @@ private struct RegisterFormField: View {
                 .foregroundColor(Color(hex: "11104B"))
                 .lineSpacing(20 - 15)
             
-            if isSecure {
-                SecureField("", text: $text, prompt: placeholderText)
-                    .font(.rubik(.regular, size: 14))
-                    .foregroundColor(Color(hex: "11104B"))
-                    .lineSpacing(20 - 14)
-            } else {
-                TextField("", text: $text, prompt: placeholderText)
-                    .font(.rubik(.regular, size: 14))
-                    .foregroundColor(Color(hex: "11104B"))
-                    .keyboardType(keyboardType)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .lineSpacing(20 - 14)
+            HStack(spacing: 8) {
+                if isSecure && !isPasswordVisible {
+                    SecureField("", text: $text, prompt: placeholderText)
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "11104B"))
+                        .lineSpacing(20 - 14)
+                } else {
+                    TextField("", text: $text, prompt: placeholderText)
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "11104B"))
+                        .keyboardType(keyboardType)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .lineSpacing(20 - 14)
+                }
+                
+                if isSecure {
+                    Button(action: {
+                        isPasswordVisible.toggle()
+                    }) {
+                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color(hex: "55564F"))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
         .padding(.horizontal, 20)
