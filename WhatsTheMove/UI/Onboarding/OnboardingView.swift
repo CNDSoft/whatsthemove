@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @Environment(\.injected) private var injected: DIContainer
     @State private var currentPage: Int = 0
     @State private var direction: TransitionDirection = .forward
+    @State private var showShareSheet: Bool = false
     var onComplete: () -> Void
     var onRequestCameraAccess: (() -> Void)?
     var onRequestNotifications: (() -> Void)?
@@ -39,6 +40,9 @@ struct OnboardingView: View {
                     finalBottomSection
                 }
             }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: ["https://www.example.com"])
         }
     }
     
@@ -250,10 +254,7 @@ private extension OnboardingView {
             onRequestCameraAccess?()
             goToNextPage()
         case 3:
-            if let url = URL(string: "App-prefs:root=General") {
-                UIApplication.shared.open(url)
-            }
-            goToNextPage()
+            showShareSheet = true
         case 5:
             onRequestNotifications?()
             goToNextPage()
