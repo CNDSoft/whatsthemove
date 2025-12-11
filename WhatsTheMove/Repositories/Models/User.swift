@@ -14,6 +14,7 @@ struct User: Codable, Equatable {
     let firstName: String
     let lastName: String
     let ageRange: String
+    var phoneNumber: String?
     var starredEventIds: [String]
     let createdAt: Date
     let updatedAt: Date
@@ -26,7 +27,7 @@ struct User: Codable, Equatable {
 extension User {
     
     func toDictionary() -> [String: Any] {
-        return [
+        var dict: [String: Any] = [
             "id": id,
             "email": email,
             "firstName": firstName,
@@ -36,6 +37,10 @@ extension User {
             "createdAt": createdAt,
             "updatedAt": updatedAt
         ]
+        if let phoneNumber = phoneNumber {
+            dict["phoneNumber"] = phoneNumber
+        }
+        return dict
     }
     
     static func fromDictionary(_ data: [String: Any], id: String) -> User? {
@@ -46,6 +51,7 @@ extension User {
             return nil
         }
         
+        let phoneNumber = data["phoneNumber"] as? String
         let starredEventIds = (data["starredEventIds"] as? [String]) ?? []
         let createdAt = (data["createdAt"] as? Date) ?? Date()
         let updatedAt = (data["updatedAt"] as? Date) ?? Date()
@@ -56,6 +62,7 @@ extension User {
             firstName: firstName,
             lastName: lastName,
             ageRange: ageRange,
+            phoneNumber: phoneNumber,
             starredEventIds: starredEventIds,
             createdAt: createdAt,
             updatedAt: updatedAt
