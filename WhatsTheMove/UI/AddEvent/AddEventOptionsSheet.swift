@@ -15,10 +15,10 @@ struct AddEventOptionsSheet: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            headerView.padding(.top, 24)
+            headerView
             optionsContent
         }
-        .presentationBackground(Color.white)
+        .background(Color.white)
         .preferredColorScheme(.light)
     }
 }
@@ -36,7 +36,7 @@ private extension AddEventOptionsSheet {
             Spacer()
         }
         .padding(.horizontal, 20)
-        .padding(.top, 20)
+        .padding(.top, 12)
         .padding(.bottom, 4)
     }
 }
@@ -57,8 +57,10 @@ private extension AddEventOptionsSheet {
             onShareFromAppTapped()
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 14, weight: .regular))
+                Image("share-from-app")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
                     .foregroundColor(Color(hex: "11104B"))
                     .frame(width: 22)
                 
@@ -80,8 +82,10 @@ private extension AddEventOptionsSheet {
             onManualEntryTapped()
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "doc.text")
-                    .font(.system(size: 14, weight: .regular))
+                Image("enter-event")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
                     .foregroundColor(Color(hex: "11104B"))
                     .frame(width: 22)
                 
@@ -93,7 +97,7 @@ private extension AddEventOptionsSheet {
             }
             .contentShape(Rectangle())
             .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.top, 12)
             .padding(.bottom, 16)
         }
         .buttonStyle(.plain)
@@ -103,10 +107,16 @@ private extension AddEventOptionsSheet {
 // MARK: - Previews
 
 #Preview {
-    AddEventOptionsSheet(
-        onManualEntryTapped: {},
-        onShareFromAppTapped: {}
-    )
-    .presentationDetents([.height(140)])
-    .presentationDragIndicator(.visible)
+    ZStack {
+        Color.gray.ignoresSafeArea()
+        
+        AddEventOptionsSheet(
+            onManualEntryTapped: {},
+            onShareFromAppTapped: {}
+        )
+        .frame(height: 128)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: Color.black.opacity(0.15), radius: 7, x: 0, y: 0)
+        .padding(.horizontal, 20)
+    }
 }

@@ -30,27 +30,14 @@ struct MainTabView: View {
             ZStack(alignment: .bottom) {
                 tabContent
                 customTabBar
+                
+                if showAddEventOptions {
+                    addEventOptionsOverlay
+                }
             }
+            .ignoresSafeArea(.container, edges: .bottom)
         }
         .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showAddEventOptions) {
-            AddEventOptionsSheet(
-                onManualEntryTapped: {
-                    showAddEventOptions = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showAddEvent = true
-                    }
-                },
-                onShareFromAppTapped: {
-                    showAddEventOptions = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showHowToShareSheet = true
-                    }
-                }
-            )
-            .presentationDetents([.height(140)])
-            .presentationDragIndicator(.visible)
-        }
         .sheet(isPresented: $showAddEvent, onDismiss: {
             shouldRefetchEvents = true
             sharedEventData = nil
@@ -107,6 +94,52 @@ private extension MainTabView {
         case .profile:
             ProfileView()
         }
+    }
+}
+
+// MARK: - Add Event Options Overlay
+
+private extension MainTabView {
+    
+    var addEventOptionsOverlay: some View {
+        ZStack(alignment: .bottom) {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showAddEventOptions = false
+                    }
+                }
+            
+            VStack(spacing: 0) {
+                Spacer()
+                
+                AddEventOptionsSheet(
+                    onManualEntryTapped: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showAddEventOptions = false
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showAddEvent = true
+                        }
+                    },
+                    onShareFromAppTapped: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showAddEventOptions = false
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showHowToShareSheet = true
+                        }
+                    }
+                )
+                .frame(height: 128)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .shadow(color: Color.black.opacity(0.15), radius: 7, x: 0, y: 0)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 80)
+            }
+        }
+        .transition(.opacity)
     }
 }
 
@@ -175,7 +208,9 @@ private extension MainTabView {
     
     var addButton: some View {
         Button {
-            showAddEventOptions = true
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showAddEventOptions = true
+            }
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 18, weight: .medium))
