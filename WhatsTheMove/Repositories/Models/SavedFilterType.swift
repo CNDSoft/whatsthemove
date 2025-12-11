@@ -14,3 +14,4 @@ enum SavedFilterType: String, CaseIterable {
     case pastEvents = "Past Events"
 }
 
+
