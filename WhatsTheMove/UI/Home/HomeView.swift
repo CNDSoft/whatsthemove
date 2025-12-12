@@ -20,7 +20,7 @@ struct HomeView: View {
     @State private var hasLoadedEvents: Bool = false
     @State private var canLoadMore: Bool = true
     @State private var shouldRefetch: Bool = false
-    @State private var showNotificationAlert: Bool = false
+    @State private var showNotifications: Bool = false
     @State private var eventToEdit: Event?
     @State private var showDeleteConfirmation: Bool = false
     @State private var eventToDelete: Event?
@@ -77,7 +77,11 @@ struct HomeView: View {
                 deletingOverlay
             }
         }
-        .underDevelopmentAlert(isPresented: $showNotificationAlert)
+        .sheet(isPresented: $showNotifications) {
+            NotificationView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
     }
     
     private var filteredEvents: [Event] {
@@ -141,7 +145,7 @@ private extension HomeView {
     
     var notificationButton: some View {
         Button {
-            showNotificationAlert = true
+            showNotifications = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)

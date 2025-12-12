@@ -15,3 +15,4 @@ enum SavedFilterType: String, CaseIterable {
 }
 
 
+

@@ -31,7 +31,7 @@ struct AccountView: View {
     @State private var systemNotificationsEnabled: Bool = true
     @State private var analyticsEnabled: Bool = false
     
-    @State private var showNotificationAlert: Bool = false
+    @State private var showNotifications: Bool = false
     @State private var showCalendarAlert: Bool = false
     @State private var showSourceLinksAlert: Bool = false
     @State private var showRegistrationAlert: Bool = false
@@ -62,7 +62,11 @@ struct AccountView: View {
             lastName = userData.lastName ?? ""
             email = userData.email ?? ""
         }
-        .underDevelopmentAlert(isPresented: $showNotificationAlert)
+        .sheet(isPresented: $showNotifications) {
+            NotificationView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
         .underDevelopmentAlert(isPresented: $showSourceLinksAlert)
         .underDevelopmentAlert(isPresented: $showRegistrationAlert)
@@ -146,7 +150,7 @@ private extension AccountView {
     
     var notificationButton: some View {
         Button {
-            showNotificationAlert = true
+            showNotifications = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)
@@ -371,7 +375,7 @@ private extension AccountView {
                 Spacer()
                 
                 CustomToggle(isOn: $eventRemindersEnabled) {
-                    showNotificationAlert = true
+                    showNotifications = true
                 }
             }
             
