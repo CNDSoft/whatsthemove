@@ -15,6 +15,8 @@ struct ProfileView: View {
     @Environment(\.safeAreaInsets) private var safeAreaInsets
     
     @State private var showCloseAccountAlert: Bool = false
+    @State private var deletePassword: String = ""
+    @State private var isDeletingAccount: Bool = false
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var email: String = ""
@@ -47,12 +49,10 @@ struct ProfileView: View {
             email = injected.appState[\.userData.email] ?? ""
             phoneNumber = injected.appState[\.userData.phoneNumber] ?? ""
         }
-        .alert("Close Account", isPresented: $showCloseAccountAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Close Account", role: .destructive) {
+        .overlay {
+            if showCloseAccountAlert {
+                closeAccountDialog
             }
-        } message: {
-            Text("Are you sure you want to close your account? This action cannot be undone.")
         }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
@@ -275,6 +275,134 @@ private extension ProfileView {
         .padding(.top, 15)
         .disabled(isSaving)
         .opacity(isSaving ? 0.5 : 1)
+    }
+}
+
+// MARK: - Close Account Dialog
+
+private extension ProfileView {
+    
+    var closeAccountDialog: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    if !isDeletingAccount {
+                        showCloseAccountAlert = false
+                        deletePassword = ""
+                    }
+                }
+            
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Close Account")
+                        .font(.rubik(.semiBold, size: 18))
+                        .foregroundColor(Color(hex: "11104B"))
+                    
+                    Text("Are you sure you want to close your account? This action cannot be undone and all your data will be permanently deleted.")
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "55564F"))
+                        .lineSpacing(20 - 14)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Enter your password to confirm")
+                            .font(.rubik(.medium, size: 13))
+                            .foregroundColor(Color(hex: "11104B"))
+                        
+                        SecureField("Password", text: $deletePassword)
+                            .font(.rubik(.regular, size: 14))
+                            .foregroundColor(Color(hex: "11104B"))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(Color(hex: "F4F4F4"))
+                            .cornerRadius(8)
+                            .disabled(isDeletingAccount)
+                    }
+                }
+                .padding(20)
+                
+                HStack(spacing: 12) {
+                    Button {
+                        if !isDeletingAccount {
+                            showCloseAccountAlert = false
+                            deletePassword = ""
+                        }
+                    } label: {
+                        Text("Cancel")
+                            .font(.rubik(.medium, size: 14))
+                            .foregroundColor(Color(hex: "11104B"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(hex: "F4F4F4"))
+                            .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isDeletingAccount)
+                    
+                    Button {
+                        if !isDeletingAccount && !deletePassword.isEmpty {
+                            Task { await performDeleteAccount() }
+                        }
+                    } label: {
+                        if isDeletingAccount {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        } else {
+                            Text("Delete Account")
+                                .font(.rubik(.medium, size: 14))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                    }
+                    .background(deletePassword.isEmpty ? Color(hex: "F25454").opacity(0.5) : Color(hex: "F25454"))
+                    .cornerRadius(8)
+                    .buttonStyle(.plain)
+                    .disabled(isDeletingAccount || deletePassword.isEmpty)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+            }
+            .background(Color.white)
+            .cornerRadius(12)
+            .padding(.horizontal, 40)
+        }
+    }
+}
+
+// MARK: - Account Deletion
+
+private extension ProfileView {
+    
+    func performDeleteAccount() async {
+        print("ProfileView - Starting account deletion")
+        
+        await MainActor.run {
+            isDeletingAccount = true
+        }
+        
+        do {
+            try await injected.interactors.auth.deleteAccount(currentPassword: deletePassword)
+            
+            await MainActor.run {
+                print("ProfileView - Account deletion completed, dismissing view")
+                isDeletingAccount = false
+                showCloseAccountAlert = false
+                deletePassword = ""
+                dismiss()
+            }
+        } catch {
+            await MainActor.run {
+                isDeletingAccount = false
+                showCloseAccountAlert = false
+                deletePassword = ""
+                errorMessage = error.localizedDescription
+                showError = true
+                print("ProfileView - Error deleting account: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
