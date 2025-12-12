@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "event-reminder.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
