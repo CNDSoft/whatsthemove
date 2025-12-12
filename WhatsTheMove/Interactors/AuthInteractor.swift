@@ -18,6 +18,7 @@ protocol AuthInteractor {
     func resetPassword(email: String) async throws
     func changePassword(currentPassword: String, newPassword: String) async throws
     func changeEmail(newEmail: String, currentPassword: String) async throws
+    func deleteAccount(currentPassword: String) async throws
 }
 
 struct RealAuthInteractor: AuthInteractor {
@@ -172,6 +173,62 @@ struct RealAuthInteractor: AuthInteractor {
         
         print("RealAuthInteractor - Email changed successfully")
     }
+    
+    func deleteAccount(currentPassword: String) async throws {
+        print("RealAuthInteractor - Starting account deletion")
+        
+        guard let user = Auth.auth().currentUser, let email = user.email else {
+            throw AuthInteractorError.userNotAuthenticated
+        }
+        
+        let userId = user.uid
+        
+        print("RealAuthInteractor - Re-authenticating user for account deletion")
+        let credential = EmailAuthProvider.credential(withEmail: email, password: currentPassword)
+        
+        do {
+            try await user.reauthenticate(with: credential)
+            print("RealAuthInteractor - Re-authentication successful")
+        } catch {
+            print("RealAuthInteractor - Re-authentication failed: \(error.localizedDescription)")
+            throw AuthInteractorError.invalidCurrentPassword
+        }
+        
+        print("RealAuthInteractor - Deleting user from Firestore")
+        do {
+            try await userWebRepository.deleteUser(id: userId)
+            print("RealAuthInteractor - User deleted from Firestore")
+        } catch {
+            print("RealAuthInteractor - Failed to delete user from Firestore: \(error.localizedDescription)")
+            throw AuthInteractorError.accountDeletionFailed
+        }
+        
+        print("RealAuthInteractor - Deleting Firebase Auth account")
+        do {
+            try await user.delete()
+            print("RealAuthInteractor - Firebase Auth account deleted")
+        } catch let error as NSError {
+            if error.code == 17014 {
+                print("RealAuthInteractor - Requires recent login, but already re-authenticated")
+                throw AuthInteractorError.requiresRecentLogin
+            }
+            print("RealAuthInteractor - Failed to delete Firebase Auth account: \(error.localizedDescription)")
+            throw AuthInteractorError.accountDeletionFailed
+        }
+        
+        await MainActor.run {
+            appState[\.userData.isAuthenticated] = false
+            appState[\.userData.email] = nil
+            appState[\.userData.userId] = nil
+            appState[\.userData.firstName] = nil
+            appState[\.userData.lastName] = nil
+            appState[\.userData.phoneNumber] = nil
+            appState[\.userData.events] = []
+            appState[\.userData.starredEventIds] = []
+        }
+        
+        print("RealAuthInteractor - Account deleted successfully, app state cleared")
+    }
 }
 
 struct StubAuthInteractor: AuthInteractor {
@@ -204,11 +261,17 @@ struct StubAuthInteractor: AuthInteractor {
     func changeEmail(newEmail: String, currentPassword: String) async throws {
         print("StubAuthInteractor - Change email stub")
     }
+    
+    func deleteAccount(currentPassword: String) async throws {
+        print("StubAuthInteractor - Delete account stub")
+    }
 }
 
 enum AuthInteractorError: LocalizedError {
     case userNotAuthenticated
     case invalidCurrentPassword
+    case requiresRecentLogin
+    case accountDeletionFailed
     
     var errorDescription: String? {
         switch self {
@@ -216,6 +279,10 @@ enum AuthInteractorError: LocalizedError {
             return "User is not authenticated"
         case .invalidCurrentPassword:
             return "Current password is incorrect"
+        case .requiresRecentLogin:
+            return "This operation requires recent authentication. Please try again."
+        case .accountDeletionFailed:
+            return "Failed to delete account. Please try again later."
         }
     }
 }
