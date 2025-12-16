@@ -64,7 +64,7 @@ private extension AddEventOptionsSheet {
                     .foregroundColor(Color(hex: "11104B"))
                     .frame(width: 22)
                 
-                Text("Share from another app")
+                Text("Share from another app or website")
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "11104B"))
                 
