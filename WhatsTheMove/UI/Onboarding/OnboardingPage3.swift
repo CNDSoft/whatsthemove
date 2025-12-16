@@ -58,13 +58,13 @@ private extension OnboardingPage3 {
     
     var descriptionSection: some View {
         VStack(spacing: 5) {
-            Text("Snap a photo of any flyer or poster. We'll extract all the details automatically.")
+            Text("Share events from Instagram, Eventbrite, and other apps directly to wtm.")
                 .font(.rubik(.regular, size: 16))
                 .foregroundColor(Color(hex: "11104B"))
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
             
-            Text("Or enter the event details manually")
+            Text("Or add them manually anytime.")
                 .font(.rubik(.regular, size: 16))
                 .foregroundColor(Color(hex: "55564F"))
                 .multilineTextAlignment(.center)

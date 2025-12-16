@@ -221,7 +221,7 @@ private extension OnboardingView {
         case 1:
             return "Next"
         case 2:
-            return "Allow Camera Access"
+            return "Next"
         case 3:
             return "Open the Share Menu"
         case 4:
@@ -239,7 +239,7 @@ private extension OnboardingView {
     
     var shouldShowSkipButton: Bool {
         switch currentPage {
-        case 2, 3, 5, 6:
+        case 3, 5, 6:
             return true
         default:
             return false
@@ -248,9 +248,6 @@ private extension OnboardingView {
     
     func handlePrimaryAction() {
         switch currentPage {
-        case 2:
-            onRequestCameraAccess?()
-            goToNextPage()
         case 3:
             showShareSheet = true
         case 5:
