@@ -385,14 +385,19 @@ private extension EventCardView {
     }
     
     var formattedTime: String? {
-        guard let start = event.startTime, let end = event.endTime else {
+        guard let start = event.startTime else {
             return nil
         }
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mma"
         let startTimeString = formatter.string(from: start).lowercased()
-        let endTimeString = formatter.string(from: end).lowercased()
-        return "\(startTimeString) - \(endTimeString)"
+        
+        if let end = event.endTime {
+            let endTimeString = formatter.string(from: end).lowercased()
+            return "\(startTimeString) - \(endTimeString)"
+        } else {
+            return startTimeString
+        }
     }
 }
 
