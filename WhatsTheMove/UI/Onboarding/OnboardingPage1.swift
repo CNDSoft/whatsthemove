@@ -58,7 +58,7 @@ private extension OnboardingPage1 {
     
     var descriptionSection: some View {
         Text("You screenshot flyers, save Instagram posts, and tell yourself you'll remember... but life gets busy.")
-            .font(.rubik(.regular, size: 14))
+            .font(.rubik(.regular, size: 16))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
             .lineSpacing(3)

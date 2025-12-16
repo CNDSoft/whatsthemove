@@ -59,7 +59,7 @@ private extension OnboardingPage4 {
     
     var descriptionSection: some View {
         Text("Add the wtm extension to your Favorites to save content from other apps.")
-            .font(.rubik(.regular, size: 14))
+            .font(.rubik(.regular, size: 16))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
             .lineSpacing(6)

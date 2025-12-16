@@ -53,7 +53,7 @@ private extension OnboardingPage7 {
             Text("Export saved events to your")
             Text("calendar with one tap")
         }
-        .font(.rubik(.regular, size: 14))
+        .font(.rubik(.regular, size: 16))
         .foregroundColor(Color(hex: "11104B"))
         .multilineTextAlignment(.center)
     }

@@ -58,7 +58,7 @@ private extension OnboardingPage5 {
     
     var descriptionSection: some View {
         Text("No more scrolling through screenshots. Filter by when you're free and instantly see your options of things to do.")
-            .font(.rubik(.regular, size: 14))
+            .font(.rubik(.regular, size: 16))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
             .lineSpacing(3)

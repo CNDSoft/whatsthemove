@@ -59,13 +59,13 @@ private extension OnboardingPage3 {
     var descriptionSection: some View {
         VStack(spacing: 5) {
             Text("Snap a photo of any flyer or poster. We'll extract all the details automatically.")
-                .font(.rubik(.regular, size: 14))
+                .font(.rubik(.regular, size: 16))
                 .foregroundColor(Color(hex: "11104B"))
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
             
             Text("Or enter the event details manually")
-                .font(.rubik(.regular, size: 14))
+                .font(.rubik(.regular, size: 16))
                 .foregroundColor(Color(hex: "55564F"))
                 .multilineTextAlignment(.center)
         }
