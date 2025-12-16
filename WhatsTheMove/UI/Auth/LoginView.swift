@@ -82,9 +82,6 @@ private extension LoginView {
                         .resizable()
                         .scaledToFit()
                         .frame(height: 72)
-                    
-                    whatsTheMoveBadge
-                        .offset(x: 80, y: 22)
                 }
             }
             .padding(.top, 60)
