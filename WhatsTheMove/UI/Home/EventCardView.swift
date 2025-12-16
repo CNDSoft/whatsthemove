@@ -8,6 +8,8 @@
 
 import SwiftUI
 import Combine
+import PhotosUI
+import UIKit
 
 struct EventCardView: View {
     
@@ -25,6 +27,12 @@ struct EventCardView: View {
     @State private var showCalendarAlert: Bool = false
     @State private var showDismissWarningAlert: Bool = false
     @State private var showEventFormForDetails: Bool = false
+    @State private var showImageSourceSheet: Bool = false
+    @State private var showCamera: Bool = false
+    @State private var showPhotosPicker: Bool = false
+    @State private var selectedImageItem: PhotosPickerItem?
+    @State private var selectedImage: UIImage?
+    @State private var isUploadingImage: Bool = false
     @Environment(\.injected) private var injected: DIContainer
     
     var body: some View {
@@ -66,6 +74,22 @@ struct EventCardView: View {
         .sheet(isPresented: $showEventFormForDetails) {
             AddEventView(mode: .edit(event))
                 .inject(injected)
+        }
+        .sheet(isPresented: $showImageSourceSheet) {
+            imageSourceSheet
+        }
+        .photosPicker(isPresented: $showPhotosPicker, selection: $selectedImageItem, matching: .images)
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraView(image: $selectedImage)
+                .ignoresSafeArea()
+        }
+        .onChange(of: selectedImageItem) { _, newItem in
+            loadImage(from: newItem)
+        }
+        .onChange(of: selectedImage) { _, newImage in
+            if let image = newImage {
+                uploadImage(image)
+            }
         }
         .underDevelopmentAlert(isPresented: $showMoreAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
@@ -122,10 +146,23 @@ private extension EventCardView {
             .fill(Color(hex: "F8F7F1"))
             .frame(width: 100, height: 100)
             .overlay(
-                Image(systemName: "photo")
-                    .font(.system(size: 24))
-                    .foregroundColor(Color(hex: "55564F").opacity(0.5))
+                ZStack {
+                    Image(systemName: "photo")
+                        .font(.system(size: 24))
+                        .foregroundColor(Color(hex: "55564F").opacity(0.5))
+                    
+                    if isUploadingImage {
+                        Color.black.opacity(0.5)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        
+                        ProgressView()
+                            .tint(.white)
+                    }
+                }
             )
+            .onTapGesture {
+                showImageSourceSheet = true
+            }
     }
     
     var starButton: some View {
@@ -572,6 +609,73 @@ private extension EventCardView {
         }
         .onTapGesture {
             showExpandedImage = false
+        }
+    }
+}
+
+// MARK: - Image Upload
+
+private extension EventCardView {
+    
+    var imageSourceSheet: some View {
+        ImageSourceSheetView(
+            onCameraTapped: {
+                showImageSourceSheet = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showCamera = true
+                }
+            },
+            onPhotoLibraryTapped: {
+                showImageSourceSheet = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showPhotosPicker = true
+                }
+            }
+        )
+        .presentationDetents([.height(160)])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(.white)
+    }
+    
+    func loadImage(from item: PhotosPickerItem?) {
+        guard let item = item else { return }
+        
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                await MainActor.run {
+                    selectedImage = image
+                }
+            }
+        }
+    }
+    
+    func uploadImage(_ image: UIImage) {
+        guard !isUploadingImage else { return }
+        
+        isUploadingImage = true
+        
+        Task {
+            do {
+                var updatedEvent = event
+                try await injected.interactors.events.updateEvent(updatedEvent, newImage: image)
+                
+                await MainActor.run {
+                    isUploadingImage = false
+                    selectedImage = nil
+                    selectedImageItem = nil
+                }
+                
+                print("EventCardView - Image uploaded successfully for event: \(event.id)")
+            } catch {
+                await MainActor.run {
+                    isUploadingImage = false
+                    selectedImage = nil
+                    selectedImageItem = nil
+                }
+                
+                print("EventCardView - Error uploading image: \(error.localizedDescription)")
+            }
         }
     }
 }

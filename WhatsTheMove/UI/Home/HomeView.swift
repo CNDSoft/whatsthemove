@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct HomeView: View {
     
@@ -52,6 +53,9 @@ struct HomeView: View {
                 }
             }
         }
+        .onReceive(eventsUpdate) { updatedEvents in
+            events = updatedEvents
+        }
         .sheet(item: $eventToEdit, onDismiss: {
             Task {
                 await refreshEvents()
@@ -82,6 +86,10 @@ struct HomeView: View {
     
     private var filteredEvents: [Event] {
         return injected.interactors.events.filterEvents(events, by: selectedFilter)
+    }
+    
+    private var eventsUpdate: AnyPublisher<[Event], Never> {
+        injected.appState.updates(for: \.userData.events)
     }
 }
 

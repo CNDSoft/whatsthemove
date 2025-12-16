@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct SavedEventsView: View {
     
@@ -59,6 +60,9 @@ struct SavedEventsView: View {
                     await refreshEvents()
                 }
             }
+        }
+        .onReceive(eventsUpdate) { updatedEvents in
+            events = updatedEvents
         }
         .sheet(isPresented: $showCategorySheet) {
             CategoriesView(
@@ -152,6 +156,10 @@ struct SavedEventsView: View {
     
     private var availableCategories: [EventCategory] {
         return injected.interactors.events.getAvailableCategories(from: eventsInCurrentFilter)
+    }
+    
+    private var eventsUpdate: AnyPublisher<[Event], Never> {
+        injected.appState.updates(for: \.userData.events)
     }
 }
 
