@@ -32,6 +32,7 @@ struct AccountView: View {
     @State private var analyticsEnabled: Bool = false
     
     @State private var showNotifications: Bool = false
+    @State private var showNotificationsAlert: Bool = false
     @State private var showCalendarAlert: Bool = false
     @State private var showSourceLinksAlert: Bool = false
     @State private var showRegistrationAlert: Bool = false
@@ -67,6 +68,7 @@ struct AccountView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .underDevelopmentAlert(isPresented: $showNotificationsAlert)
         .underDevelopmentAlert(isPresented: $showCalendarAlert)
         .underDevelopmentAlert(isPresented: $showSourceLinksAlert)
         .underDevelopmentAlert(isPresented: $showRegistrationAlert)
@@ -91,9 +93,6 @@ private extension AccountView {
             VStack(spacing: 5) {
                 profileSection
                 calendarExportSection
-                notificationsSection
-                dataPrivacySection
-                supportInfoSection
                 signOutSection
                 footer
             }
@@ -150,7 +149,7 @@ private extension AccountView {
     
     var notificationButton: some View {
         Button {
-            showNotifications = true
+            showNotificationsAlert = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)
