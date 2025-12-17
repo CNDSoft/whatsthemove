@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 protocol CalendarInteractor {
     func connectAppleCalendar(calendarIdentifier: String, calendarName: String) async throws
@@ -22,6 +23,8 @@ protocol CalendarInteractor {
     func checkCalendarPermission() async -> Bool
     func isGoogleAuthenticated() -> Bool
     func hasRequestedApplePermission() -> Bool
+    func isApplePermissionDenied() -> Bool
+    func openSettings()
 }
 
 struct RealCalendarInteractor: CalendarInteractor {
@@ -307,6 +310,18 @@ struct RealCalendarInteractor: CalendarInteractor {
     func hasRequestedApplePermission() -> Bool {
         return appleCalendarRepository.hasRequestedPermission()
     }
+    
+    func isApplePermissionDenied() -> Bool {
+        return appleCalendarRepository.isPermissionDenied()
+    }
+    
+    func openSettings() {
+        if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+            Task { @MainActor in
+                UIApplication.shared.open(settingsURL)
+            }
+        }
+    }
 }
 
 struct StubCalendarInteractor: CalendarInteractor {
@@ -356,5 +371,12 @@ struct StubCalendarInteractor: CalendarInteractor {
     
     func hasRequestedApplePermission() -> Bool {
         return true
+    }
+    
+    func isApplePermissionDenied() -> Bool {
+        return false
+    }
+    
+    func openSettings() {
     }
 }

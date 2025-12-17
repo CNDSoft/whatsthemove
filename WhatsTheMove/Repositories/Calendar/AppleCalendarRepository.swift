@@ -13,6 +13,7 @@ import SwiftUI
 protocol AppleCalendarRepository {
     func requestAccess() async throws -> Bool
     func hasRequestedPermission() -> Bool
+    func isPermissionDenied() -> Bool
     func getCalendars() async throws -> [CalendarInfo]
     func createEvent(_ event: Event, in calendarId: String, includeSourceLinks: Bool) async throws -> String
     func updateEvent(_ event: Event, calendarEventId: String, in calendarId: String, includeSourceLinks: Bool) async throws
@@ -44,6 +45,13 @@ struct RealAppleCalendarRepository: AppleCalendarRepository {
         let hasRequested = authStatus != .notDetermined
         print("RealAppleCalendarRepository - Permission requested: \(hasRequested), status: \(authStatus.rawValue)")
         return hasRequested
+    }
+    
+    func isPermissionDenied() -> Bool {
+        let authStatus = EKEventStore.authorizationStatus(for: .event)
+        let isDenied = authStatus == .denied || authStatus == .restricted
+        print("RealAppleCalendarRepository - Permission denied: \(isDenied), status: \(authStatus.rawValue)")
+        return isDenied
     }
     
     func getCalendars() async throws -> [CalendarInfo] {
@@ -220,6 +228,10 @@ struct StubAppleCalendarRepository: AppleCalendarRepository {
     
     func hasRequestedPermission() -> Bool {
         return true
+    }
+    
+    func isPermissionDenied() -> Bool {
+        return false
     }
 
     func getCalendars() async throws -> [CalendarInfo] {

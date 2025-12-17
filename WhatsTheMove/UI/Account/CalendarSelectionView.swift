@@ -14,12 +14,22 @@ struct CalendarSelectionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.injected) private var injected: DIContainer
     
-    @State private var selectedCalendarType: CalendarType = .apple
+    var initialCalendarType: CalendarType = .apple
+    var autoConnect: Bool = false
+    
     @State private var calendarsState: Loadable<[CalendarInfo]> = .notRequested
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
     @State private var showSignOutConfirmation: Bool = false
     @State private var isSigningOut: Bool = false
+    
+    @State private var selectedCalendarType: CalendarType
+    
+    init(initialCalendarType: CalendarType = .apple, autoConnect: Bool = false) {
+        self.initialCalendarType = initialCalendarType
+        self.autoConnect = autoConnect
+        self._selectedCalendarType = State(initialValue: initialCalendarType)
+    }
     
     var body: some View {
         NavigationView {
@@ -47,7 +57,11 @@ struct CalendarSelectionView: View {
                 }
             }
             .onAppear {
-                loadCalendars()
+                if autoConnect {
+                    triggerAutoConnect()
+                } else {
+                    loadCalendars()
+                }
             }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) { }
@@ -68,7 +82,7 @@ struct CalendarSelectionView: View {
     @ViewBuilder private var content: some View {
         if selectedCalendarType == .google && !injected.interactors.calendar.isGoogleAuthenticated() {
             connectGoogleView()
-        } else if selectedCalendarType == .apple && !injected.interactors.calendar.hasRequestedApplePermission() {
+        } else if selectedCalendarType == .apple && (!injected.interactors.calendar.hasRequestedApplePermission() || injected.interactors.calendar.isApplePermissionDenied()) {
             connectAppleView()
         } else {
             switch calendarsState {
@@ -182,7 +196,9 @@ private extension CalendarSelectionView {
             )
             .padding(.horizontal, 40)
 
-            Text("Grant access to your Apple Calendar to sync events")
+            Text(injected.interactors.calendar.isApplePermissionDenied() ? 
+                "Calendar access was denied. Tap the button to open Settings and enable access." :
+                "Grant access to your Apple Calendar to sync events")
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
                     .multilineTextAlignment(.center)
@@ -365,7 +381,7 @@ private extension CalendarSelectionView {
             return
         }
         
-        if selectedCalendarType == .apple && !injected.interactors.calendar.hasRequestedApplePermission() {
+        if selectedCalendarType == .apple && (!injected.interactors.calendar.hasRequestedApplePermission() || injected.interactors.calendar.isApplePermissionDenied()) {
             calendarsState = .notRequested
             return
         }
@@ -387,6 +403,12 @@ private extension CalendarSelectionView {
     }
     
     func connectAppleCalendar() {
+        if injected.interactors.calendar.isApplePermissionDenied() {
+            print("CalendarSelectionView - Permission denied, opening Settings")
+            injected.interactors.calendar.openSettings()
+            return
+        }
+        
         calendarsState = .isLoading(last: nil, cancelBag: CancelBag())
         
         Task {
@@ -404,7 +426,7 @@ private extension CalendarSelectionView {
                     print("CalendarSelectionView - Permission denied")
                     await MainActor.run {
                         calendarsState = .notRequested
-                        errorMessage = "Calendar permission was denied. Please enable it in Settings."
+                        errorMessage = "Calendar permission was denied. Tap the button again to open Settings."
                         showError = true
                     }
                 }
@@ -501,11 +523,32 @@ private extension CalendarSelectionView {
             }
         }
     }
+    
+    func triggerAutoConnect() {
+        print("CalendarSelectionView - Auto-connecting to \(selectedCalendarType)")
+        
+        switch selectedCalendarType {
+        case .apple:
+            connectAppleCalendar()
+        case .google:
+            connectGoogleCalendar()
+        }
+    }
 }
 
 // MARK: - Previews
 
-#Preview {
-    CalendarSelectionView()
+#Preview("Apple Calendar") {
+    CalendarSelectionView(initialCalendarType: .apple, autoConnect: false)
+        .inject(DIContainer(appState: AppState(), interactors: .stub))
+}
+
+#Preview("Google Calendar") {
+    CalendarSelectionView(initialCalendarType: .google, autoConnect: false)
+        .inject(DIContainer(appState: AppState(), interactors: .stub))
+}
+
+#Preview("Auto Connect Apple") {
+    CalendarSelectionView(initialCalendarType: .apple, autoConnect: true)
         .inject(DIContainer(appState: AppState(), interactors: .stub))
 }

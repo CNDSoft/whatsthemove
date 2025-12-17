@@ -15,6 +15,7 @@ final class MockedAppleCalendarRepository: Mock, AppleCalendarRepository {
     enum Action: Equatable {
         case requestAccess
         case hasRequestedPermission
+        case isPermissionDenied
         case getCalendars
         case createEvent(Event, String, Bool)
         case updateEvent(Event, String, String, Bool)
@@ -24,6 +25,7 @@ final class MockedAppleCalendarRepository: Mock, AppleCalendarRepository {
     var actions: MockActions<Action>
     var accessGranted: Bool = true
     var permissionRequested: Bool = true
+    var permissionDenied: Bool = false
     var calendars: [CalendarInfo] = []
     var eventIdResponse: String = "test-event-id"
     var shouldThrowError: Bool = false
@@ -43,6 +45,11 @@ final class MockedAppleCalendarRepository: Mock, AppleCalendarRepository {
     func hasRequestedPermission() -> Bool {
         register(.hasRequestedPermission)
         return permissionRequested
+    }
+    
+    func isPermissionDenied() -> Bool {
+        register(.isPermissionDenied)
+        return permissionDenied
     }
     
     func getCalendars() async throws -> [CalendarInfo] {

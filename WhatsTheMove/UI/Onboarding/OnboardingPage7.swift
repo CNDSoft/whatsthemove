@@ -10,6 +10,8 @@ import SwiftUI
 
 struct OnboardingPage7: View {
     
+    @State private var selectedCalendarType: CalendarType?
+    
     var onConnectGoogle: (() -> Void)?
     var onConnectApple: (() -> Void)?
     
@@ -28,6 +30,9 @@ struct OnboardingPage7: View {
             Spacer()
         }
         .padding(.horizontal, 40)
+        .sheet(item: $selectedCalendarType) { calendarType in
+            CalendarSelectionView(initialCalendarType: calendarType, autoConnect: true)
+        }
     }
 }
 
@@ -68,13 +73,17 @@ private extension OnboardingPage7 {
             CalendarConnectButton(
                 iconName: "google",
                 title: "Connect Google Calendar",
-                action: { onConnectGoogle?() }
+                action: {
+                    selectedCalendarType = .google
+                }
             )
             
             CalendarConnectButton(
                 iconName: "apple",
                 title: "Connect Apple Calendar",
-                action: { onConnectApple?() }
+                action: {
+                    selectedCalendarType = .apple
+                }
             )
         }
     }

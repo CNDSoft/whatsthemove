@@ -287,8 +287,8 @@ private extension AccountView {
                                 .foregroundColor(Color(hex: "55564F"))
                             
                             Text(calendarName)
-                                .font(.rubik(.regular, size: 13))
-                                .foregroundColor(Color(hex: "55564F"))
+                                    .font(.rubik(.regular, size: 13))
+                                    .foregroundColor(Color(hex: "55564F"))
                         }
                         .padding(.leading, 23)
                     }

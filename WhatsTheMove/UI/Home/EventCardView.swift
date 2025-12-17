@@ -464,8 +464,8 @@ private extension EventCardView {
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "2D9674"))
                 } else {
-                    Image(systemName: "plus.circle")
-                        .font(.system(size: 14))
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 14))
                 }
                 
                 Text(calendarButtonText)

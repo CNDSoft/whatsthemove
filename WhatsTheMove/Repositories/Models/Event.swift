@@ -10,9 +10,11 @@ import Foundation
 
 // MARK: - CalendarType
 
-enum CalendarType: String, Codable {
+enum CalendarType: String, Codable, Identifiable {
     case apple
     case google
+    
+    var id: String { rawValue }
 }
 
 // MARK: - AdmissionType
