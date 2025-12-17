@@ -1,5 +1,5 @@
 {
-  "originHash" : "b55529513d25d5ee26f919a6015f6f239cc98be6e323118e32a7f7e5a0a2dd6d",
+  "originHash" : "bb69a2feeac26ef67153533666f5f54e342ac9d6ea7c33bd74255d09b14ff68f",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/gtm-session-fetcher.git",
       "state" : {
-        "revision" : "c756a29784521063b6a1202907e2cc47f41b667c",
-        "version" : "4.5.0"
+        "revision" : "a2ab612cb980066ee56d90d60d8462992c07f24b",
+        "version" : "3.5.0"
       }
     },
     {

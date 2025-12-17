@@ -34,6 +34,8 @@
 	<string>WhatsTheMove needs access to your calendar to automatically sync your saved events.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>WhatsTheMove needs permission to add your events to your calendar.</string>
+	<key>GIDClientID</key>
+	<string>233558487708-59q73e1sp66691qpq33pmkkmist3vshf.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -44,6 +46,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>wtm</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.googleusercontent.apps.233558487708-59q73e1sp66691qpq33pmkkmist3vshf</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.YOUR_REVERSED_CLIENT_ID</string>
 			</array>
 		</dict>
 	</array>

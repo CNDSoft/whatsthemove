@@ -8,6 +8,8 @@
 
 import Foundation
 import SwiftUI
+import AuthenticationServices
+import CommonCrypto
 
 protocol GoogleCalendarRepository {
     func authenticate() async throws
@@ -27,11 +29,133 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
     
     func authenticate() async throws {
         print("RealGoogleCalendarRepository - Starting authentication")
-        throw CalendarSyncError.authenticationFailed
+        
+        guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String else {
+            print("RealGoogleCalendarRepository - GIDClientID not found in Info.plist")
+            throw CalendarSyncError.authenticationFailed
+        }
+        
+        let redirectURI = "com.googleusercontent.apps.233558487708-59q73e1sp66691qpq33pmkkmist3vshf:/oauth2redirect"
+        let scope = "https://www.googleapis.com/auth/calendar"
+        
+        let codeVerifier = generateCodeVerifier()
+        let codeChallenge = generateCodeChallenge(from: codeVerifier)
+        
+        let authURL = "https://accounts.google.com/o/oauth2/v2/auth"
+        var components = URLComponents(string: authURL)!
+        components.queryItems = [
+            URLQueryItem(name: "client_id", value: clientID),
+            URLQueryItem(name: "redirect_uri", value: redirectURI),
+            URLQueryItem(name: "response_type", value: "code"),
+            URLQueryItem(name: "scope", value: scope),
+            URLQueryItem(name: "code_challenge", value: codeChallenge),
+            URLQueryItem(name: "code_challenge_method", value: "S256"),
+            URLQueryItem(name: "access_type", value: "offline"),
+            URLQueryItem(name: "prompt", value: "consent")
+        ]
+        
+        guard let url = components.url else {
+            throw CalendarSyncError.authenticationFailed
+        }
+        
+        do {
+            let callbackURL = try await performWebAuthentication(url: url, redirectURI: redirectURI)
+            
+            guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                  let code = components.queryItems?.first(where: { $0.name == "code" })?.value else {
+                throw CalendarSyncError.authenticationFailed
+            }
+            
+            try await exchangeCodeForTokens(code: code, codeVerifier: codeVerifier, clientID: clientID, redirectURI: redirectURI)
+            
+            print("RealGoogleCalendarRepository - Authentication successful")
+        } catch {
+            print("RealGoogleCalendarRepository - Authentication failed: \(error)")
+            throw CalendarSyncError.authenticationFailed
+        }
     }
     
     func isAuthenticated() -> Bool {
         return getAccessToken() != nil
+    }
+    
+    private func performWebAuthentication(url: URL, redirectURI: String) async throws -> URL {
+        return try await withCheckedThrowingContinuation { continuation in
+            let provider = WebAuthenticationPresentationContextProvider()
+            
+            let session = ASWebAuthenticationSession(
+                url: url,
+                callbackURLScheme: redirectURI.components(separatedBy: ":").first
+            ) { callbackURL, error in
+                _ = provider
+                
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else if let callbackURL = callbackURL {
+                    continuation.resume(returning: callbackURL)
+                } else {
+                    continuation.resume(throwing: CalendarSyncError.authenticationFailed)
+                }
+            }
+            
+            session.presentationContextProvider = provider
+            session.prefersEphemeralWebBrowserSession = false
+            session.start()
+        }
+    }
+    
+    private func exchangeCodeForTokens(code: String, codeVerifier: String, clientID: String, redirectURI: String) async throws {
+        let tokenURL = URL(string: "https://oauth2.googleapis.com/token")!
+        var request = URLRequest(url: tokenURL)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        let parameters = [
+            "code": code,
+            "client_id": clientID,
+            "redirect_uri": redirectURI,
+            "grant_type": "authorization_code",
+            "code_verifier": codeVerifier
+        ]
+        
+        let body = parameters.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" }.joined(separator: "&")
+        request.httpBody = body.data(using: .utf8)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw CalendarSyncError.authenticationFailed
+        }
+        
+        let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
+        saveAccessToken(tokenResponse.access_token)
+        
+        if let refreshToken = tokenResponse.refresh_token {
+            saveRefreshToken(refreshToken)
+        }
+    }
+    
+    private func generateCodeVerifier() -> String {
+        var buffer = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, buffer.count, &buffer)
+        return Data(buffer).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+            .trimmingCharacters(in: .whitespaces)
+    }
+    
+    private func generateCodeChallenge(from verifier: String) -> String {
+        guard let data = verifier.data(using: .utf8) else { return "" }
+        var buffer = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &buffer)
+        }
+        return Data(buffer).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+            .trimmingCharacters(in: .whitespaces)
     }
     
     func getCalendars() async throws -> [CalendarInfo] {
@@ -338,6 +462,13 @@ struct GoogleEventResponse: Codable {
     let id: String
 }
 
+struct TokenResponse: Codable {
+    let access_token: String
+    let refresh_token: String?
+    let expires_in: Int
+    let token_type: String
+}
+
 class KeychainHelper {
     
     static func save(service: String, account: String, data: String) {
@@ -383,5 +514,13 @@ class KeychainHelper {
         ]
         
         SecItemDelete(query as CFDictionary)
+    }
+}
+
+class WebAuthenticationPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first ?? ASPresentationAnchor()
     }
 }
