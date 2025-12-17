@@ -23,11 +23,13 @@ struct EventCardView: View {
     @State private var showExpandedImage: Bool = false
     @State private var isStarred: Bool = false
     @State private var showMoreAlert: Bool = false
+    @State private var calendarConnected: Bool = false
     @State private var showActionsSheet: Bool = false
     @State private var isSyncingToCalendar: Bool = false
     @State private var showCalendarError: Bool = false
     @State private var calendarErrorMessage: String = ""
     @State private var showDismissWarningAlert: Bool = false
+    @State private var showCalendarSelection: Bool = false
     @State private var showEventFormForDetails: Bool = false
     @State private var showImageSourceSheet: Bool = false
     @State private var showCamera: Bool = false
@@ -55,8 +57,12 @@ struct EventCardView: View {
         .onReceive(starredEventsUpdate) { starredIds in
             isStarred = starredIds.contains(event.id)
         }
+        .onReceive(calendarSyncUpdate) { syncEnabled in
+            calendarConnected = syncEnabled
+        }
         .onAppear {
             isStarred = injected.interactors.users.isEventStarred(eventId: event.id)
+            calendarConnected = injected.appState[\.userData.calendarSyncEnabled]
         }
         .sheet(isPresented: $showActionsSheet) {
             EventActionsSheet(
@@ -98,12 +104,20 @@ struct EventCardView: View {
         } message: {
             Text(calendarErrorMessage)
         }
+        .sheet(isPresented: $showCalendarSelection) {
+            CalendarSelectionView()
+                .inject(injected)
+        }
         .underDevelopmentAlert(isPresented: $showMoreAlert)
         .underDevelopmentAlert(isPresented: $showDismissWarningAlert)
     }
     
     private var starredEventsUpdate: AnyPublisher<Set<String>, Never> {
         injected.appState.updates(for: \.userData.starredEventIds)
+    }
+    
+    private var calendarSyncUpdate: AnyPublisher<Bool, Never> {
+        injected.appState.updates(for: \.userData.calendarSyncEnabled)
     }
 }
 
@@ -478,7 +492,7 @@ private extension EventCardView {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .allowsHitTesting(!isSyncingToCalendar && isCalendarConnected && !isEventSyncedToCalendar)
+        .allowsHitTesting(!isSyncingToCalendar && !isEventSyncedToCalendar)
     }
     
     var calendarButtonText: String {
@@ -505,7 +519,7 @@ private extension EventCardView {
     }
     
     var isCalendarConnected: Bool {
-        return injected.appState[\.userData.calendarSyncEnabled]
+        return calendarConnected
     }
     
     var viewDetailsButton: some View {
@@ -669,8 +683,7 @@ private extension EventCardView {
     func addToCalendar() {
         guard !isSyncingToCalendar else { return }
         guard isCalendarConnected else {
-            calendarErrorMessage = "Please connect a calendar in Account settings first."
-            showCalendarError = true
+            showCalendarSelection = true
             return
         }
         
