@@ -143,10 +143,6 @@ extension Event {
             errors.append("End time must be different from start time")
         }
         
-        if admission == .paid && (admissionAmount == nil || admissionAmount! <= 0) {
-            errors.append("Admission amount is required for paid events")
-        }
-        
         return errors
     }
     

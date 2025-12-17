@@ -391,9 +391,6 @@ struct RegistrationSection: View {
                 HStack(spacing: 10) {
                     RadioButton(title: "Yes", isSelected: requiresRegistration) {
                         requiresRegistration = true
-                        if registrationDeadline == nil {
-                            registrationDeadline = Date()
-                        }
                     }
                     
                     RadioButton(title: "No", isSelected: !requiresRegistration) {
@@ -403,10 +400,6 @@ struct RegistrationSection: View {
                 
                 if requiresRegistration {
                     deadlineInputField
-                    
-                    Text("Optional: Date by which you need to register")
-                        .font(.rubik(.regular, size: 12))
-                        .foregroundColor(Color(hex: "55564F"))
                     
                     if showDeadlinePicker, let deadline = Binding($registrationDeadline) {
                         DatePicker("", selection: deadline, displayedComponents: .date)
