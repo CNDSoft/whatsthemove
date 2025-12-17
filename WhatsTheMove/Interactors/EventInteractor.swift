@@ -24,6 +24,7 @@ struct RealEventInteractor: EventInteractor {
     
     let appState: Store<AppState>
     let eventWebRepository: EventWebRepository
+    let calendarInteractor: CalendarInteractor
     
     func saveEvent(_ event: Event, image: UIImage?) async throws {
         print("RealEventInteractor - Saving event: \(event.name)")
@@ -165,7 +166,9 @@ struct RealEventInteractor: EventInteractor {
     func deleteEvent(id: String) async throws {
         print("RealEventInteractor - Deleting event: \(id)")
         
-        if let event = try await eventWebRepository.getEvent(id: id) {
+        let event = try await eventWebRepository.getEvent(id: id)
+        
+        if let event = event {
             try await eventWebRepository.deleteEventImage(userId: event.userId, eventId: id)
         }
         

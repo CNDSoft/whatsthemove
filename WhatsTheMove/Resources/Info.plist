@@ -30,6 +30,10 @@
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>WhatsTheMove needs camera access to take photos for your events and profile.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>WhatsTheMove needs access to your calendar to automatically sync your saved events.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>WhatsTheMove needs permission to add your events to your calendar.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

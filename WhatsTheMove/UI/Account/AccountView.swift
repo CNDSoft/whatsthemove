@@ -21,6 +21,8 @@ struct AccountView: View {
     @State private var eventCount: Int = 0
     
     @State private var calendarConnected: Bool = false
+    @State private var connectedCalendarType: CalendarType?
+    @State private var selectedCalendarName: String?
     @State private var includeSourceLinks: Bool = true
     @State private var eventRemindersEnabled: Bool = true
     @State private var eventRemindersExpanded: Bool = true
@@ -34,8 +36,8 @@ struct AccountView: View {
     
     @State private var showNotifications: Bool = false
     @State private var showNotificationsAlert: Bool = false
-    @State private var showCalendarAlert: Bool = false
-    @State private var showSourceLinksAlert: Bool = false
+    @State private var showCalendarSelection: Bool = false
+    @State private var showDisconnectConfirmation: Bool = false
     @State private var showRegistrationAlert: Bool = false
     @State private var showSystemNotificationsAlert: Bool = false
     @State private var showAnalyticsAlert: Bool = false
@@ -59,21 +61,39 @@ struct AccountView: View {
             lastName = injected.appState[\.userData.lastName] ?? ""
             email = injected.appState[\.userData.email] ?? ""
             eventCount = injected.appState[\.userData.events].count
+            calendarConnected = injected.appState[\.userData.calendarSyncEnabled]
+            connectedCalendarType = injected.appState[\.userData.connectedCalendarType]
+            selectedCalendarName = injected.appState[\.userData.selectedCalendarName]
+            includeSourceLinks = injected.appState[\.userData.includeSourceLinksInCalendar]
         }
         .onReceive(userDataUpdate) { userData in
             firstName = userData.firstName ?? ""
             lastName = userData.lastName ?? ""
             email = userData.email ?? ""
             eventCount = userData.events.count
+            calendarConnected = userData.calendarSyncEnabled
+            connectedCalendarType = userData.connectedCalendarType
+            selectedCalendarName = userData.selectedCalendarName
+            includeSourceLinks = userData.includeSourceLinksInCalendar
         }
         .sheet(isPresented: $showNotifications) {
             NotificationView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showCalendarSelection) {
+            CalendarSelectionView()
+                .inject(injected)
+        }
+        .confirmationDialog("Disconnect Calendar", isPresented: $showDisconnectConfirmation) {
+            Button("Disconnect", role: .destructive) {
+                disconnectCalendar()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will stop syncing events to your calendar. Calendar events already created will not be deleted.")
+        }
         .underDevelopmentAlert(isPresented: $showNotificationsAlert)
-        .underDevelopmentAlert(isPresented: $showCalendarAlert)
-        .underDevelopmentAlert(isPresented: $showSourceLinksAlert)
         .underDevelopmentAlert(isPresented: $showRegistrationAlert)
         .underDevelopmentAlert(isPresented: $showSystemNotificationsAlert)
         .underDevelopmentAlert(isPresented: $showAnalyticsAlert)
@@ -239,7 +259,11 @@ private extension AccountView {
     
     var eventCalendarRow: some View {
         Button {
-            showCalendarAlert = true
+            if calendarConnected {
+                showDisconnectConfirmation = true
+            } else {
+                showCalendarSelection = true
+            }
         } label: {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -256,17 +280,15 @@ private extension AccountView {
                             .foregroundColor(Color(hex: "11104B"))
                     }
                     
-                    if calendarConnected {
+                    if calendarConnected, let calendarType = connectedCalendarType, let calendarName = selectedCalendarName {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Connected: Google Calendar (Personal)")
+                            Text("Connected: \(calendarType == .apple ? "Apple" : "Google") Calendar")
                                 .font(.rubik(.regular, size: 13))
                                 .foregroundColor(Color(hex: "55564F"))
                             
-                            if !email.isEmpty {
-                                Text(email)
-                                    .font(.rubik(.regular, size: 13))
-                                    .foregroundColor(Color(hex: "55564F"))
-                            }
+                            Text(calendarName)
+                                .font(.rubik(.regular, size: 13))
+                                .foregroundColor(Color(hex: "55564F"))
                         }
                         .padding(.leading, 23)
                     }
@@ -333,7 +355,7 @@ private extension AccountView {
             Spacer()
             
             CustomToggle(isOn: $includeSourceLinks) {
-                showSourceLinksAlert = true
+                toggleIncludeSourceLinks()
             }
         }
         .padding(.horizontal, 20)
@@ -669,6 +691,24 @@ private extension AccountView {
 // MARK: - Side Effects
 
 private extension AccountView {
+    
+    func toggleIncludeSourceLinks() {
+        includeSourceLinks.toggle()
+        UserDefaults.standard.set(includeSourceLinks, forKey: "includeSourceLinksInCalendar")
+        injected.appState[\.userData.includeSourceLinksInCalendar] = includeSourceLinks
+        print("AccountView - Include source links set to: \(includeSourceLinks)")
+    }
+    
+    func disconnectCalendar() {
+        Task {
+            do {
+                try await injected.interactors.calendar.disconnectCalendar()
+                print("AccountView - Calendar disconnected successfully")
+            } catch {
+                print("AccountView - Error disconnecting calendar: \(error)")
+            }
+        }
+    }
     
     func signOut() {
         isSigningOut = true

@@ -9,10 +9,12 @@
 import Foundation
 import UserNotifications
 import AVFoundation
+import EventKit
 
 enum Permission {
     case pushNotifications
     case camera
+    case calendar
 }
 
 extension Permission {
@@ -74,6 +76,8 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
             }
         case .camera:
             appState[keyPath] = cameraPermissionStatus()
+        case .calendar:
+            appState[keyPath] = calendarPermissionStatus()
         }
     }
 
@@ -92,6 +96,10 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
         case .camera:
             Task {
                 await requestCameraPermission()
+            }
+        case .calendar:
+            Task {
+                await requestCalendarPermission()
             }
         }
     }
@@ -148,6 +156,40 @@ private extension RealUserPermissionsInteractor {
         let isGranted = await AVCaptureDevice.requestAccess(for: .video)
         await MainActor.run {
             appState[\.permissions.camera] = isGranted ? .granted : .denied
+        }
+    }
+}
+
+// MARK: - Calendar
+
+extension EKAuthorizationStatus {
+    var map: Permission.Status {
+        switch self {
+        case .denied, .restricted: return .denied
+        case .fullAccess, .writeOnly: return .granted
+        case .notDetermined: return .notRequested
+        @unknown default: return .notRequested
+        }
+    }
+}
+
+private extension RealUserPermissionsInteractor {
+    
+    func calendarPermissionStatus() -> Permission.Status {
+        return EKEventStore.authorizationStatus(for: .event).map
+    }
+    
+    func requestCalendarPermission() async {
+        let eventStore = EKEventStore()
+        do {
+            let isGranted = try await eventStore.requestFullAccessToEvents()
+            await MainActor.run {
+                appState[\.permissions.calendar] = isGranted ? .granted : .denied
+            }
+        } catch {
+            await MainActor.run {
+                appState[\.permissions.calendar] = .denied
+            }
         }
     }
 }

@@ -224,6 +224,14 @@ extension Event {
             dict["location"] = location
         }
         
+        if let appleCalendarEventId = appleCalendarEventId {
+            dict["appleCalendarEventId"] = appleCalendarEventId
+        }
+        
+        if let googleCalendarEventId = googleCalendarEventId {
+            dict["googleCalendarEventId"] = googleCalendarEventId
+        }
+        
         return dict
     }
     
@@ -252,6 +260,8 @@ extension Event {
         let category = categoryRaw.flatMap { EventCategory(rawValue: $0) }
         let notes = dict["notes"] as? String
         let location = dict["location"] as? String
+        let appleCalendarEventId = dict["appleCalendarEventId"] as? String
+        let googleCalendarEventId = dict["googleCalendarEventId"] as? String
         
         return Event(
             id: id,
@@ -271,7 +281,9 @@ extension Event {
             location: location,
             status: status,
             createdAt: createdAtTimestamp.dateValue(),
-            updatedAt: updatedAtTimestamp.dateValue()
+            updatedAt: updatedAtTimestamp.dateValue(),
+            appleCalendarEventId: appleCalendarEventId,
+            googleCalendarEventId: googleCalendarEventId
         )
     }
 }

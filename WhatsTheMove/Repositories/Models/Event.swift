@@ -8,6 +8,13 @@
 
 import Foundation
 
+// MARK: - CalendarType
+
+enum CalendarType: String, Codable {
+    case apple
+    case google
+}
+
 // MARK: - AdmissionType
 
 enum AdmissionType: String, Codable {
@@ -86,6 +93,8 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
     var status: EventStatus
     let createdAt: Date
     var updatedAt: Date
+    var appleCalendarEventId: String?
+    var googleCalendarEventId: String?
     
     init(
         id: String = UUID().uuidString,
@@ -105,7 +114,9 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         location: String? = nil,
         status: EventStatus = .interested,
         createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        appleCalendarEventId: String? = nil,
+        googleCalendarEventId: String? = nil
     ) {
         self.id = id
         self.userId = userId
@@ -125,6 +136,8 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         self.status = status
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.appleCalendarEventId = appleCalendarEventId
+        self.googleCalendarEventId = googleCalendarEventId
     }
 }
 

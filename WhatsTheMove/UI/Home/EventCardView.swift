@@ -24,7 +24,9 @@ struct EventCardView: View {
     @State private var isStarred: Bool = false
     @State private var showMoreAlert: Bool = false
     @State private var showActionsSheet: Bool = false
-    @State private var showCalendarAlert: Bool = false
+    @State private var isSyncingToCalendar: Bool = false
+    @State private var showCalendarError: Bool = false
+    @State private var calendarErrorMessage: String = ""
     @State private var showDismissWarningAlert: Bool = false
     @State private var showEventFormForDetails: Bool = false
     @State private var showImageSourceSheet: Bool = false
@@ -91,8 +93,12 @@ struct EventCardView: View {
                 uploadImage(image)
             }
         }
+        .alert("Calendar Sync Error", isPresented: $showCalendarError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(calendarErrorMessage)
+        }
         .underDevelopmentAlert(isPresented: $showMoreAlert)
-        .underDevelopmentAlert(isPresented: $showCalendarAlert)
         .underDevelopmentAlert(isPresented: $showDismissWarningAlert)
     }
     
@@ -446,22 +452,60 @@ private extension EventCardView {
     
     var calendarButton: some View {
         Button {
-            showCalendarAlert = true
+            addToCalendar()
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "plus.circle")
-                    .font(.system(size: 14))
+                if isSyncingToCalendar {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .frame(width: 14, height: 14)
+                } else if isEventSyncedToCalendar {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: "2D9674"))
+                } else {
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 14))
+                }
                 
-                Text("Calendar")
+                Text(calendarButtonText)
                     .font(.rubik(.regular, size: 12))
             }
-            .foregroundColor(Color(hex: "11104B"))
+            .foregroundColor(isEventSyncedToCalendar ? Color(hex: "2D9674") : Color(hex: "11104B"))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(Color(hex: "F8F7F1"))
+            .background(isEventSyncedToCalendar ? Color(hex: "45DFAE").opacity(0.1) : Color(hex: "F8F7F1"))
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .allowsHitTesting(!isSyncingToCalendar && isCalendarConnected && !isEventSyncedToCalendar)
+    }
+    
+    var calendarButtonText: String {
+        if isSyncingToCalendar {
+            return "Syncing..."
+        } else if isEventSyncedToCalendar {
+            return "In Calendar"
+        } else if !isCalendarConnected {
+            return "No Calendar"
+        } else {
+            return "Calendar"
+        }
+    }
+    
+    var isEventSyncedToCalendar: Bool {
+        let calendarType = injected.appState[\.userData.connectedCalendarType]
+        
+        if calendarType == .apple && event.appleCalendarEventId != nil {
+            return true
+        } else if calendarType == .google && event.googleCalendarEventId != nil {
+            return true
+        }
+        return false
+    }
+    
+    var isCalendarConnected: Bool {
+        return injected.appState[\.userData.calendarSyncEnabled]
     }
     
     var viewDetailsButton: some View {
@@ -614,6 +658,48 @@ private extension EventCardView {
         }
         .onTapGesture {
             showExpandedImage = false
+        }
+    }
+}
+
+// MARK: - Calendar Sync
+
+private extension EventCardView {
+    
+    func addToCalendar() {
+        guard !isSyncingToCalendar else { return }
+        guard isCalendarConnected else {
+            calendarErrorMessage = "Please connect a calendar in Account settings first."
+            showCalendarError = true
+            return
+        }
+        
+        if isEventSyncedToCalendar {
+            calendarErrorMessage = "This event is already in your calendar."
+            showCalendarError = true
+            return
+        }
+        
+        isSyncingToCalendar = true
+        
+        Task {
+            do {
+                try await injected.interactors.calendar.syncEvent(event)
+                
+                await MainActor.run {
+                    isSyncingToCalendar = false
+                }
+                
+                print("EventCardView - Event synced to calendar successfully: \(event.id)")
+            } catch {
+                await MainActor.run {
+                    isSyncingToCalendar = false
+                    calendarErrorMessage = error.localizedDescription
+                    showCalendarError = true
+                }
+                
+                print("EventCardView - Error syncing to calendar: \(error.localizedDescription)")
+            }
         }
     }
 }

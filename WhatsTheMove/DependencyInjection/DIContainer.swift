@@ -42,6 +42,7 @@ extension DIContainer {
         let auth: AuthInteractor
         let events: EventInteractor
         let users: UserInteractor
+        let calendar: CalendarInteractor
 
         static var stub: Self {
             .init(images: StubImagesInteractor(),
@@ -49,7 +50,8 @@ extension DIContainer {
                   userPermissions: StubUserPermissionsInteractor(),
                   auth: StubAuthInteractor(),
                   events: StubEventInteractor(),
-                  users: StubUserInteractor())
+                  users: StubUserInteractor(),
+                  calendar: StubCalendarInteractor())
         }
     }
 }

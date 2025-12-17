@@ -46,6 +46,17 @@ extension AppState {
         var events: [Event] = []
         var starredEventIds: Set<String> = []
         var lastSavedEventId: String?
+        var connectedCalendarType: CalendarType? = {
+            if let rawValue = UserDefaults.standard.string(forKey: "connectedCalendarType") {
+                return CalendarType(rawValue: rawValue)
+            }
+            return nil
+        }()
+        var selectedCalendarIdentifier: String? = UserDefaults.standard.string(forKey: "selectedCalendarIdentifier")
+        var selectedCalendarName: String? = UserDefaults.standard.string(forKey: "selectedCalendarName")
+        var calendarSyncEnabled: Bool = UserDefaults.standard.bool(forKey: "calendarSyncEnabled")
+        var lastCalendarSyncDate: Date? = UserDefaults.standard.object(forKey: "lastCalendarSyncDate") as? Date
+        var includeSourceLinksInCalendar: Bool = UserDefaults.standard.object(forKey: "includeSourceLinksInCalendar") as? Bool ?? true
     }
 }
 
@@ -53,6 +64,7 @@ extension AppState {
     struct Permissions: Equatable {
         var push: Permission.Status = .unknown
         var camera: Permission.Status = .unknown
+        var calendar: Permission.Status = .unknown
     }
 
     static func permissionKeyPath(for permission: Permission) -> WritableKeyPath<AppState, Permission.Status> {
@@ -62,6 +74,8 @@ extension AppState {
             return pathToPermissions.appending(path: \.push)
         case .camera:
             return pathToPermissions.appending(path: \.camera)
+        case .calendar:
+            return pathToPermissions.appending(path: \.calendar)
         }
     }
 }
