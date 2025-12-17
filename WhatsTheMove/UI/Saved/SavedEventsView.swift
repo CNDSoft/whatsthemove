@@ -42,6 +42,9 @@ struct SavedEventsView: View {
                 
                 if hasEventsWithCategories {
                     categorySelector
+                    
+                    Divider()
+                        .background(Color(hex: "55564F").opacity(0.2))
                 }
                 
                 eventListContent
