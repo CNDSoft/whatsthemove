@@ -22,7 +22,7 @@ struct HomeView: View {
     @State private var canLoadMore: Bool = true
     @State private var shouldRefetch: Bool = false
     @State private var showNotifications: Bool = false
-    @State private var showNotificationsAlert: Bool = true
+    @State private var showNotificationsAlert: Bool = false
     @State private var eventToEdit: Event?
     @State private var showDeleteConfirmation: Bool = false
     @State private var eventToDelete: Event?
@@ -157,7 +157,7 @@ private extension HomeView {
     
     var notificationButton: some View {
         Button {
-            showNotifications = true
+            showNotificationsAlert = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)
