@@ -49,11 +49,15 @@ struct CalendarSelectionView: View {
             }
             .navigationTitle("Select Calendar")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(Color(hex: "F8F7F1"), for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundColor(Color(hex: "11104B"))
                 }
             }
             .onAppear {
