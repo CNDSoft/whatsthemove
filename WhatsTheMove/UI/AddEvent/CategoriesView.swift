@@ -44,7 +44,7 @@ private extension CategoriesView {
     var categoryList: some View {
         let categoriesToShow = availableCategories ?? Array(EventCategory.allCases)
         
-        return VStack(spacing: 24) {
+         return VStack(spacing: 24) {
             if showAllCategoriesOption {
                 allCategoriesRow
             }

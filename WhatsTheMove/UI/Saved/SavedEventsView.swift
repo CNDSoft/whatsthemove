@@ -61,6 +61,7 @@ struct SavedEventsView: View {
             if shouldRefetch {
                 Task {
                     await refreshEvents()
+                    await handleFilterSwitchAfterSave()
                 }
             }
         }
@@ -83,6 +84,7 @@ struct SavedEventsView: View {
         .sheet(item: $eventToEdit, onDismiss: {
             Task {
                 await refreshEvents()
+                await handleFilterSwitchAfterSave()
             }
         }) { event in
             AddEventView(mode: .edit(event))
@@ -549,6 +551,28 @@ private extension SavedEventsView {
         let totalHeight = topPadding + dragIndicatorHeight + (CGFloat(categoryCount) * categoryRowHeight) + (CGFloat(max(0, categoryCount - 1)) * categorySpacing) + bottomPadding
         
         return min(totalHeight, 500)
+    }
+    
+    func handleFilterSwitchAfterSave() async {
+        guard let lastSavedEventId = await MainActor.run(body: { injected.appState[\.userData.lastSavedEventId] }) else {
+            return
+        }
+        
+        guard let savedEvent = events.first(where: { $0.id == lastSavedEventId }) else {
+            await MainActor.run {
+                injected.appState[\.userData.lastSavedEventId] = nil
+            }
+            return
+        }
+        
+        let starredIds = await MainActor.run { injected.appState[\.userData.starredEventIds] }
+        let appropriateFilter = injected.interactors.events.determineSavedFilter(for: savedEvent, starredIds: starredIds)
+        
+        await MainActor.run {
+            selectedFilter = appropriateFilter
+            injected.appState[\.userData.lastSavedEventId] = nil
+        }
+        print("SavedEventsView - Switched to filter: \(appropriateFilter.rawValue) for saved event")
     }
 }
 

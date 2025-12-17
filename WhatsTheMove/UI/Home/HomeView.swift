@@ -50,6 +50,7 @@ struct HomeView: View {
             if shouldRefetch {
                 Task {
                     await refreshEvents()
+                    await handleFilterSwitchAfterSave()
                 }
             }
         }
@@ -59,6 +60,7 @@ struct HomeView: View {
         .sheet(item: $eventToEdit, onDismiss: {
             Task {
                 await refreshEvents()
+                await handleFilterSwitchAfterSave()
             }
         }) { event in
             AddEventView(mode: .edit(event))
@@ -418,6 +420,31 @@ private extension HomeView {
                     eventToDelete = nil
                 }
                 print("HomeView - Failed to delete event: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func handleFilterSwitchAfterSave() async {
+        guard let lastSavedEventId = await MainActor.run(body: { injected.appState[\.userData.lastSavedEventId] }) else {
+            return
+        }
+        
+        guard let savedEvent = events.first(where: { $0.id == lastSavedEventId }) else {
+            await MainActor.run {
+                injected.appState[\.userData.lastSavedEventId] = nil
+            }
+            return
+        }
+        
+        if let appropriateFilter = injected.interactors.events.determineFilter(for: savedEvent, in: events) {
+            await MainActor.run {
+                selectedFilter = appropriateFilter
+                injected.appState[\.userData.lastSavedEventId] = nil
+            }
+            print("HomeView - Switched to filter: \(appropriateFilter.rawValue) for saved event")
+        } else {
+            await MainActor.run {
+                injected.appState[\.userData.lastSavedEventId] = nil
             }
         }
     }

@@ -50,6 +50,7 @@ struct RealEventInteractor: EventInteractor {
             var events = appState[\.userData.events]
             events.append(eventToSave)
             appState[\.userData.events] = events
+            appState[\.userData.lastSavedEventId] = eventToSave.id
         }
         
         print("RealEventInteractor - Event saved successfully: \(event.id)")
@@ -155,6 +156,7 @@ struct RealEventInteractor: EventInteractor {
                 events[index] = eventToUpdate
             }
             appState[\.userData.events] = events
+            appState[\.userData.lastSavedEventId] = eventToUpdate.id
         }
         
         print("RealEventInteractor - Event updated successfully")
@@ -325,6 +327,61 @@ extension EventInteractor {
         starredIds: Set<String>
     ) -> Int {
         return filterUserEvents(events, by: filter, userId: userId, starredIds: starredIds).count
+    }
+    
+    func determineFilter(for event: Event, in events: [Event]) -> EventFilter? {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        if event.eventDate < now {
+            return nil
+        }
+        
+        if calendar.isDateInToday(event.eventDate) {
+            return .tonight
+        }
+        
+        let weekday = calendar.component(.weekday, from: now)
+        let daysUntilFriday = (6 - weekday + 7) % 7
+        let daysUntilSunday = (1 - weekday + 7) % 7
+        
+        if let friday = calendar.date(byAdding: .day, value: daysUntilFriday, to: now),
+           let sunday = calendar.date(byAdding: .day, value: daysUntilSunday, to: now),
+           let fridayStart = calendar.startOfDay(for: friday) as Date?,
+           let sundayEnd = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: sunday) {
+            if event.eventDate >= fridayStart && event.eventDate <= sundayEnd {
+                return .thisWeekend
+            }
+        }
+        
+        if let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
+           let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
+           let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) {
+            if event.eventDate >= startOfNextWeek && event.eventDate <= endOfNextWeek {
+                return .nextWeek
+            }
+        }
+        
+        if calendar.isDate(event.eventDate, equalTo: now, toGranularity: .month) {
+            return .thisMonth
+        }
+        
+        if let fiveDaysAgo = calendar.date(byAdding: .day, value: -5, to: now),
+           event.createdAt >= fiveDaysAgo {
+            return .recentlySaved
+        }
+        
+        return firstNonEmptyFilter(for: events)
+    }
+    
+    func determineSavedFilter(for event: Event, starredIds: Set<String>) -> SavedFilterType {
+        let now = Date()
+        
+        if event.eventDate < now {
+            return .pastEvents
+        }
+        
+        return .allEvents
     }
 }
 
