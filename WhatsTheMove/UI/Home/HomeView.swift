@@ -22,6 +22,7 @@ struct HomeView: View {
     @State private var canLoadMore: Bool = true
     @State private var shouldRefetch: Bool = false
     @State private var showNotifications: Bool = false
+    @State private var showNotificationsAlert: Bool = true
     @State private var eventToEdit: Event?
     @State private var showDeleteConfirmation: Bool = false
     @State private var eventToDelete: Event?
@@ -88,6 +89,7 @@ struct HomeView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .underDevelopmentAlert(isPresented: $showNotificationsAlert)
     }
     
     private var filteredEvents: [Event] {

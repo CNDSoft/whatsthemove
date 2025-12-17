@@ -21,6 +21,7 @@ struct SavedEventsView: View {
     @State private var errorMessage: String?
     @State private var hasLoadedEvents: Bool = false
     @State private var showCategorySheet: Bool = false
+    @State private var showNotificationsAlert: Bool = true
     @State private var eventToEdit: Event?
     @State private var showDeleteConfirmation: Bool = false
     @State private var eventToDelete: Event?
@@ -107,6 +108,7 @@ struct SavedEventsView: View {
                 deletingOverlay
             }
         }
+        .underDevelopmentAlert(isPresented: $showNotificationsAlert)
     }
     
     private var filteredEvents: [Event] {
