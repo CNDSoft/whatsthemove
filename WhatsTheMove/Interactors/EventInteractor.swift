@@ -209,7 +209,8 @@ enum EventInteractorError: LocalizedError {
 extension EventInteractor {
     
     func filterEvents(_ events: [Event], by filter: EventFilter) -> [Event] {
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
         let now = Date()
         
         let futureEvents = events.filter { $0.eventDate >= now }
@@ -330,7 +331,8 @@ extension EventInteractor {
     }
     
     func determineFilter(for event: Event, in events: [Event]) -> EventFilter? {
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
         let now = Date()
         
         if event.eventDate < now {
