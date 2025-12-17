@@ -44,7 +44,7 @@ private extension CategoriesView {
     var categoryList: some View {
         let categoriesToShow = availableCategories ?? Array(EventCategory.allCases)
         
-        return VStack(spacing: 19) {
+        return VStack(spacing: 24) {
             if showAllCategoriesOption {
                 allCategoriesRow
             }
@@ -60,15 +60,15 @@ private extension CategoriesView {
             selectedCategory = nil
             onDismiss?()
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: 14) {
                 Image(systemName: "square.grid.2x2")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 28, height: 28)
                     .foregroundColor(Color(hex: "11104B"))
                 
                 Text("All Categories")
-                    .font(.rubik(.regular, size: 14))
+                    .font(.rubik(.regular, size: 16))
                     .foregroundColor(Color(hex: "11104B"))
                 
                 Spacer()

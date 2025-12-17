@@ -281,7 +281,7 @@ private extension AddEventView {
             selectedCategory: $selectedCategory,
             onDismiss: { showCategoryPicker = false }
         )
-        .presentationDetents([.height(390)])
+        .presentationDetents([.height(508)])
         .presentationDragIndicator(.hidden)
         .presentationBackground(.white)
     }

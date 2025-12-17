@@ -19,9 +19,11 @@ enum AdmissionType: String, Codable {
 
 enum EventCategory: String, CaseIterable, Codable {
     case music = "Music"
+    case art = "Art"
     case outdoor = "Outdoor"
     case lifestyle = "Lifestyle"
     case sport = "Sport"
+    case fitness = "Fitness"
     case travel = "Travel"
     case technology = "Technology"
     case community = "Community"
@@ -31,9 +33,11 @@ enum EventCategory: String, CaseIterable, Codable {
     var iconName: String {
         switch self {
         case .music: return "music"
+        case .art: return "art"
         case .outdoor: return "outdoor"
         case .lifestyle: return "lifestyle"
         case .sport: return "sport"
+        case .fitness: return "fitness"
         case .travel: return "travel"
         case .technology: return "technology"
         case .community: return "community"
