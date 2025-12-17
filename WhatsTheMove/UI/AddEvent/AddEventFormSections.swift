@@ -294,13 +294,26 @@ struct URLLinkSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 FormFieldLabel(text: "URL/Link")
                 
-                TextField("", text: $urlLink, prompt: Text("Paste Instagram, Facebook, or event link")
-                    .foregroundColor(Color(hex: "55564F")))
-                    .font(.rubik(.regular, size: 14))
-                    .foregroundColor(Color(hex: "55564F"))
-                    .keyboardType(.URL)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                HStack(spacing: 8) {
+                    TextField("", text: $urlLink, prompt: Text("Paste Instagram, Facebook, or event link")
+                        .foregroundColor(Color(hex: "55564F")))
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "55564F"))
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    
+                    if !urlLink.isEmpty {
+                        Button {
+                            urlLink = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(Color(hex: "55564F"))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
         }
     }
