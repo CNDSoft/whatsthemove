@@ -13,6 +13,7 @@ import CommonCrypto
 
 protocol GoogleCalendarRepository {
     func authenticate() async throws
+    func signOut()
     func getCalendars() async throws -> [CalendarInfo]
     func createEvent(_ event: Event, in calendarId: String, includeSourceLinks: Bool) async throws -> String
     func updateEvent(_ event: Event, calendarEventId: String, in calendarId: String, includeSourceLinks: Bool) async throws
@@ -76,7 +77,17 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
     }
     
     func isAuthenticated() -> Bool {
-        return getAccessToken() != nil
+        let hasToken = getAccessToken() != nil
+        print("RealGoogleCalendarRepository - isAuthenticated: \(hasToken)")
+        return hasToken
+    }
+    
+    func signOut() {
+        print("RealGoogleCalendarRepository - Signing out, current token: \(getAccessToken() != nil ? "exists" : "none")")
+        KeychainHelper.delete(service: keychainService, account: accessTokenKey)
+        KeychainHelper.delete(service: keychainService, account: refreshTokenKey)
+        let stillHasToken = getAccessToken() != nil
+        print("RealGoogleCalendarRepository - Google credentials cleared, token after delete: \(stillHasToken ? "still exists!" : "removed")")
     }
     
     private func performWebAuthentication(url: URL, redirectURI: String) async throws -> URL {
@@ -409,6 +420,9 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
 struct StubGoogleCalendarRepository: GoogleCalendarRepository {
     
     func authenticate() async throws {
+    }
+    
+    func signOut() {
     }
     
     func isAuthenticated() -> Bool {

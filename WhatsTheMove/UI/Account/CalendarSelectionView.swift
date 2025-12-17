@@ -18,6 +18,8 @@ struct CalendarSelectionView: View {
     @State private var calendarsState: Loadable<[CalendarInfo]> = .notRequested
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
+    @State private var showSignOutConfirmation: Bool = false
+    @State private var isSigningOut: Bool = false
     
     var body: some View {
         NavigationView {
@@ -27,6 +29,11 @@ struct CalendarSelectionView: View {
                 
                 VStack(spacing: 0) {
                     calendarTypeSelector
+                    
+                    if isCurrentProviderAuthenticated {
+                        signOutButton
+                    }
+                    
                     content
                 }
             }
@@ -47,19 +54,48 @@ struct CalendarSelectionView: View {
             } message: {
                 Text(errorMessage)
             }
+            .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
+                Button("Sign Out from \(selectedCalendarType == .apple ? "Apple" : "Google") Calendar", role: .destructive) {
+                    signOutFromProvider()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will disconnect your \(selectedCalendarType == .apple ? "Apple" : "Google") calendar and remove all synced events.")
+            }
         }
     }
     
     @ViewBuilder private var content: some View {
-        switch calendarsState {
-        case .notRequested:
-            notRequestedView()
-        case .isLoading:
-            loadingView()
-        case let .loaded(calendars):
-            loadedView(calendars)
-        case let .failed(error):
-            failedView(error)
+        if selectedCalendarType == .google && !injected.interactors.calendar.isGoogleAuthenticated() {
+            connectGoogleView()
+        } else if selectedCalendarType == .apple && !injected.interactors.calendar.hasRequestedApplePermission() {
+            connectAppleView()
+        } else {
+            switch calendarsState {
+            case .notRequested:
+                notRequestedView()
+            case .isLoading:
+                loadingView()
+            case let .loaded(calendars):
+                loadedView(calendars)
+            case let .failed(error):
+                failedView(error)
+            }
+        }
+    }
+}
+
+// MARK: - Computed Properties
+
+private extension CalendarSelectionView {
+    
+    var isCurrentProviderAuthenticated: Bool {
+        switch selectedCalendarType {
+        case .apple:
+            let connectedType = injected.appState[\.userData.connectedCalendarType]
+            return connectedType == .apple
+        case .google:
+            return injected.interactors.calendar.isGoogleAuthenticated()
         }
     }
 }
@@ -93,6 +129,34 @@ private extension CalendarSelectionView {
         }
         .buttonStyle(.plain)
     }
+    
+    var signOutButton: some View {
+        Button {
+            showSignOutConfirmation = true
+        } label: {
+            HStack {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.system(size: 14))
+                
+                Text("Sign Out from \(selectedCalendarType == .apple ? "Apple" : "Google") Calendar")
+                    .font(.rubik(.medium, size: 14))
+            }
+            .foregroundColor(Color(hex: "F25454"))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.white)
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(hex: "F25454"), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .disabled(isSigningOut)
+        .opacity(isSigningOut ? 0.6 : 1.0)
+    }
 }
 
 // MARK: - Loading Content
@@ -101,6 +165,51 @@ private extension CalendarSelectionView {
     
     func notRequestedView() -> some View {
         Text("")
+    }
+    
+    func connectAppleView() -> some View {
+        VStack(spacing: 30) {
+            VStack(spacing: 15) {
+                
+                
+                
+            }
+            
+            CalendarConnectButton(
+                iconName: "apple",
+                title: "Connect Apple Calendar",
+                action: { connectAppleCalendar() }
+            )
+            .padding(.horizontal, 40)
+
+            Text("Grant access to your Apple Calendar to sync events")
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 50)
+    }
+    
+    func connectGoogleView() -> some View {
+        VStack(spacing: 30) {
+            
+            CalendarConnectButton(
+                iconName: "google",
+                title: "Connect Google Calendar",
+                action: { connectGoogleCalendar() }
+            )
+            .padding(.horizontal, 40)
+            
+            Text("Sign in with your Google account to sync events with Google Calendar")
+                    .font(.rubik(.regular, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 50)
     }
     
     func loadingView() -> some View {
@@ -251,6 +360,16 @@ private extension CalendarSelectionView {
 private extension CalendarSelectionView {
     
     func loadCalendars() {
+        if selectedCalendarType == .google && !injected.interactors.calendar.isGoogleAuthenticated() {
+            calendarsState = .notRequested
+            return
+        }
+        
+        if selectedCalendarType == .apple && !injected.interactors.calendar.hasRequestedApplePermission() {
+            calendarsState = .notRequested
+            return
+        }
+        
         calendarsState = .isLoading(last: nil, cancelBag: CancelBag())
         
         Task {
@@ -262,6 +381,60 @@ private extension CalendarSelectionView {
             } catch {
                 await MainActor.run {
                     calendarsState = .failed(error)
+                }
+            }
+        }
+    }
+    
+    func connectAppleCalendar() {
+        calendarsState = .isLoading(last: nil, cancelBag: CancelBag())
+        
+        Task {
+            do {
+                print("CalendarSelectionView - Requesting Apple Calendar permission")
+                let granted = try await injected.interactors.calendar.requestCalendarPermission()
+                
+                if granted {
+                    print("CalendarSelectionView - Permission granted, loading calendars")
+                    let calendars = try await injected.interactors.calendar.getAvailableCalendars(for: .apple)
+                    await MainActor.run {
+                        calendarsState = .loaded(calendars)
+                    }
+                } else {
+                    print("CalendarSelectionView - Permission denied")
+                    await MainActor.run {
+                        calendarsState = .notRequested
+                        errorMessage = "Calendar permission was denied. Please enable it in Settings."
+                        showError = true
+                    }
+                }
+            } catch {
+                print("CalendarSelectionView - Failed to request permission: \(error)")
+                await MainActor.run {
+                    calendarsState = .notRequested
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    func connectGoogleCalendar() {
+        calendarsState = .isLoading(last: nil, cancelBag: CancelBag())
+        
+        Task {
+            do {
+                print("CalendarSelectionView - Connecting to Google Calendar")
+                let calendars = try await injected.interactors.calendar.getAvailableCalendars(for: .google)
+                await MainActor.run {
+                    calendarsState = .loaded(calendars)
+                }
+            } catch {
+                print("CalendarSelectionView - Failed to connect: \(error)")
+                await MainActor.run {
+                    calendarsState = .notRequested
+                    errorMessage = error.localizedDescription
+                    showError = true
                 }
             }
         }
@@ -289,6 +462,40 @@ private extension CalendarSelectionView {
             } catch {
                 await MainActor.run {
                     errorMessage = error.localizedDescription
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    func signOutFromProvider() {
+        isSigningOut = true
+        
+        Task {
+            do {
+                print("CalendarSelectionView - Signing out from \(selectedCalendarType) calendar")
+                
+                if selectedCalendarType == .google {
+                    try await injected.interactors.calendar.signOutFromGoogle()
+                }
+                
+                try await injected.interactors.calendar.disconnectCalendar()
+                
+                print("CalendarSelectionView - Sign out successful, checking auth status...")
+                let stillAuthenticated = selectedCalendarType == .google ? 
+                    injected.interactors.calendar.isGoogleAuthenticated() : false
+                print("CalendarSelectionView - Still authenticated: \(stillAuthenticated)")
+                
+                await MainActor.run {
+                    isSigningOut = false
+                    calendarsState = .notRequested
+                    dismiss()
+                }
+            } catch {
+                print("CalendarSelectionView - Sign out failed: \(error)")
+                await MainActor.run {
+                    isSigningOut = false
+                    errorMessage = "Failed to sign out: \(error.localizedDescription)"
                     showError = true
                 }
             }

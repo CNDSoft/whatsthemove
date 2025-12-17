@@ -12,6 +12,7 @@ protocol CalendarInteractor {
     func connectAppleCalendar(calendarIdentifier: String, calendarName: String) async throws
     func connectGoogleCalendar(calendarIdentifier: String, calendarName: String) async throws
     func disconnectCalendar() async throws
+    func signOutFromGoogle() async throws
     func getAvailableCalendars(for type: CalendarType) async throws -> [CalendarInfo]
     func syncEvent(_ event: Event) async throws
     func syncAllEvents() async throws
@@ -19,6 +20,8 @@ protocol CalendarInteractor {
     func updateCalendarEvent(_ event: Event) async throws
     func requestCalendarPermission() async throws -> Bool
     func checkCalendarPermission() async -> Bool
+    func isGoogleAuthenticated() -> Bool
+    func hasRequestedApplePermission() -> Bool
 }
 
 struct RealCalendarInteractor: CalendarInteractor {
@@ -73,6 +76,17 @@ struct RealCalendarInteractor: CalendarInteractor {
     
     func disconnectCalendar() async throws {
         print("RealCalendarInteractor - Disconnecting calendar")
+        
+        let currentType = await appState[\.userData.connectedCalendarType]
+        print("RealCalendarInteractor - Current connected type: \(String(describing: currentType))")
+        
+        if currentType == .google {
+            print("RealCalendarInteractor - Calling Google signOut")
+            googleCalendarRepository.signOut()
+            print("RealCalendarInteractor - Google signOut completed")
+        } else {
+            print("RealCalendarInteractor - Not Google calendar, skipping signOut")
+        }
         
         await MainActor.run {
             appState[\.userData.connectedCalendarType] = nil
@@ -279,6 +293,20 @@ struct RealCalendarInteractor: CalendarInteractor {
             }
         }
     }
+    
+    func isGoogleAuthenticated() -> Bool {
+        return googleCalendarRepository.isAuthenticated()
+    }
+    
+    func signOutFromGoogle() async throws {
+        print("RealCalendarInteractor - Signing out from Google")
+        googleCalendarRepository.signOut()
+        print("RealCalendarInteractor - Google sign out completed")
+    }
+    
+    func hasRequestedApplePermission() -> Bool {
+        return appleCalendarRepository.hasRequestedPermission()
+    }
 }
 
 struct StubCalendarInteractor: CalendarInteractor {
@@ -316,6 +344,17 @@ struct StubCalendarInteractor: CalendarInteractor {
     }
     
     func checkCalendarPermission() async -> Bool {
+        return true
+    }
+    
+    func isGoogleAuthenticated() -> Bool {
+        return true
+    }
+    
+    func signOutFromGoogle() async throws {
+    }
+    
+    func hasRequestedApplePermission() -> Bool {
         return true
     }
 }

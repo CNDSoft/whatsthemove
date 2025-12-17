@@ -12,6 +12,7 @@ import SwiftUI
 
 protocol AppleCalendarRepository {
     func requestAccess() async throws -> Bool
+    func hasRequestedPermission() -> Bool
     func getCalendars() async throws -> [CalendarInfo]
     func createEvent(_ event: Event, in calendarId: String, includeSourceLinks: Bool) async throws -> String
     func updateEvent(_ event: Event, calendarEventId: String, in calendarId: String, includeSourceLinks: Bool) async throws
@@ -36,6 +37,13 @@ struct RealAppleCalendarRepository: AppleCalendarRepository {
             print("RealAppleCalendarRepository - Access request failed: \(error)")
             throw CalendarSyncError.permissionDenied
         }
+    }
+    
+    func hasRequestedPermission() -> Bool {
+        let authStatus = EKEventStore.authorizationStatus(for: .event)
+        let hasRequested = authStatus != .notDetermined
+        print("RealAppleCalendarRepository - Permission requested: \(hasRequested), status: \(authStatus.rawValue)")
+        return hasRequested
     }
     
     func getCalendars() async throws -> [CalendarInfo] {
@@ -205,11 +213,15 @@ struct RealAppleCalendarRepository: AppleCalendarRepository {
 }
 
 struct StubAppleCalendarRepository: AppleCalendarRepository {
-    
+
     func requestAccess() async throws -> Bool {
         return true
     }
     
+    func hasRequestedPermission() -> Bool {
+        return true
+    }
+
     func getCalendars() async throws -> [CalendarInfo] {
         return [
             CalendarInfo(id: "stub-1", title: "Calendar", source: "iCloud", color: .blue, type: .apple),
