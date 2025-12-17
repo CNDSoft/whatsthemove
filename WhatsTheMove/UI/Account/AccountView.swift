@@ -18,6 +18,7 @@ struct AccountView: View {
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var email: String = ""
+    @State private var eventCount: Int = 0
     
     @State private var calendarConnected: Bool = false
     @State private var includeSourceLinks: Bool = true
@@ -57,11 +58,13 @@ struct AccountView: View {
             firstName = injected.appState[\.userData.firstName] ?? ""
             lastName = injected.appState[\.userData.lastName] ?? ""
             email = injected.appState[\.userData.email] ?? ""
+            eventCount = injected.appState[\.userData.events].count
         }
         .onReceive(userDataUpdate) { userData in
             firstName = userData.firstName ?? ""
             lastName = userData.lastName ?? ""
             email = userData.email ?? ""
+            eventCount = userData.events.count
         }
         .sheet(isPresented: $showNotifications) {
             NotificationView()
@@ -172,7 +175,7 @@ private extension AccountView {
                     .foregroundColor(Color(hex: "11104B"))
                     .textCase(.uppercase)
                 
-                Text("\(injected.appState[\.userData.starredEventIds].count) events saved")
+                Text("\(eventCount) events saved")
                     .font(.rubik(.regular, size: 14))
                     .foregroundColor(Color(hex: "55564F"))
             }
