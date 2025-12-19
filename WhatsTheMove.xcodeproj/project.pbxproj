@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4819F10E2CDF5819003CA0AE /* EnvironmentOverrides in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F10D2CDF5819003CA0AE /* EnvironmentOverrides */; };
 		4819F1172CDF6DD4003CA0AE /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F1162CDF6DD4003CA0AE /* ViewInspector */; };
+		4E5E5D722EF5779200488180 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 4E5E5D712EF5779200488180 /* FirebaseMessaging */; };
 		4E83771D2EE9AF6900FE7AC1 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4EC1692E2ED866A000DBBFD4 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4EC1692D2ED866A000DBBFD4 /* FirebaseAuth */; };
 		4EC169302ED866A000DBBFD4 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4EC1692F2ED866A000DBBFD4 /* FirebaseCore */; };
@@ -108,6 +109,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E5E5D722EF5779200488180 /* FirebaseMessaging in Frameworks */,
 				4819F10E2CDF5819003CA0AE /* EnvironmentOverrides in Frameworks */,
 				4EC169322ED866A000DBBFD4 /* FirebaseFirestore in Frameworks */,
 				4EC169302ED866A000DBBFD4 /* FirebaseCore in Frameworks */,
@@ -181,6 +183,7 @@
 				4EC1692F2ED866A000DBBFD4 /* FirebaseCore */,
 				4EC169312ED866A000DBBFD4 /* FirebaseFirestore */,
 				4EC169332ED866A000DBBFD4 /* FirebaseStorage */,
+				4E5E5D712EF5779200488180 /* FirebaseMessaging */,
 			);
 			productName = WhatsTheMove;
 			productReference = 488734172CDCA2DB00B400A3 /* WhatsTheMove.app */;
@@ -706,6 +709,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4819F1152CDF6DD4003CA0AE /* XCRemoteSwiftPackageReference "ViewInspector" */;
 			productName = ViewInspector;
+		};
+		4E5E5D712EF5779200488180 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4EC1692C2ED8669F00DBBFD4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 		4EC1692D2ED866A000DBBFD4 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;

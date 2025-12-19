@@ -84,6 +84,8 @@ struct RealUserInteractor: UserInteractor {
             ageRange: user.ageRange,
             phoneNumber: phoneNumber,
             starredEventIds: user.starredEventIds,
+            notificationPreferences: user.notificationPreferences,
+            fcmToken: user.fcmToken,
             createdAt: user.createdAt,
             updatedAt: Date()
         )

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 import UserNotifications
 import AVFoundation
 import EventKit
@@ -128,8 +129,16 @@ private extension RealUserPermissionsInteractor {
 
     func requestPushNotificationsPermission() async {
         let center = notificationCenter
-        let isGranted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
-        appState[\.permissions.push] = isGranted ? .granted : .denied
+        let isGranted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        await MainActor.run {
+            appState[\.permissions.push] = isGranted ? .granted : .denied
+        }
+        
+        if isGranted {
+            await MainActor.run {
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        }
     }
 }
 

@@ -35,11 +35,8 @@ struct AccountView: View {
     @State private var analyticsEnabled: Bool = false
     
     @State private var showNotifications: Bool = false
-    @State private var showNotificationsAlert: Bool = false
     @State private var showCalendarSelection: Bool = false
     @State private var showDisconnectConfirmation: Bool = false
-    @State private var showRegistrationAlert: Bool = false
-    @State private var showSystemNotificationsAlert: Bool = false
     @State private var showAnalyticsAlert: Bool = false
     @State private var showFeedbackAlert: Bool = false
     @State private var showRateAppAlert: Bool = false
@@ -65,6 +62,7 @@ struct AccountView: View {
             connectedCalendarType = injected.appState[\.userData.connectedCalendarType]
             selectedCalendarName = injected.appState[\.userData.selectedCalendarName]
             includeSourceLinks = injected.appState[\.userData.includeSourceLinksInCalendar]
+            loadNotificationPreferences()
         }
         .onReceive(userDataUpdate) { userData in
             firstName = userData.firstName ?? ""
@@ -93,9 +91,6 @@ struct AccountView: View {
         } message: {
             Text("This will stop syncing events to your calendar. Calendar events already created will not be deleted.")
         }
-        .underDevelopmentAlert(isPresented: $showNotificationsAlert)
-        .underDevelopmentAlert(isPresented: $showRegistrationAlert)
-        .underDevelopmentAlert(isPresented: $showSystemNotificationsAlert)
         .underDevelopmentAlert(isPresented: $showAnalyticsAlert)
         .underDevelopmentAlert(isPresented: $showFeedbackAlert)
         .underDevelopmentAlert(isPresented: $showRateAppAlert)
@@ -116,6 +111,7 @@ private extension AccountView {
             VStack(spacing: 5) {
                 profileSection
                 calendarExportSection
+                notificationsSection
                 signOutSection
                 footer
             }
@@ -172,7 +168,7 @@ private extension AccountView {
     
     var notificationButton: some View {
         Button {
-            showNotificationsAlert = true
+            showNotifications = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)
@@ -399,7 +395,7 @@ private extension AccountView {
                 Spacer()
                 
                 CustomToggle(isOn: $eventRemindersEnabled) {
-                    showNotifications = true
+                    updateNotificationPreferences()
                 }
             }
             
@@ -470,7 +466,7 @@ private extension AccountView {
             Spacer()
             
             CustomToggle(isOn: $registrationDeadlinesEnabled) {
-                showRegistrationAlert = true
+                updateNotificationPreferences()
             }
         }
         .padding(.horizontal, 20)
@@ -503,7 +499,7 @@ private extension AccountView {
             Spacer()
             
             CustomToggle(isOn: $systemNotificationsEnabled) {
-                showSystemNotificationsAlert = true
+                updateNotificationPreferences()
             }
         }
         .padding(.horizontal, 20)
@@ -514,6 +510,7 @@ private extension AccountView {
     func checkboxRow(isChecked: Binding<Bool>, title: String) -> some View {
         Button {
             isChecked.wrappedValue.toggle()
+            updateNotificationPreferences()
         } label: {
             HStack(spacing: 10) {
                 CustomCheckbox(isChecked: isChecked.wrappedValue)
@@ -723,6 +720,38 @@ private extension AccountView {
             }
         }
     }
+    
+    func loadNotificationPreferences() {
+        let preferences = injected.appState[\.userData.notificationPreferences]
+        eventRemindersEnabled = preferences.eventRemindersEnabled
+        reminderWeekBefore = preferences.reminderWeekBefore
+        reminderDayBefore = preferences.reminderDayBefore
+        reminder3Hours = preferences.reminder3Hours
+        reminderInterestedDayBefore = preferences.reminderInterestedDayBefore
+        registrationDeadlinesEnabled = preferences.registrationDeadlinesEnabled
+        systemNotificationsEnabled = preferences.systemNotificationsEnabled
+    }
+    
+    func updateNotificationPreferences() {
+        let preferences = NotificationPreferences(
+            eventRemindersEnabled: eventRemindersEnabled,
+            reminderWeekBefore: reminderWeekBefore,
+            reminderDayBefore: reminderDayBefore,
+            reminder3Hours: reminder3Hours,
+            reminderInterestedDayBefore: reminderInterestedDayBefore,
+            registrationDeadlinesEnabled: registrationDeadlinesEnabled,
+            systemNotificationsEnabled: systemNotificationsEnabled
+        )
+        
+        Task {
+            do {
+                try await injected.interactors.notifications.updatePreferences(preferences)
+                print("AccountView - Notification preferences updated successfully")
+            } catch {
+                print("AccountView - Error updating notification preferences: \(error)")
+            }
+        }
+    }
 }
 
 // MARK: - Custom Components
@@ -733,6 +762,7 @@ struct CustomToggle: View {
     
     var body: some View {
         Button {
+            isOn.toggle()
             onToggle()
         } label: {
             ZStack(alignment: isOn ? .trailing : .leading) {

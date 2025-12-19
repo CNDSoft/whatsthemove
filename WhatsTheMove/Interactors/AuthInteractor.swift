@@ -43,6 +43,8 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.firstName] = user?.firstName
             appState[\.userData.lastName] = user?.lastName
             appState[\.userData.phoneNumber] = user?.phoneNumber
+            appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
+            appState[\.userData.fcmToken] = user?.fcmToken
         }
     }
     
@@ -66,6 +68,8 @@ struct RealAuthInteractor: AuthInteractor {
             ageRange: ageRange,
             phoneNumber: nil,
             starredEventIds: [],
+            notificationPreferences: NotificationPreferences(),
+            fcmToken: nil,
             createdAt: now,
             updatedAt: now
         )
@@ -115,6 +119,8 @@ struct RealAuthInteractor: AuthInteractor {
                 appState[\.userData.firstName] = user?.firstName
                 appState[\.userData.lastName] = user?.lastName
                 appState[\.userData.phoneNumber] = user?.phoneNumber
+                appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
+                appState[\.userData.fcmToken] = user?.fcmToken
             }
             return true
         }

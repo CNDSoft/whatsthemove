@@ -39,6 +39,7 @@ struct NotificationItem: Identifiable, Codable, Equatable {
     var message: String
     var actionText: String?
     var actionUrl: String?
+    var eventId: String?
     var isRead: Bool
     let timestamp: Date
     let createdAt: Date
@@ -51,6 +52,7 @@ struct NotificationItem: Identifiable, Codable, Equatable {
         message: String,
         actionText: String? = nil,
         actionUrl: String? = nil,
+        eventId: String? = nil,
         isRead: Bool = false,
         timestamp: Date = Date(),
         createdAt: Date = Date()
@@ -62,6 +64,7 @@ struct NotificationItem: Identifiable, Codable, Equatable {
         self.message = message
         self.actionText = actionText
         self.actionUrl = actionUrl
+        self.eventId = eventId
         self.isRead = isRead
         self.timestamp = timestamp
         self.createdAt = createdAt
@@ -72,7 +75,6 @@ extension NotificationItem {
     func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [
             "id": id,
-            "userId": userId,
             "type": type.rawValue,
             "title": title,
             "message": message,
@@ -86,12 +88,14 @@ extension NotificationItem {
         if let actionUrl = actionUrl {
             dict["actionUrl"] = actionUrl
         }
+        if let eventId = eventId {
+            dict["eventId"] = eventId
+        }
         return dict
     }
     
-    static func fromDictionary(_ data: [String: Any], id: String) -> NotificationItem? {
-        guard let userId = data["userId"] as? String,
-              let typeString = data["type"] as? String,
+    static func fromDictionary(_ data: [String: Any], id: String, userId: String) -> NotificationItem? {
+        guard let typeString = data["type"] as? String,
               let type = NotificationType(rawValue: typeString),
               let title = data["title"] as? String,
               let message = data["message"] as? String else {
@@ -100,6 +104,7 @@ extension NotificationItem {
         
         let actionText = data["actionText"] as? String
         let actionUrl = data["actionUrl"] as? String
+        let eventId = data["eventId"] as? String
         let isRead = (data["isRead"] as? Bool) ?? false
         let timestamp = (data["timestamp"] as? Date) ?? Date()
         let createdAt = (data["createdAt"] as? Date) ?? Date()
@@ -112,6 +117,7 @@ extension NotificationItem {
             message: message,
             actionText: actionText,
             actionUrl: actionUrl,
+            eventId: eventId,
             isRead: isRead,
             timestamp: timestamp,
             createdAt: createdAt

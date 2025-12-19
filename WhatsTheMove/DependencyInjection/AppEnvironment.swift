@@ -73,11 +73,13 @@ extension AppEnvironment {
         let pushToken = RealPushTokenWebRepository(session: session)
         let users = RealUserWebRepository()
         let events = RealEventWebRepository()
+        let notifications = RealNotificationWebRepository()
         return .init(images: images,
                      countries: countries,
                      pushToken: pushToken,
                      users: users,
-                     events: events)
+                     events: events,
+                     notifications: notifications)
     }
 
     private static func configuredDBRepositories(modelContainer: ModelContainer) -> DIContainer.DBRepositories {
@@ -126,12 +128,17 @@ extension AppEnvironment {
         let users = RealUserInteractor(
             appState: appState,
             userWebRepository: webRepositories.users)
+        let notifications = RealNotificationInteractor(
+            appState: appState,
+            notificationWebRepository: webRepositories.notifications,
+            userWebRepository: webRepositories.users)
         return .init(images: images,
                      countries: countries,
                      userPermissions: userPermissions,
                      auth: auth,
                      events: events,
                      users: users,
-                     calendar: calendar)
+                     calendar: calendar,
+                     notifications: notifications)
     }
 }

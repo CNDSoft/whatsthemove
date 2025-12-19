@@ -11,8 +11,12 @@ import SwiftUI
 struct NotificationView: View {
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.injected) private var injected: DIContainer
     @State private var selectedFilter: NotificationFilter = .all
-    @State private var notifications: [NotificationItem] = []
+    
+    private var notifications: [NotificationItem] {
+        injected.appState[\.userData.notifications]
+    }
     
     var body: some View {
         ZStack {
@@ -25,6 +29,9 @@ struct NotificationView: View {
             }
         }
         .preferredColorScheme(.light)
+        .task {
+            await loadNotifications()
+        }
     }
     
     private var filteredNotifications: [NotificationItem] {
@@ -190,6 +197,9 @@ private extension NotificationView {
                         if let notificationsForDate = groupedNotifications[dateKey] {
                             ForEach(notificationsForDate.sorted(by: { $0.timestamp > $1.timestamp })) { notification in
                                 notificationRow(notification)
+                                    .onTapGesture {
+                                        handleNotificationTap(notification)
+                                    }
                             }
                         }
                     }
@@ -198,6 +208,9 @@ private extension NotificationView {
                 if !filteredNotifications.isEmpty && selectedFilter != .unread {
                     markAllAsReadButton
                 }
+            }
+            .refreshable {
+                await loadNotifications()
             }
         }
     }
@@ -263,16 +276,21 @@ private extension NotificationView {
     }
     
     var markAllAsReadButton: some View {
-        HStack {
-            Text("Mark all as read")
-                .font(.rubik(.regular, size: 13))
-                .foregroundColor(Color(hex: "4B7BE2"))
-            
-            Spacer()
+        Button {
+            markAllAsRead()
+        } label: {
+            HStack {
+                Text("Mark all as read")
+                    .font(.rubik(.regular, size: 13))
+                    .foregroundColor(Color(hex: "4B7BE2"))
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 15)
+            .background(Color.white)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 15)
-        .background(Color.white)
+        .buttonStyle(.plain)
     }
     
     var emptyStateView: some View {
@@ -353,6 +371,38 @@ private extension NotificationView {
         let formatter = DateFormatter()
         formatter.dateFormat = "hh:mm a"
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - Side Effects
+
+private extension NotificationView {
+    
+    func loadNotifications() async {
+        do {
+            try await injected.interactors.notifications.loadNotifications()
+            print("NotificationView - Notifications loaded successfully")
+        } catch {
+            print("NotificationView - Error loading notifications: \(error)")
+        }
+    }
+    
+    func markAllAsRead() {
+        Task {
+            do {
+                try await injected.interactors.notifications.markAllAsRead()
+                print("NotificationView - All notifications marked as read")
+            } catch {
+                print("NotificationView - Error marking all as read: \(error)")
+            }
+        }
+    }
+    
+    func handleNotificationTap(_ notification: NotificationItem) {
+        Task {
+            await injected.interactors.notifications.handleNotificationTap(notification)
+            print("NotificationView - Handled notification tap")
+        }
     }
 }
 

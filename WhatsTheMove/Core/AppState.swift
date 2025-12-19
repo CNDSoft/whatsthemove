@@ -57,6 +57,9 @@ extension AppState {
         var calendarSyncEnabled: Bool = UserDefaults.standard.bool(forKey: "calendarSyncEnabled")
         var lastCalendarSyncDate: Date? = UserDefaults.standard.object(forKey: "lastCalendarSyncDate") as? Date
         var includeSourceLinksInCalendar: Bool = UserDefaults.standard.object(forKey: "includeSourceLinksInCalendar") as? Bool ?? true
+        var notificationPreferences: NotificationPreferences = NotificationPreferences()
+        var notifications: [NotificationItem] = []
+        var fcmToken: String?
     }
 }
 

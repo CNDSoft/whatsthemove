@@ -31,6 +31,7 @@ extension DIContainer {
         let pushToken: PushTokenWebRepository
         let users: UserWebRepository
         let events: EventWebRepository
+        let notifications: NotificationWebRepository
     }
     struct DBRepositories {
         let countries: CountriesDBRepository
@@ -43,6 +44,7 @@ extension DIContainer {
         let events: EventInteractor
         let users: UserInteractor
         let calendar: CalendarInteractor
+        let notifications: NotificationInteractor
 
         static var stub: Self {
             .init(images: StubImagesInteractor(),
@@ -51,7 +53,8 @@ extension DIContainer {
                   auth: StubAuthInteractor(),
                   events: StubEventInteractor(),
                   users: StubUserInteractor(),
-                  calendar: StubCalendarInteractor())
+                  calendar: StubCalendarInteractor(),
+                  notifications: StubNotificationInteractor())
         }
     }
 }

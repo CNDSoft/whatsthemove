@@ -16,6 +16,9 @@ protocol UserWebRepository {
     func deleteUser(id: String) async throws
     func toggleStarredEvent(userId: String, eventId: String) async throws
     func getStarredEventIds(userId: String) async throws -> [String]
+    func updateNotificationPreferences(userId: String, preferences: NotificationPreferences) async throws
+    func getNotificationPreferences(userId: String) async throws -> NotificationPreferences
+    func updateFCMToken(userId: String, token: String?) async throws
 }
 
 struct RealUserWebRepository: UserWebRepository {
@@ -113,6 +116,54 @@ struct RealUserWebRepository: UserWebRepository {
         print("RealUserWebRepository - Retrieved \(starredEventIds.count) starred events")
         return starredEventIds
     }
+    
+    func updateNotificationPreferences(userId: String, preferences: NotificationPreferences) async throws {
+        print("RealUserWebRepository - Updating notification preferences for user: \(userId)")
+        
+        try await db.collection(collectionName)
+            .document(userId)
+            .updateData(["notificationPreferences": preferences.toDictionary()])
+        
+        print("RealUserWebRepository - Notification preferences updated successfully")
+    }
+    
+    func getNotificationPreferences(userId: String) async throws -> NotificationPreferences {
+        print("RealUserWebRepository - Getting notification preferences for user: \(userId)")
+        
+        let document = try await db.collection(collectionName)
+            .document(userId)
+            .getDocument()
+        
+        guard document.exists else {
+            print("RealUserWebRepository - User not found, returning default preferences")
+            return NotificationPreferences()
+        }
+        
+        let data = document.data() ?? [:]
+        if let prefsDict = data["notificationPreferences"] as? [String: Any] {
+            return NotificationPreferences.fromDictionary(prefsDict)
+        }
+        
+        print("RealUserWebRepository - No preferences found, returning default")
+        return NotificationPreferences()
+    }
+    
+    func updateFCMToken(userId: String, token: String?) async throws {
+        print("RealUserWebRepository - Updating FCM token for user: \(userId)")
+        
+        var updateData: [String: Any] = [:]
+        if let token = token {
+            updateData["fcmToken"] = token
+        } else {
+            updateData["fcmToken"] = FieldValue.delete()
+        }
+        
+        try await db.collection(collectionName)
+            .document(userId)
+            .updateData(updateData)
+        
+        print("RealUserWebRepository - FCM token updated successfully")
+    }
 }
 
 struct StubUserWebRepository: UserWebRepository {
@@ -141,6 +192,19 @@ struct StubUserWebRepository: UserWebRepository {
     func getStarredEventIds(userId: String) async throws -> [String] {
         print("StubUserWebRepository - Get starred event IDs stub")
         return []
+    }
+    
+    func updateNotificationPreferences(userId: String, preferences: NotificationPreferences) async throws {
+        print("StubUserWebRepository - Update notification preferences stub")
+    }
+    
+    func getNotificationPreferences(userId: String) async throws -> NotificationPreferences {
+        print("StubUserWebRepository - Get notification preferences stub")
+        return NotificationPreferences()
+    }
+    
+    func updateFCMToken(userId: String, token: String?) async throws {
+        print("StubUserWebRepository - Update FCM token stub")
     }
 }
 
