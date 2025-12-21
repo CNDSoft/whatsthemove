@@ -1,0 +1,308 @@
+# Cursor Rules for Firebase Functions Development
+
+## Project Architecture
+
+This is a TypeScript-based Firebase Cloud Functions project following modular architecture:
+
+### Directory Structure
+- **src/**: TypeScript source files
+  - **notifications/**: Notification-related cloud functions
+  - **utils/**: Shared utilities and helpers
+  - **index.ts**: Main entry point, exports all functions
+- **lib/**: Compiled JavaScript output (DO NOT EDIT)
+- **node_modules/**: Dependencies (DO NOT EDIT)
+
+## Code Conventions
+
+### File Header
+All TypeScript files should include standard imports and maintain consistency:
+```typescript
+import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
+```
+
+### Function Structure
+Cloud Functions should follow this pattern:
+```typescript
+export const functionName = functions
+  .region("us-central1")
+  .pubsub.schedule("schedule-string")
+  .onRun(async (context) => {
+    functions.logger.info("FunctionName - Starting execution");
+    
+    try {
+      // Implementation
+      functions.logger.info("FunctionName - Success message");
+    } catch (error) {
+      functions.logger.error("FunctionName - Error:", error);
+      throw error;
+    }
+  });
+```
+
+### Scheduled Functions
+- Use clear schedule expressions: `"0 9 * * *"` for daily at 9 AM
+- Always specify region explicitly
+- Include timezone in comments if relevant
+
+### HTTP Functions
+```typescript
+export const functionName = functions
+  .region("us-central1")
+  .https.onRequest(async (req, res) => {
+    functions.logger.info("FunctionName - Request received");
+    
+    try {
+      // Validate request
+      if (!req.body.requiredField) {
+        res.status(400).send({ error: "Missing required field" });
+        return;
+      }
+      
+      // Implementation
+      res.status(200).send({ success: true });
+    } catch (error) {
+      functions.logger.error("FunctionName - Error:", error);
+      res.status(500).send({ error: "Internal server error" });
+    }
+  });
+```
+
+### Firestore Triggers
+```typescript
+export const functionName = functions
+  .region("us-central1")
+  .firestore.document("collection/{documentId}")
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    functions.logger.info("FunctionName - Document created", {
+      documentId: context.params.documentId,
+    });
+    
+    try {
+      // Implementation
+    } catch (error) {
+      functions.logger.error("FunctionName - Error:", error);
+      throw error;
+    }
+  });
+```
+
+## Logging Standards
+
+### Always Use Firebase Logger
+```typescript
+functions.logger.info("ClassName - Message");
+functions.logger.warn("ClassName - Warning message");
+functions.logger.error("ClassName - Error message", error);
+functions.logger.debug("ClassName - Debug info", { data });
+```
+
+### Log Format
+- Include function/module name: `"FunctionName - [action]"`
+- Use structured logging with objects for complex data
+- Log at appropriate levels: info, warn, error, debug
+
+## Error Handling
+
+### Standard Pattern
+```typescript
+try {
+  // Operation
+  functions.logger.info("FunctionName - Operation successful");
+} catch (error) {
+  functions.logger.error("FunctionName - Operation failed", error);
+  
+  // For HTTP functions: send appropriate status
+  // For scheduled functions: throw to mark as failed
+  throw error;
+}
+```
+
+### Validation
+- Validate all inputs at function entry
+- Return/send clear error messages
+- Use appropriate HTTP status codes
+
+## Firestore Operations
+
+### Queries
+- Use async/await consistently
+- Handle empty query results
+- Batch operations when possible
+
+### Transactions
+```typescript
+await admin.firestore().runTransaction(async (transaction) => {
+  const doc = await transaction.get(docRef);
+  
+  if (!doc.exists) {
+    throw new Error("Document not found");
+  }
+  
+  transaction.update(docRef, { field: value });
+});
+```
+
+## FCM (Firebase Cloud Messaging)
+
+### Send Notifications
+```typescript
+const message = {
+  token: userToken,
+  notification: {
+    title: "Title",
+    body: "Body message",
+  },
+  data: {
+    key: "value",
+  },
+  apns: {
+    payload: {
+      aps: {
+        sound: "default",
+        badge: 1,
+      },
+    },
+  },
+};
+
+await admin.messaging().send(message);
+```
+
+### Batch Notifications
+- Use `sendEach` or `sendEachForMulticast` for multiple recipients
+- Handle failures gracefully
+- Log success and failure counts
+
+## TypeScript Conventions
+
+### Type Safety
+- Always define interfaces for data structures
+- Use strict TypeScript settings
+- Avoid `any` type unless absolutely necessary
+
+### Interfaces
+```typescript
+interface EventData {
+  id: string;
+  title: string;
+  date: Date;
+  participants: string[];
+}
+```
+
+### Async/Await
+- Always use async/await over promises
+- Handle errors with try/catch
+- Don't mix callbacks with async/await
+
+## Utility Functions
+
+### Location
+- Place shared utilities in `src/utils/`
+- Export utility functions for reuse
+- Keep utilities pure and testable
+
+### Naming
+- Use camelCase for functions and variables
+- Use PascalCase for interfaces and types
+- Use UPPER_CASE for constants
+
+## Testing
+
+### Test Files
+- Place test files adjacent to source with `.test.ts` extension
+- Use Jest or Firebase emulator suite
+- Mock external dependencies
+
+### Test Structure
+```typescript
+describe("FunctionName", () => {
+  it("should handle valid input", async () => {
+    // Arrange
+    const input = { /* test data */ };
+    
+    // Act
+    const result = await functionName(input);
+    
+    // Assert
+    expect(result).toEqual(expectedOutput);
+  });
+});
+```
+
+## Deployment
+
+### Environment Variables
+- Use Firebase config for environment-specific values
+- Never hardcode sensitive data
+- Document required environment variables
+
+### Function Configuration
+- Set appropriate memory and timeout limits
+- Use minimum necessary permissions
+- Document any special IAM requirements
+
+## Important Rules
+
+1. **NEVER create new .md files** except README.md - all documentation goes in existing README.md
+2. **ALWAYS edit existing shell scripts** - never create new ones without explicit request
+3. Keep functions focused and single-purpose (under 200 lines)
+4. Always include function name in log messages: `"FunctionName - [message]"`
+5. Use structured logging with objects, not string concatenation
+6. Handle all errors explicitly - never leave try blocks without catch
+7. Validate all inputs at function boundaries
+8. Write production-ready code - no placeholder implementations
+9. Don't modify unrelated code when making changes
+10. Test locally with Firebase emulator before deployment
+11. Follow DRY principle - check existing utilities before writing new ones
+12. Always use TypeScript strict mode features
+13. Export all functions from `src/index.ts`
+14. **NEVER modify files in lib/ directory** - these are auto-generated
+15. Keep utility functions in `src/utils/` - never inline complex logic
+16. Use appropriate HTTP status codes for all responses
+17. Document complex business logic with inline comments (no emojis)
+18. Batch Firestore operations when processing multiple documents
+19. Set reasonable timeouts for scheduled functions
+20. Handle FCM token failures gracefully
+
+## Shell Scripts Rules
+
+1. **ALWAYS check if a shell script already exists** before creating new ones
+2. **EDIT existing scripts** rather than creating duplicates
+3. Only create new shell scripts when explicitly requested
+4. Keep scripts focused on single tasks
+5. Use meaningful names: `action-target.sh` format
+6. Include error handling with `set -e`
+7. Add usage instructions at the top of the script
+
+## Documentation Rules
+
+1. **DO NOT create new markdown files** for features or changes
+2. Update README.md for any significant changes
+3. Use inline code comments for complex logic
+4. Keep comments concise and technical
+5. Never use emojis in any documentation or comments
+6. Document breaking changes clearly
+7. Include examples in README.md for new functions
+
+## Performance Considerations
+
+1. Use Firestore batch operations for bulk updates
+2. Implement pagination for large result sets
+3. Cache frequently accessed data when appropriate
+4. Set appropriate function timeout limits
+5. Clean up listeners and resources properly
+6. Use Firestore indexes for complex queries
+
+## Security Best Practices
+
+1. Validate all user inputs
+2. Check authentication/authorization before operations
+3. Use Firestore security rules as first line of defense
+4. Sanitize data before storing in Firestore
+5. Never expose sensitive data in logs
+6. Use environment variables for API keys and secrets
+7. Implement rate limiting for public endpoints
+

@@ -56,3 +56,11 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 fastlane/app_archive
+firestore-export/
+
+# Production testing files
+service-account-key.json
+.env
+
+## Node.js
+node_modules/
