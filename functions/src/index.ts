@@ -184,24 +184,29 @@ export const testRegistrationDeadlines = functions.https.onRequest(async (req, r
   
   try {
     const db = admin.firestore();
-    const now = admin.firestore.Timestamp.now();
+    const now = Timestamp.now();
     const threeDaysFromNow = new Date(now.toDate().getTime() + 3 * 24 * 60 * 60 * 1000);
     
     const eventsSnapshot = await db
       .collection("events")
       .where("requiresRegistration", "==", true)
-      .where("registrationDeadline", ">=", now)
-      .where("registrationDeadline", "<=", admin.firestore.Timestamp.fromDate(threeDaysFromNow))
       .get();
     
-    console.log(`Found ${eventsSnapshot.size} events with upcoming registration deadlines`);
+    const eventsWithUpcomingDeadlines = eventsSnapshot.docs.filter((doc) => {
+      const data = doc.data();
+      if (!data.registrationDeadline) return false;
+      const deadline = data.registrationDeadline.toDate();
+      return deadline >= now.toDate() && deadline <= threeDaysFromNow;
+    });
+    
+    console.log(`Found ${eventsWithUpcomingDeadlines.length} events with upcoming registration deadlines (out of ${eventsSnapshot.size} total events with registration)`);
     
     const { sendPushNotification } = await import("./utils/fcm");
     const { getUser, createNotification, getScheduledNotification, updateScheduledNotification } = await import("./utils/firestore");
     
     let notificationsSent = 0;
     
-    for (const eventDoc of eventsSnapshot.docs) {
+    for (const eventDoc of eventsWithUpcomingDeadlines) {
       const event = { id: eventDoc.id, ...eventDoc.data() } as any;
       
       if (event.status === "Going" || event.status === "Interested") {
@@ -227,9 +232,21 @@ export const testRegistrationDeadlines = functions.https.onRequest(async (req, r
         }
         
         const registrationDeadline = event.registrationDeadline.toDate();
-        const daysUntilDeadline = Math.ceil(
-          (registrationDeadline.getTime() - now.toDate().getTime()) / (24 * 60 * 60 * 1000)
+        
+        const todayMidnight = new Date(now.toDate());
+        todayMidnight.setHours(0, 0, 0, 0);
+        
+        const deadlineMidnight = new Date(registrationDeadline);
+        deadlineMidnight.setHours(0, 0, 0, 0);
+        
+        const daysUntilDeadline = Math.round(
+          (deadlineMidnight.getTime() - todayMidnight.getTime()) / (24 * 60 * 60 * 1000)
         );
+        
+        console.log(`Registration deadline calculation for event ${event.id}:`);
+        console.log(`  Today: ${todayMidnight.toISOString()}`);
+        console.log(`  Deadline: ${deadlineMidnight.toISOString()}`);
+        console.log(`  Days until deadline: ${daysUntilDeadline}`);
         
         const deadlineText =
           daysUntilDeadline === 0 ? "today" :
@@ -268,7 +285,7 @@ export const testRegistrationDeadlines = functions.https.onRequest(async (req, r
           eventId: event.id,
           userId: user.id,
           registrationDeadlineSent: true,
-          lastChecked: admin.firestore.Timestamp.now(),
+          lastChecked: Timestamp.now(),
         });
         
         notificationsSent++;
@@ -279,7 +296,7 @@ export const testRegistrationDeadlines = functions.https.onRequest(async (req, r
     res.status(200).json({
       success: true,
       message: "Registration deadlines check executed successfully",
-      eventsChecked: eventsSnapshot.size,
+      eventsChecked: eventsWithUpcomingDeadlines.length,
       notificationsSent,
     });
   } catch (error: any) {
