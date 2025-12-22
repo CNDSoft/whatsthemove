@@ -3,7 +3,7 @@ import * as admin from "firebase-admin";
 export interface PushNotificationPayload {
   title: string;
   body: string;
-  type: string;
+  type: "Event" | "Deadline" | "Registration" | "General";
   notificationId: string;
   eventId?: string;
   actionUrl?: string;

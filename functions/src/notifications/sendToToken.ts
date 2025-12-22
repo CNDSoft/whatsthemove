@@ -39,7 +39,7 @@ export const sendNotificationToToken = functions.https.onCall(
     const notificationPayload = {
       title,
       body,
-      type: type || "general",
+      type: (type || "General") as "Event" | "Deadline" | "Registration" | "General",
       notificationId: `notification_${Date.now()}`,
       eventId,
       actionUrl,
@@ -113,7 +113,7 @@ export const testSendNotificationToToken = functions.https.onRequest(
     const notificationPayload = {
       title,
       body,
-      type: type || "general",
+      type: (type || "General") as "Event" | "Deadline" | "Registration" | "General",
       notificationId: `test_notification_${Date.now()}`,
       eventId,
       actionUrl,

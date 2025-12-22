@@ -123,7 +123,7 @@ export const testEventReminders = functions.https.onRequest(async (req, res) => 
         const notification = {
           id: notificationId,
           userId: user.id,
-          type: "event",
+          type: "Event" as const,
           title: "Event Reminder",
           message: `${event.name} is ${reminderText}!`,
           actionText: "View Event",
@@ -240,15 +240,15 @@ export const testRegistrationDeadlines = functions.https.onRequest(async (req, r
         const notification = {
           id: notificationId,
           userId: user.id,
-          type: "deadline",
+          type: "Deadline" as const,
           title: "Registration Deadline",
           message: `Registration for ${event.name} closes ${deadlineText}!`,
           actionText: "Register Now",
           actionUrl: event.urlLink || `/events/${event.id}`,
           eventId: event.id,
           isRead: false,
-          timestamp: admin.firestore.Timestamp.now(),
-          createdAt: admin.firestore.Timestamp.now(),
+          timestamp: Timestamp.now(),
+          createdAt: Timestamp.now(),
         };
         
         await createNotification(notification);

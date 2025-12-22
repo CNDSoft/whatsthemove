@@ -40,8 +40,16 @@ export async function createNotification(
   notification: Notification
 ): Promise<void> {
   const db = admin.firestore();
-  await db.collection("notifications").doc(notification.id).set(notification);
-  console.log(`Created notification: ${notification.id}`);
+  
+  // Save to user's subcollection: users/{userId}/notifications/{notificationId}
+  await db
+    .collection("users")
+    .doc(notification.userId)
+    .collection("notifications")
+    .doc(notification.id)
+    .set(notification);
+    
+  console.log(`Created notification: ${notification.id} for user: ${notification.userId}`);
 }
 
 export async function getUser(userId: string): Promise<User | null> {

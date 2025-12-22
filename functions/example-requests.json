@@ -1,7 +1,7 @@
 {
   "singleToken": {
     "description": "Send notification to a single FCM token",
-    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testSendNotificationToToken",
     "method": "POST",
     "body": {
       "fcmToken": "YOUR_FCM_TOKEN_HERE",
@@ -12,7 +12,7 @@
   },
   "multipleTokens": {
     "description": "Send notification to multiple FCM tokens",
-    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testSendNotificationToToken",
     "method": "POST",
     "body": {
       "fcmTokens": [
@@ -27,7 +27,7 @@
   },
   "eventReminder": {
     "description": "Send event reminder notification",
-    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testSendNotificationToToken",
     "method": "POST",
     "body": {
       "fcmToken": "YOUR_FCM_TOKEN_HERE",
@@ -40,7 +40,7 @@
   },
   "registrationDeadline": {
     "description": "Send registration deadline notification",
-    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testSendNotificationToToken",
     "method": "POST",
     "body": {
       "fcmToken": "YOUR_FCM_TOKEN_HERE",
@@ -53,7 +53,7 @@
   },
   "generalAnnouncement": {
     "description": "Send general announcement",
-    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testSendNotificationToToken",
     "method": "POST",
     "body": {
       "fcmToken": "YOUR_FCM_TOKEN_HERE",
@@ -62,6 +62,17 @@
       "type": "general",
       "actionUrl": "whatsthemove://home"
     }
+  },
+  "testEventReminders": {
+    "description": "Test scheduled event reminders function",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testEventReminders",
+    "method": "POST",
+    "note": "Requires test data in Firestore. Run: node setup-test-data.js YOUR_FCM_TOKEN"
+  },
+  "testRegistrationDeadlines": {
+    "description": "Test scheduled registration deadlines function",
+    "endpoint": "http://localhost:5555/eventbooking-fd7c2/us-central1/testRegistrationDeadlines",
+    "method": "POST",
+    "note": "Requires test data in Firestore. Run: node setup-test-data.js YOUR_FCM_TOKEN"
   }
 }
-
