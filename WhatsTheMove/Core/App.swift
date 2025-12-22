@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 import EnvironmentOverrides
 import FirebaseAuth
+import UserNotifications
 
 @main
 struct MainApp: App {
@@ -143,6 +144,10 @@ private struct RootContent: View {
         hasCompletedOnboarding = onboardingCompleted
         injected.appState[\.userData.hasCompletedOnboarding] = onboardingCompleted
         
+        if authStatus && onboardingCompleted {
+            await requestPushNotificationIfNeeded()
+        }
+        
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
         await MainActor.run {
@@ -162,6 +167,16 @@ private struct RootContent: View {
     }
     
     private func requestNotifications() {
+        injected.interactors.userPermissions.request(permission: .pushNotifications)
+    }
+    
+    private func requestPushNotificationIfNeeded() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        
+        guard settings.authorizationStatus == .notDetermined else {
+            return
+        }
+        
         injected.interactors.userPermissions.request(permission: .pushNotifications)
     }
 }

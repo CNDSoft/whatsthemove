@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 import FirebaseAuth
+import FirebaseMessaging
 
 protocol AuthInteractor {
     func signIn(email: String, password: String) async throws
@@ -25,6 +26,7 @@ struct RealAuthInteractor: AuthInteractor {
     
     let appState: Store<AppState>
     let userWebRepository: UserWebRepository
+    let notificationInteractor: NotificationInteractor
     
     func signIn(email: String, password: String) async throws {
         print("RealAuthInteractor - Sign in with email: \(email)")
@@ -46,6 +48,8 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
             appState[\.userData.fcmToken] = user?.fcmToken
         }
+        
+        await registerFCMTokenIfAvailable()
     }
     
     func signUp(email: String, password: String, firstName: String, lastName: String, ageRange: String) async throws {
@@ -85,6 +89,8 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.firstName] = firstName
             appState[\.userData.lastName] = lastName
         }
+        
+        await registerFCMTokenIfAvailable()
     }
     
     func signOut() async throws {
@@ -234,6 +240,17 @@ struct RealAuthInteractor: AuthInteractor {
         }
         
         print("RealAuthInteractor - Account deleted successfully, app state cleared")
+    }
+    
+    private func registerFCMTokenIfAvailable() async {
+        do {
+            let token = try await Messaging.messaging().token()
+            print("RealAuthInteractor - FCM token retrieved: \(token)")
+            try await notificationInteractor.registerFCMToken(token)
+            print("RealAuthInteractor - FCM token registered after authentication")
+        } catch {
+            print("RealAuthInteractor - Failed to register FCM token: \(error.localizedDescription)")
+        }
     }
 }
 

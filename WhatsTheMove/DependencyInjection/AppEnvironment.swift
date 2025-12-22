@@ -111,9 +111,14 @@ extension AppEnvironment {
                     UIApplication.shared.open($0, options: [:], completionHandler: nil)
                 }
             })
+        let notifications = RealNotificationInteractor(
+            appState: appState,
+            notificationWebRepository: webRepositories.notifications,
+            userWebRepository: webRepositories.users)
         let auth = RealAuthInteractor(
             appState: appState,
-            userWebRepository: webRepositories.users)
+            userWebRepository: webRepositories.users,
+            notificationInteractor: notifications)
         let appleCalendarRepository = RealAppleCalendarRepository()
         let googleCalendarRepository = RealGoogleCalendarRepository()
         let calendar = RealCalendarInteractor(
@@ -127,10 +132,6 @@ extension AppEnvironment {
             calendarInteractor: calendar)
         let users = RealUserInteractor(
             appState: appState,
-            userWebRepository: webRepositories.users)
-        let notifications = RealNotificationInteractor(
-            appState: appState,
-            notificationWebRepository: webRepositories.notifications,
             userWebRepository: webRepositories.users)
         return .init(images: images,
                      countries: countries,

@@ -163,7 +163,22 @@ struct RealNotificationInteractor: NotificationInteractor {
     func registerFCMToken(_ token: String) async throws {
         print("RealNotificationInteractor - Registering FCM token")
         
-        guard let userId = await MainActor.run(body: { appState[\.userData.userId] }) else {
+        var userId: String?
+        var attempts = 0
+        let maxAttempts = 10
+        
+        while userId == nil && attempts < maxAttempts {
+            userId = await MainActor.run(body: { appState[\.userData.userId] })
+            
+            if userId == nil {
+                print("RealNotificationInteractor - User not authenticated yet, waiting... (attempt \(attempts + 1)/\(maxAttempts))")
+                try await Task.sleep(nanoseconds: 500_000_000)
+                attempts += 1
+            }
+        }
+        
+        guard let userId = userId else {
+            print("RealNotificationInteractor - User not authenticated after \(maxAttempts) attempts")
             throw NotificationInteractorError.userNotAuthenticated
         }
         
@@ -173,7 +188,7 @@ struct RealNotificationInteractor: NotificationInteractor {
             appState[\.userData.fcmToken] = token
         }
         
-        print("RealNotificationInteractor - FCM token registered")
+        print("RealNotificationInteractor - FCM token registered successfully")
     }
 }
 

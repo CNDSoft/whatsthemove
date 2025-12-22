@@ -22,23 +22,18 @@ class PushNotificationManager: NSObject, ObservableObject {
     }
     
     func setupNotifications() {
-        print("PushNotificationManager - Setting up push notifications")
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
         
-        UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
     }
     
     func requestPermission() async {
-        print("PushNotificationManager - Requesting push notification permission")
-        
         do {
             let granted = try await notificationInteractor.requestPushPermission()
             
             if granted {
-                print("PushNotificationManager - Permission granted, registering for remote notifications")
                 await registerForRemoteNotifications()
-            } else {
-                print("PushNotificationManager - Permission denied")
             }
         } catch {
             print("PushNotificationManager - Error requesting permission: \(error)")
@@ -52,8 +47,6 @@ class PushNotificationManager: NSObject, ObservableObject {
     }
     
     func handleRemoteNotification(userInfo: [AnyHashable: Any]) {
-        print("PushNotificationManager - Handling remote notification: \(userInfo)")
-        
         Task {
             do {
                 try await notificationInteractor.loadNotifications()
@@ -71,9 +64,8 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        print("PushNotificationManager - Will present notification")
-        
-        handleRemoteNotification(userInfo: notification.request.content.userInfo)
+        let content = notification.request.content
+        handleRemoteNotification(userInfo: content.userInfo)
         
         completionHandler([.banner, .sound, .badge])
     }
@@ -83,9 +75,8 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        print("PushNotificationManager - Did receive notification response")
-        
-        handleRemoteNotification(userInfo: response.notification.request.content.userInfo)
+        let content = response.notification.request.content
+        handleRemoteNotification(userInfo: content.userInfo)
         
         completionHandler()
     }
@@ -94,17 +85,11 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
 extension PushNotificationManager: MessagingDelegate {
     
     nonisolated func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("PushNotificationManager - FCM token received: \(fcmToken ?? "nil")")
-        
-        guard let token = fcmToken else {
-            print("PushNotificationManager - No FCM token received")
-            return
-        }
+        guard let token = fcmToken else { return }
         
         Task { @MainActor in
             do {
                 try await notificationInteractor.registerFCMToken(token)
-                print("PushNotificationManager - FCM token registered successfully")
             } catch {
                 print("PushNotificationManager - Error registering FCM token: \(error)")
             }

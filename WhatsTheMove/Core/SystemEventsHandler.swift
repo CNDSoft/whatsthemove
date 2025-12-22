@@ -57,8 +57,6 @@ struct RealSystemEventsHandler: SystemEventsHandler {
             .first(where: { $0 != .unknown })
             .sink { status in
                 if status == .granted {
-                    // If the permission was granted on previous launch
-                    // requesting the push token again:
                     permissions?.request(permission: .pushNotifications)
                 }
             }
@@ -85,7 +83,9 @@ struct RealSystemEventsHandler: SystemEventsHandler {
     }
 
     func handlePushRegistration(result: Result<Data, Error>) {
-
+        if case .failure(let error) = result {
+            print("SystemEventsHandler - APNs registration failed: \(error.localizedDescription)")
+        }
     }
 
     func appDidReceiveRemoteNotification(payload: [AnyHashable: Any]) async -> UIBackgroundFetchResult {

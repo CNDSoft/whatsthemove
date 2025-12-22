@@ -26,20 +26,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions
         launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
-        print("AppDelegate - Firebase configured")
+        
+        Messaging.messaging().isAutoInitEnabled = true
         
         pushNotificationManager = PushNotificationManager(
             notificationInteractor: environment.diContainer.interactors.notifications
         )
-        print("AppDelegate - Push notification manager initialized")
-        
-        Messaging.messaging().token { token, error in
-            if let error = error {
-                print("AppDelegate - Error fetching FCM token: \(error)")
-            } else if let token = token {
-                print("AppDelegate - FCM token: \(token)")
-            }
-        }
         
         return true
     }
@@ -52,18 +44,24 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        print("AppDelegate - Registered for remote notifications")
-        Messaging.messaging().apnsToken = deviceToken
+        #if DEBUG
+        Messaging.messaging().setAPNSToken(deviceToken, type: .sandbox)
+        #else
+        Messaging.messaging().setAPNSToken(deviceToken, type: .prod)
+        #endif
+        
         systemEventsHandler.handlePushRegistration(result: .success(deviceToken))
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        print("AppDelegate - Failed to register for remote notifications: \(error)")
+        print("AppDelegate - ❌ Failed to register for remote notifications: \(error)")
         systemEventsHandler.handlePushRegistration(result: .failure(error))
     }
 
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
-        print("AppDelegate - Received remote notification")
+        print("AppDelegate - 📬 Received remote notification (app in background/terminated)")
+        print("AppDelegate - Notification payload: \(userInfo)")
+        
         pushNotificationManager?.handleRemoteNotification(userInfo: userInfo)
         return await systemEventsHandler
             .appDidReceiveRemoteNotification(payload: userInfo)
