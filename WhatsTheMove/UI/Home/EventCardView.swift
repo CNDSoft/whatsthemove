@@ -562,7 +562,10 @@ private extension EventCardView {
     @ViewBuilder
     var registrationWarning: some View {
         if event.requiresRegistration, let deadline = event.registrationDeadline {
-            let daysUntil = Calendar.current.dateComponents([.day], from: Date(), to: deadline).day ?? 0
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+            let deadlineDay = calendar.startOfDay(for: deadline)
+            let daysUntil = calendar.dateComponents([.day], from: today, to: deadlineDay).day ?? 0
             
             if daysUntil >= 0 && daysUntil <= 7 {
                 HStack(spacing: 8) {
