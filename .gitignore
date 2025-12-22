@@ -64,3 +64,6 @@ service-account-key.json
 
 ## Node.js
 node_modules/
+
+## Firebase Functions compiled output
+functions/lib/
