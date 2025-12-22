@@ -145,7 +145,7 @@ private extension AccountView {
             Image("saved-events-header")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: 225)
+                .frame(width: width, height: 118)
                 .clipped()
         }
         .frame(width: width, height: 118)

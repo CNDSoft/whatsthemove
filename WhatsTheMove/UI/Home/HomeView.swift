@@ -89,7 +89,6 @@ struct HomeView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
-        .underDevelopmentAlert(isPresented: $showNotificationsAlert)
     }
     
     private var filteredEvents: [Event] {
@@ -157,7 +156,7 @@ private extension HomeView {
     
     var notificationButton: some View {
         Button {
-            showNotificationsAlert = true
+            showNotifications = true
         } label: {
             Image("bell")
                 .frame(width: 38, height: 38)
