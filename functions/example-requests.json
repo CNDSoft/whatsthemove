@@ -1,0 +1,67 @@
+{
+  "singleToken": {
+    "description": "Send notification to a single FCM token",
+    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "method": "POST",
+    "body": {
+      "fcmToken": "YOUR_FCM_TOKEN_HERE",
+      "title": "Test Notification",
+      "body": "This is a test message from Firebase Functions",
+      "type": "general"
+    }
+  },
+  "multipleTokens": {
+    "description": "Send notification to multiple FCM tokens",
+    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "method": "POST",
+    "body": {
+      "fcmTokens": [
+        "TOKEN_1",
+        "TOKEN_2",
+        "TOKEN_3"
+      ],
+      "title": "Batch Notification",
+      "body": "This notification is sent to multiple devices",
+      "type": "general"
+    }
+  },
+  "eventReminder": {
+    "description": "Send event reminder notification",
+    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "method": "POST",
+    "body": {
+      "fcmToken": "YOUR_FCM_TOKEN_HERE",
+      "title": "Event Reminder",
+      "body": "Your event 'Beach Party' starts in 1 hour!",
+      "type": "event_reminder",
+      "eventId": "event_123",
+      "actionUrl": "whatsthemove://events/event_123"
+    }
+  },
+  "registrationDeadline": {
+    "description": "Send registration deadline notification",
+    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "method": "POST",
+    "body": {
+      "fcmToken": "YOUR_FCM_TOKEN_HERE",
+      "title": "Registration Closing Soon",
+      "body": "Registration for 'Music Festival' closes in 24 hours",
+      "type": "registration_deadline",
+      "eventId": "event_456",
+      "actionUrl": "whatsthemove://events/event_456"
+    }
+  },
+  "generalAnnouncement": {
+    "description": "Send general announcement",
+    "endpoint": "http://localhost:5001/whatsthemove/us-central1/testSendNotificationToToken",
+    "method": "POST",
+    "body": {
+      "fcmToken": "YOUR_FCM_TOKEN_HERE",
+      "title": "New Feature Available",
+      "body": "Check out the new event discovery feature!",
+      "type": "general",
+      "actionUrl": "whatsthemove://home"
+    }
+  }
+}
+
