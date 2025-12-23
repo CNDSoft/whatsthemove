@@ -97,9 +97,12 @@ struct AccountView: View {
         } message: {
             Text("This will stop syncing events to your calendar. Calendar events already created will not be deleted.")
         }
+        .sheet(isPresented: $showPrivacyPolicyAlert) {
+            PrivacyPolicyView()
+                .inject(injected)
+        }
         .underDevelopmentAlert(isPresented: $showFeedbackAlert)
         .underDevelopmentAlert(isPresented: $showRateAppAlert)
-        .underDevelopmentAlert(isPresented: $showPrivacyPolicyAlert)
     }
     
     private var userDataUpdate: AnyPublisher<AppState.UserData, Never> {
@@ -117,6 +120,7 @@ private extension AccountView {
                 profileSection
                 calendarExportSection
                 notificationsSection
+                supportInfoSection
                 dataPrivacySection
                 signOutSection
                 footer
@@ -585,12 +589,12 @@ private extension AccountView {
             sectionHeader("SUPPORT & INFO")
             
             VStack(spacing: 1) {
-                supportRow(icon: "send-feedback", title: "Send Feedback") {
-                    showFeedbackAlert = true
-                }
-                supportRow(icon: "rate-the-app", title: "Rate the App") {
-                    showRateAppAlert = true
-                }
+//                supportRow(icon: "send-feedback", title: "Send Feedback") {
+//                    showFeedbackAlert = true
+//                }
+//                supportRow(icon: "rate-the-app", title: "Rate the App") {
+//                    showRateAppAlert = true
+//                }
                 supportRow(icon: "privacy-policy", title: "Privacy Policy") {
                     showPrivacyPolicyAlert = true
                 }

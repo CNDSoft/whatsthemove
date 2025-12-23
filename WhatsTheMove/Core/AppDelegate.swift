@@ -12,6 +12,7 @@ import Combine
 import Foundation
 import Firebase
 import FirebaseAnalytics
+import FirebaseRemoteConfig
 
 @MainActor
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -34,12 +35,28 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         Analytics.setAnalyticsCollectionEnabled(analyticsEnabled)
         print("AppDelegate - Firebase Analytics collection enabled: \(analyticsEnabled)")
         
+        configureRemoteConfig()
+        
         pushNotificationManager = PushNotificationManager(
             notificationInteractor: environment.diContainer.interactors.notifications,
             appState: environment.diContainer.appState
         )
         
         return true
+    }
+    
+    private func configureRemoteConfig() {
+        let remoteConfig = RemoteConfig.remoteConfig()
+        let settings = RemoteConfigSettings()
+        
+        #if DEBUG
+        settings.minimumFetchInterval = 0
+        #else
+        settings.minimumFetchInterval = 3600
+        #endif
+        
+        remoteConfig.configSettings = settings
+        print("AppDelegate - Firebase Remote Config configured")
     }
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {

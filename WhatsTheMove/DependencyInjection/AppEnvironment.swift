@@ -138,6 +138,7 @@ extension AppEnvironment {
             appState: appState,
             userWebRepository: webRepositories.users,
             analyticsInteractor: analytics)
+        let remoteConfig = RealRemoteConfigInteractor()
         return .init(images: images,
                      countries: countries,
                      userPermissions: userPermissions,
@@ -146,6 +147,7 @@ extension AppEnvironment {
                      users: users,
                      calendar: calendar,
                      notifications: notifications,
-                     analytics: analytics)
+                     analytics: analytics,
+                     remoteConfig: remoteConfig)
     }
 }

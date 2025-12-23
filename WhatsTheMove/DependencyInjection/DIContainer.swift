@@ -46,6 +46,7 @@ extension DIContainer {
         let calendar: CalendarInteractor
         let notifications: NotificationInteractor
         let analytics: AnalyticsInteractor
+        let remoteConfig: RemoteConfigInteractor
 
         static var stub: Self {
             .init(images: StubImagesInteractor(),
@@ -56,7 +57,8 @@ extension DIContainer {
                   users: StubUserInteractor(),
                   calendar: StubCalendarInteractor(),
                   notifications: StubNotificationInteractor(),
-                  analytics: StubAnalyticsInteractor())
+                  analytics: StubAnalyticsInteractor(),
+                  remoteConfig: StubRemoteConfigInteractor())
         }
     }
 }
