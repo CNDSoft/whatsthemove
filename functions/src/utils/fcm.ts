@@ -39,11 +39,11 @@ export async function sendPushNotification(
     console.log(`Sending push notification to token: ${fcmToken.substring(0, 20)}...`);
     console.log(`  Title: ${payload.title}`);
     console.log(`  Body: ${payload.body}`);
-    
+
     await admin.messaging().send(message);
-    console.log(`✓ Push notification sent successfully`);
+    console.log("✓ Push notification sent successfully");
   } catch (error) {
-    console.error(`✗ Failed to send push notification:`, error);
+    console.error("✗ Failed to send push notification:", error);
     throw error;
   }
 }
@@ -53,7 +53,7 @@ export async function sendBatchPushNotifications(
   payload: PushNotificationPayload
 ): Promise<void> {
   console.log(`Sending batch push notifications to ${tokens.length} tokens...`);
-  
+
   const batchSize = 500;
   const batches: string[][] = [];
 
@@ -87,7 +87,7 @@ export async function sendBatchPushNotifications(
     try {
       const response = await admin.messaging().sendEach(messages);
       console.log(`✓ Batch sent: ${response.successCount} successful, ${response.failureCount} failed`);
-      
+
       if (response.failureCount > 0) {
         response.responses.forEach((resp, idx) => {
           if (!resp.success) {
@@ -96,7 +96,7 @@ export async function sendBatchPushNotifications(
         });
       }
     } catch (error) {
-      console.error(`✗ Failed to send batch notifications:`, error);
+      console.error("✗ Failed to send batch notifications:", error);
     }
   }
 }

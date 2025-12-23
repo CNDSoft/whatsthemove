@@ -40,7 +40,7 @@ export async function createNotification(
   notification: Notification
 ): Promise<void> {
   const db = admin.firestore();
-  
+
   // Save to user's subcollection: users/{userId}/notifications/{notificationId}
   await db
     .collection("users")
@@ -48,7 +48,7 @@ export async function createNotification(
     .collection("notifications")
     .doc(notification.id)
     .set(notification);
-    
+
   console.log(`Created notification: ${notification.id} for user: ${notification.userId}`);
 }
 
