@@ -30,7 +30,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         Messaging.messaging().isAutoInitEnabled = true
         
         pushNotificationManager = PushNotificationManager(
-            notificationInteractor: environment.diContainer.interactors.notifications
+            notificationInteractor: environment.diContainer.interactors.notifications,
+            appState: environment.diContainer.appState
         )
         
         return true

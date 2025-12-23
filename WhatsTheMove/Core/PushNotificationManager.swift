@@ -14,9 +14,11 @@ import Firebase
 class PushNotificationManager: NSObject, ObservableObject {
     
     private let notificationInteractor: NotificationInteractor
+    private let appState: Store<AppState>
     
-    init(notificationInteractor: NotificationInteractor) {
+    init(notificationInteractor: NotificationInteractor, appState: Store<AppState>) {
         self.notificationInteractor = notificationInteractor
+        self.appState = appState
         super.init()
         setupNotifications()
     }
@@ -50,9 +52,53 @@ class PushNotificationManager: NSObject, ObservableObject {
         Task {
             do {
                 try await notificationInteractor.loadNotifications()
+                
+                if let eventId = extractEventId(from: userInfo) {
+                    await MainActor.run {
+                        print("PushNotificationManager - Setting notificationTappedEventId: \(eventId)")
+                        appState[\.userData.notificationTappedEventId] = eventId
+                    }
+                }
+                
+                if let notificationId = extractNotificationId(from: userInfo) {
+                    try? await markNotificationAsRead(notificationId: notificationId)
+                }
             } catch {
                 print("PushNotificationManager - Error reloading notifications: \(error)")
             }
+        }
+    }
+    
+    private func extractEventId(from userInfo: [AnyHashable: Any]) -> String? {
+        if let eventId = userInfo["eventId"] as? String {
+            return eventId
+        }
+        
+        if let gcmMessageId = userInfo["gcm.message_id"] as? String {
+            print("PushNotificationManager - Received FCM notification: \(gcmMessageId)")
+        }
+        
+        print("PushNotificationManager - No eventId found in notification payload")
+        print("PushNotificationManager - Available keys: \(userInfo.keys)")
+        return nil
+    }
+    
+    private func extractNotificationId(from userInfo: [AnyHashable: Any]) -> String? {
+        if let notificationId = userInfo["notificationId"] as? String {
+            return notificationId
+        }
+        
+        print("PushNotificationManager - No notificationId found in notification payload")
+        return nil
+    }
+    
+    private func markNotificationAsRead(notificationId: String) async {
+        do {
+            print("PushNotificationManager - Marking notification as read: \(notificationId)")
+            try await notificationInteractor.markAsRead(notificationId: notificationId)
+            print("PushNotificationManager - Successfully marked notification as read")
+        } catch {
+            print("PushNotificationManager - Error marking notification as read: \(error)")
         }
     }
 }
@@ -75,10 +121,29 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        print("PushNotificationManager - User tapped on notification")
         let content = response.notification.request.content
-        handleRemoteNotification(userInfo: content.userInfo)
         
-        completionHandler()
+        Task {
+            do {
+                try await notificationInteractor.loadNotifications()
+                
+                if let eventId = extractEventId(from: content.userInfo) {
+                    await MainActor.run {
+                        print("PushNotificationManager - Navigating to event: \(eventId)")
+                        appState[\.userData.notificationTappedEventId] = eventId
+                    }
+                }
+                
+                if let notificationId = extractNotificationId(from: content.userInfo) {
+                    try? await markNotificationAsRead(notificationId: notificationId)
+                }
+            } catch {
+                print("PushNotificationManager - Error handling notification tap: \(error)")
+            }
+            
+            completionHandler()
+        }
     }
 }
 
