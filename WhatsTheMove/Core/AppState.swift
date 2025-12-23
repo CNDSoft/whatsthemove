@@ -46,6 +46,7 @@ extension AppState {
         var events: [Event] = []
         var starredEventIds: Set<String> = []
         var lastSavedEventId: String?
+        var notificationTappedEventId: String?
         var connectedCalendarType: CalendarType? = {
             if let rawValue = UserDefaults.standard.string(forKey: "connectedCalendarType") {
                 return CalendarType(rawValue: rawValue)

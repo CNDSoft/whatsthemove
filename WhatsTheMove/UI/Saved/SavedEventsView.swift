@@ -61,12 +61,19 @@ struct SavedEventsView: View {
             if shouldRefetch {
                 Task {
                     await refreshEvents()
-                    await handleFilterSwitchAfterSave()
+                    await handleFilterSwitchAfterAction()
                 }
             }
         }
         .onReceive(eventsUpdate) { updatedEvents in
             events = updatedEvents
+        }
+        .onReceive(notificationTappedEventUpdate) { eventId in
+            if eventId != nil {
+                Task {
+                    await handleFilterSwitchAfterAction()
+                }
+            }
         }
         .sheet(isPresented: $showCategorySheet) {
             CategoriesView(
@@ -84,7 +91,7 @@ struct SavedEventsView: View {
         .sheet(item: $eventToEdit, onDismiss: {
             Task {
                 await refreshEvents()
-                await handleFilterSwitchAfterSave()
+                await handleFilterSwitchAfterAction()
             }
         }) { event in
             AddEventView(mode: .edit(event))
@@ -165,6 +172,10 @@ struct SavedEventsView: View {
     
     private var eventsUpdate: AnyPublisher<[Event], Never> {
         injected.appState.updates(for: \.userData.events)
+    }
+    
+    private var notificationTappedEventUpdate: AnyPublisher<String?, Never> {
+        injected.appState.updates(for: \.userData.notificationTappedEventId)
     }
 }
 
@@ -553,26 +564,32 @@ private extension SavedEventsView {
         return min(totalHeight, 500)
     }
     
-    func handleFilterSwitchAfterSave() async {
-        guard let lastSavedEventId = await MainActor.run(body: { injected.appState[\.userData.lastSavedEventId] }) else {
+    func handleFilterSwitchAfterAction() async {
+        let eventIdToFind = await MainActor.run {
+            injected.appState[\.userData.lastSavedEventId] ?? injected.appState[\.userData.notificationTappedEventId]
+        }
+        
+        guard let eventId = eventIdToFind else {
             return
         }
         
-        guard let savedEvent = events.first(where: { $0.id == lastSavedEventId }) else {
+        guard let targetEvent = events.first(where: { $0.id == eventId }) else {
             await MainActor.run {
                 injected.appState[\.userData.lastSavedEventId] = nil
+                injected.appState[\.userData.notificationTappedEventId] = nil
             }
             return
         }
         
         let starredIds = await MainActor.run { injected.appState[\.userData.starredEventIds] }
-        let appropriateFilter = injected.interactors.events.determineSavedFilter(for: savedEvent, starredIds: starredIds)
+        let appropriateFilter = injected.interactors.events.determineSavedFilter(for: targetEvent, starredIds: starredIds)
         
         await MainActor.run {
             selectedFilter = appropriateFilter
             injected.appState[\.userData.lastSavedEventId] = nil
+            injected.appState[\.userData.notificationTappedEventId] = nil
         }
-        print("SavedEventsView - Switched to filter: \(appropriateFilter.rawValue) for saved event")
+        print("SavedEventsView - Switched to filter: \(appropriateFilter.rawValue)")
     }
 }
 

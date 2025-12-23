@@ -401,6 +401,14 @@ private extension NotificationView {
     func handleNotificationTap(_ notification: NotificationItem) {
         Task {
             await injected.interactors.notifications.handleNotificationTap(notification)
+            
+            if let eventId = notification.eventId {
+                await MainActor.run {
+                    injected.appState[\.userData.notificationTappedEventId] = eventId
+                    dismiss()
+                }
+            }
+            
             print("NotificationView - Handled notification tap")
         }
     }
