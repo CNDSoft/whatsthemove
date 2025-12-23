@@ -27,6 +27,7 @@ struct RealAuthInteractor: AuthInteractor {
     let appState: Store<AppState>
     let userWebRepository: UserWebRepository
     let notificationInteractor: NotificationInteractor
+    let analyticsInteractor: AnalyticsInteractor
     
     func signIn(email: String, password: String) async throws {
         print("RealAuthInteractor - Sign in with email: \(email)")
@@ -47,7 +48,10 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.phoneNumber] = user?.phoneNumber
             appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
             appState[\.userData.fcmToken] = user?.fcmToken
+            appState[\.userData.analyticsEnabled] = user?.analyticsEnabled ?? false
         }
+        
+        analyticsInteractor.trackLogin(method: "email")
         
         await registerFCMTokenIfAvailable()
     }
@@ -74,6 +78,7 @@ struct RealAuthInteractor: AuthInteractor {
             starredEventIds: [],
             notificationPreferences: NotificationPreferences(),
             fcmToken: nil,
+            analyticsEnabled: false,
             createdAt: now,
             updatedAt: now
         )
@@ -88,7 +93,10 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.userId] = firebaseUser.uid
             appState[\.userData.firstName] = firstName
             appState[\.userData.lastName] = lastName
+            appState[\.userData.analyticsEnabled] = false
         }
+        
+        analyticsInteractor.trackSignUp(method: "email")
         
         await registerFCMTokenIfAvailable()
     }
@@ -127,6 +135,7 @@ struct RealAuthInteractor: AuthInteractor {
                 appState[\.userData.phoneNumber] = user?.phoneNumber
                 appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
                 appState[\.userData.fcmToken] = user?.fcmToken
+                appState[\.userData.analyticsEnabled] = user?.analyticsEnabled ?? false
             }
             return true
         }

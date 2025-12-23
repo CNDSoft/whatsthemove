@@ -46,6 +46,7 @@ struct User: Codable, Equatable {
     var starredEventIds: [String]
     var notificationPreferences: NotificationPreferences
     var fcmToken: String?
+    var analyticsEnabled: Bool
     let createdAt: Date
     let updatedAt: Date
     
@@ -65,6 +66,7 @@ extension User {
             "ageRange": ageRange,
             "starredEventIds": starredEventIds,
             "notificationPreferences": notificationPreferences.toDictionary(),
+            "analyticsEnabled": analyticsEnabled,
             "createdAt": createdAt,
             "updatedAt": updatedAt
         ]
@@ -88,6 +90,7 @@ extension User {
         let phoneNumber = data["phoneNumber"] as? String
         let starredEventIds = (data["starredEventIds"] as? [String]) ?? []
         let fcmToken = data["fcmToken"] as? String
+        let analyticsEnabled = (data["analyticsEnabled"] as? Bool) ?? false
         
         let notificationPreferences: NotificationPreferences
         if let prefsDict = data["notificationPreferences"] as? [String: Any] {
@@ -109,6 +112,7 @@ extension User {
             starredEventIds: starredEventIds,
             notificationPreferences: notificationPreferences,
             fcmToken: fcmToken,
+            analyticsEnabled: analyticsEnabled,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

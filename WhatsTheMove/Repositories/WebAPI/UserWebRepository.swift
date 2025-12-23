@@ -19,6 +19,7 @@ protocol UserWebRepository {
     func updateNotificationPreferences(userId: String, preferences: NotificationPreferences) async throws
     func getNotificationPreferences(userId: String) async throws -> NotificationPreferences
     func updateFCMToken(userId: String, token: String?) async throws
+    func updateAnalyticsPreference(userId: String, enabled: Bool) async throws
 }
 
 struct RealUserWebRepository: UserWebRepository {
@@ -164,6 +165,16 @@ struct RealUserWebRepository: UserWebRepository {
         
         print("RealUserWebRepository - FCM token updated successfully")
     }
+    
+    func updateAnalyticsPreference(userId: String, enabled: Bool) async throws {
+        print("RealUserWebRepository - Updating analytics preference for user: \(userId) to: \(enabled)")
+        
+        try await db.collection(collectionName)
+            .document(userId)
+            .updateData(["analyticsEnabled": enabled])
+        
+        print("RealUserWebRepository - Analytics preference updated successfully")
+    }
 }
 
 struct StubUserWebRepository: UserWebRepository {
@@ -205,6 +216,10 @@ struct StubUserWebRepository: UserWebRepository {
     
     func updateFCMToken(userId: String, token: String?) async throws {
         print("StubUserWebRepository - Update FCM token stub")
+    }
+    
+    func updateAnalyticsPreference(userId: String, enabled: Bool) async throws {
+        print("StubUserWebRepository - Update analytics preference stub")
     }
 }
 

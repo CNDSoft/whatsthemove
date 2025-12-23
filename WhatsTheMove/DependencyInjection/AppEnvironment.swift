@@ -115,10 +115,14 @@ extension AppEnvironment {
             appState: appState,
             notificationWebRepository: webRepositories.notifications,
             userWebRepository: webRepositories.users)
+        let analytics = RealAnalyticsInteractor(
+            appState: appState,
+            userWebRepository: webRepositories.users)
         let auth = RealAuthInteractor(
             appState: appState,
             userWebRepository: webRepositories.users,
-            notificationInteractor: notifications)
+            notificationInteractor: notifications,
+            analyticsInteractor: analytics)
         let appleCalendarRepository = RealAppleCalendarRepository()
         let googleCalendarRepository = RealGoogleCalendarRepository()
         let calendar = RealCalendarInteractor(
@@ -132,7 +136,8 @@ extension AppEnvironment {
             calendarInteractor: calendar)
         let users = RealUserInteractor(
             appState: appState,
-            userWebRepository: webRepositories.users)
+            userWebRepository: webRepositories.users,
+            analyticsInteractor: analytics)
         return .init(images: images,
                      countries: countries,
                      userPermissions: userPermissions,
@@ -140,6 +145,7 @@ extension AppEnvironment {
                      events: events,
                      users: users,
                      calendar: calendar,
-                     notifications: notifications)
+                     notifications: notifications,
+                     analytics: analytics)
     }
 }

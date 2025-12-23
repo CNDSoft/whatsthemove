@@ -11,6 +11,7 @@ import SwiftUI
 import Combine
 import Foundation
 import Firebase
+import FirebaseAnalytics
 
 @MainActor
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -28,6 +29,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
         
         Messaging.messaging().isAutoInitEnabled = true
+        
+        let analyticsEnabled = UserDefaults.standard.object(forKey: "analyticsEnabled") as? Bool ?? false
+        Analytics.setAnalyticsCollectionEnabled(analyticsEnabled)
+        print("AppDelegate - Firebase Analytics collection enabled: \(analyticsEnabled)")
         
         pushNotificationManager = PushNotificationManager(
             notificationInteractor: environment.diContainer.interactors.notifications,

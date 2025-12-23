@@ -37,7 +37,6 @@ struct AccountView: View {
     @State private var showNotifications: Bool = false
     @State private var showCalendarSelection: Bool = false
     @State private var showDisconnectConfirmation: Bool = false
-    @State private var showAnalyticsAlert: Bool = false
     @State private var showFeedbackAlert: Bool = false
     @State private var showRateAppAlert: Bool = false
     @State private var showPrivacyPolicyAlert: Bool = false
@@ -62,6 +61,7 @@ struct AccountView: View {
             connectedCalendarType = injected.appState[\.userData.connectedCalendarType]
             selectedCalendarName = injected.appState[\.userData.selectedCalendarName]
             includeSourceLinks = injected.appState[\.userData.includeSourceLinksInCalendar]
+            analyticsEnabled = injected.appState[\.userData.analyticsEnabled]
             loadNotificationPreferences()
         }
         .onReceive(userDataUpdate) { userData in
@@ -73,6 +73,7 @@ struct AccountView: View {
             connectedCalendarType = userData.connectedCalendarType
             selectedCalendarName = userData.selectedCalendarName
             includeSourceLinks = userData.includeSourceLinksInCalendar
+            analyticsEnabled = userData.analyticsEnabled
         }
         .sheet(isPresented: $showNotifications, onDismiss: {
             injected.appState[\.routing.notificationViewOpenedFrom] = nil
@@ -96,7 +97,6 @@ struct AccountView: View {
         } message: {
             Text("This will stop syncing events to your calendar. Calendar events already created will not be deleted.")
         }
-        .underDevelopmentAlert(isPresented: $showAnalyticsAlert)
         .underDevelopmentAlert(isPresented: $showFeedbackAlert)
         .underDevelopmentAlert(isPresented: $showRateAppAlert)
         .underDevelopmentAlert(isPresented: $showPrivacyPolicyAlert)
@@ -117,6 +117,7 @@ private extension AccountView {
                 profileSection
                 calendarExportSection
                 notificationsSection
+                dataPrivacySection
                 signOutSection
                 footer
             }
@@ -566,7 +567,7 @@ private extension AccountView {
             Spacer()
             
             CustomToggle(isOn: $analyticsEnabled) {
-                showAnalyticsAlert = true
+                toggleAnalytics()
             }
         }
         .padding(.horizontal, 20)
@@ -754,6 +755,21 @@ private extension AccountView {
                 print("AccountView - Notification preferences updated successfully")
             } catch {
                 print("AccountView - Error updating notification preferences: \(error)")
+            }
+        }
+    }
+    
+    func toggleAnalytics() {
+        Task {
+            do {
+                try await injected.interactors.analytics.setAnalyticsEnabled(analyticsEnabled)
+                UserDefaults.standard.set(analyticsEnabled, forKey: "analyticsEnabled")
+                print("AccountView - Analytics enabled set to: \(analyticsEnabled)")
+            } catch {
+                print("AccountView - Error updating analytics preference: \(error)")
+                await MainActor.run {
+                    analyticsEnabled.toggle()
+                }
             }
         }
     }

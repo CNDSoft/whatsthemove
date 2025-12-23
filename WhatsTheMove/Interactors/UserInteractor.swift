@@ -19,6 +19,7 @@ struct RealUserInteractor: UserInteractor {
     
     let appState: Store<AppState>
     let userWebRepository: UserWebRepository
+    let analyticsInteractor: AnalyticsInteractor
     
     func toggleStarredEvent(eventId: String) async throws {
         print("RealUserInteractor - Toggling starred event: \(eventId)")
@@ -26,6 +27,8 @@ struct RealUserInteractor: UserInteractor {
         guard let userId = await MainActor.run(body: { appState[\.userData.userId] }) else {
             throw UserInteractorError.userNotAuthenticated
         }
+        
+        let wasStarred = await MainActor.run(body: { appState[\.userData.starredEventIds].contains(eventId) })
         
         try await userWebRepository.toggleStarredEvent(userId: userId, eventId: eventId)
         
@@ -39,6 +42,15 @@ struct RealUserInteractor: UserInteractor {
                 print("RealUserInteractor - Added event to starred")
             }
             appState[\.userData.starredEventIds] = starredIds
+        }
+        
+        let events = await MainActor.run(body: { appState[\.userData.events] })
+        if let event = events.first(where: { $0.id == eventId }) {
+            if wasStarred {
+                analyticsInteractor.trackEventUnsaved(eventId: eventId, eventName: event.name)
+            } else {
+                analyticsInteractor.trackEventSaved(eventId: eventId, eventName: event.name)
+            }
         }
         
         print("RealUserInteractor - Starred event toggled successfully")
@@ -86,6 +98,7 @@ struct RealUserInteractor: UserInteractor {
             starredEventIds: user.starredEventIds,
             notificationPreferences: user.notificationPreferences,
             fcmToken: user.fcmToken,
+            analyticsEnabled: user.analyticsEnabled,
             createdAt: user.createdAt,
             updatedAt: Date()
         )

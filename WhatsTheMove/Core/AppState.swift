@@ -69,6 +69,7 @@ extension AppState {
         var notificationPreferences: NotificationPreferences = NotificationPreferences()
         var notifications: [NotificationItem] = []
         var fcmToken: String?
+        var analyticsEnabled: Bool = UserDefaults.standard.object(forKey: "analyticsEnabled") as? Bool ?? false
     }
 }
 
