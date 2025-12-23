@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+import UserNotifications
 
 struct HomeView: View {
     
@@ -27,6 +28,7 @@ struct HomeView: View {
     @State private var showDeleteConfirmation: Bool = false
     @State private var eventToDelete: Event?
     @State private var isDeleting: Bool = false
+    @State private var hasCheckedNotificationPermission: Bool = false
     
     @Binding var triggerRefetch: Bool
     
@@ -46,6 +48,7 @@ struct HomeView: View {
         }
         .task {
             await loadEventsIfNeeded()
+            await checkNotificationPermissionAfterDelay()
         }
         .onChange(of: triggerRefetch) { _, shouldRefetch in
             if shouldRefetch {
@@ -316,6 +319,27 @@ private extension HomeView {
 // MARK: - Side Effects
 
 private extension HomeView {
+    
+    func checkNotificationPermissionAfterDelay() async {
+        guard !hasCheckedNotificationPermission else {
+            return
+        }
+        
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
+        
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        
+        guard settings.authorizationStatus == .notDetermined else {
+            hasCheckedNotificationPermission = true
+            return
+        }
+        
+        await MainActor.run {
+            print("HomeView - Requesting push notification permission after delay")
+            injected.interactors.userPermissions.request(permission: .pushNotifications)
+            hasCheckedNotificationPermission = true
+        }
+    }
     
     func loadEventsIfNeeded() async {
         guard !hasLoadedEvents else {
