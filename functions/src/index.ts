@@ -30,7 +30,7 @@ export const eventReminders = functions.pubsub
       console.log(`EventReminders - Found ${eventsSnapshot.size} upcoming events`);
 
       const { sendPushNotification } = await import("./utils/fcm");
-      const { getUser, createNotification, getScheduledNotification, updateScheduledNotification } = await import("./utils/firestore");
+      const { getUser, createNotification } = await import("./utils/firestore");
 
       let notificationsSent = 0;
 
@@ -59,9 +59,6 @@ export const eventReminders = functions.pubsub
         }
 
         const eventDate = event.eventDate.toDate();
-        const scheduledData = await getScheduledNotification(event.userId, event.id);
-        const sentReminders = scheduledData?.scheduledReminders || [];
-
         const timeDiff = eventDate.getTime() - now.toDate().getTime();
         const daysUntil = timeDiff / (24 * 60 * 60 * 1000);
         const hoursUntil = timeDiff / (60 * 60 * 1000);
@@ -71,36 +68,61 @@ export const eventReminders = functions.pubsub
         let isEnabled = false;
 
         if (event.status === "Going") {
-          if (daysUntil <= 7 && daysUntil > 6) {
-            if (!sentReminders.includes("1week") && prefs.reminderWeekBefore) {
-              reminderType = "1week";
-              reminderText = "in one week";
-              isEnabled = true;
-            }
-          } else if (daysUntil <= 1 && daysUntil > 0.8) {
-            if (!sentReminders.includes("1day") && prefs.reminderDayBefore) {
-              reminderType = "1day";
-              reminderText = "tomorrow";
-              isEnabled = true;
-            }
-          } else if (hoursUntil <= 3 && hoursUntil > 2) {
-            if (!sentReminders.includes("3hours") && prefs.reminder3Hours) {
-              reminderType = "3hours";
-              reminderText = "in 3 hours";
-              isEnabled = true;
-            }
+          if (daysUntil <= 7 && daysUntil > 6 && prefs.reminderWeekBefore) {
+            reminderType = "1week";
+            reminderText = "in one week";
+            isEnabled = true;
+          } else if (daysUntil <= 1 && daysUntil > 0.8 && prefs.reminderDayBefore) {
+            reminderType = "1day";
+            reminderText = "tomorrow";
+            isEnabled = true;
+          } else if (hoursUntil <= 3 && hoursUntil > 2 && prefs.reminder3Hours) {
+            reminderType = "3hours";
+            reminderText = "in 3 hours";
+            isEnabled = true;
           }
         } else if (event.status === "Interested") {
-          if (daysUntil <= 1 && daysUntil > 0.8) {
-            if (!sentReminders.includes("1day") && prefs.reminderInterestedDayBefore) {
-              reminderType = "1day";
-              reminderText = "tomorrow";
-              isEnabled = true;
-            }
+          if (daysUntil <= 1 && daysUntil > 0.8 && prefs.reminderInterestedDayBefore) {
+            reminderType = "1day";
+            reminderText = "tomorrow";
+            isEnabled = true;
           }
         }
 
         if (reminderType && isEnabled) {
+          const docId = `${event.userId}_${event.id}`;
+          const scheduledNotifRef = db.collection("scheduledNotifications").doc(docId);
+
+          try {
+            const shouldSendNotification = await db.runTransaction(async (transaction) => {
+              const scheduledDoc = await transaction.get(scheduledNotifRef);
+              const scheduledData = scheduledDoc.exists ? scheduledDoc.data() : null;
+              const sentReminders = scheduledData?.scheduledReminders || [];
+
+              if (sentReminders.includes(reminderType)) {
+                console.log(`EventReminders - ${reminderType} already sent for event ${event.id}`);
+                return false;
+              }
+
+              const updatedReminders = [...sentReminders, reminderType];
+              transaction.set(scheduledNotifRef, {
+                eventId: event.id,
+                userId: event.userId,
+                scheduledReminders: updatedReminders,
+                lastChecked: Timestamp.now(),
+              }, { merge: true });
+
+              return true;
+            });
+
+            if (!shouldSendNotification) {
+              continue;
+            }
+          } catch (error) {
+            console.error(`EventReminders - Transaction failed for event ${event.id}:`, error);
+            continue;
+          }
+
           console.log(`EventReminders - Sending ${reminderType} reminder for event ${event.id}`);
 
           const notificationId = `${event.id}_${reminderType}_${Date.now()}`;
@@ -130,14 +152,6 @@ export const eventReminders = functions.pubsub
               actionUrl: notification.actionUrl,
             });
           }
-
-          sentReminders.push(reminderType);
-          await updateScheduledNotification(user.id, event.id, {
-            eventId: event.id,
-            userId: user.id,
-            scheduledReminders: sentReminders,
-            lastChecked: Timestamp.now(),
-          });
 
           notificationsSent++;
           console.log(`EventReminders - ${reminderType} reminder sent for event ${event.id}`);
@@ -178,7 +192,7 @@ export const registrationDeadlines = functions.pubsub
       console.log(`RegistrationDeadlines - Found ${eventsWithUpcomingDeadlines.length} events with upcoming deadlines`);
 
       const { sendPushNotification } = await import("./utils/fcm");
-      const { getUser, createNotification, getScheduledNotification, updateScheduledNotification } = await import("./utils/firestore");
+      const { getUser, createNotification } = await import("./utils/firestore");
 
       let notificationsSent = 0;
 
@@ -200,9 +214,34 @@ export const registrationDeadlines = functions.pubsub
             continue;
           }
 
-          const scheduledData = await getScheduledNotification(event.userId, event.id);
-          if (scheduledData?.registrationDeadlineSent) {
-            console.log(`RegistrationDeadlines - Already sent for event ${event.id}`);
+          const docId = `${event.userId}_${event.id}`;
+          const scheduledNotifRef = db.collection("scheduledNotifications").doc(docId);
+
+          try {
+            const shouldSendNotification = await db.runTransaction(async (transaction) => {
+              const scheduledDoc = await transaction.get(scheduledNotifRef);
+              const scheduledData = scheduledDoc.exists ? scheduledDoc.data() : null;
+
+              if (scheduledData?.registrationDeadlineSent) {
+                console.log(`RegistrationDeadlines - Already sent for event ${event.id}`);
+                return false;
+              }
+
+              transaction.set(scheduledNotifRef, {
+                eventId: event.id,
+                userId: event.userId,
+                registrationDeadlineSent: true,
+                lastChecked: Timestamp.now(),
+              }, { merge: true });
+
+              return true;
+            });
+
+            if (!shouldSendNotification) {
+              continue;
+            }
+          } catch (error) {
+            console.error(`RegistrationDeadlines - Transaction failed for event ${event.id}:`, error);
             continue;
           }
 
@@ -252,13 +291,6 @@ export const registrationDeadlines = functions.pubsub
               actionUrl: notification.actionUrl,
             });
           }
-
-          await updateScheduledNotification(user.id, event.id, {
-            eventId: event.id,
-            userId: user.id,
-            registrationDeadlineSent: true,
-            lastChecked: Timestamp.now(),
-          });
 
           notificationsSent++;
           console.log(`RegistrationDeadlines - Sent notification for event ${event.id}`);
