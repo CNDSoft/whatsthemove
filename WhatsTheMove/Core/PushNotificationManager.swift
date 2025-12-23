@@ -52,17 +52,7 @@ class PushNotificationManager: NSObject, ObservableObject {
         Task {
             do {
                 try await notificationInteractor.loadNotifications()
-                
-                if let eventId = extractEventId(from: userInfo) {
-                    await MainActor.run {
-                        print("PushNotificationManager - Setting notificationTappedEventId: \(eventId)")
-                        appState[\.userData.notificationTappedEventId] = eventId
-                    }
-                }
-                
-                if let notificationId = extractNotificationId(from: userInfo) {
-                    try? await markNotificationAsRead(notificationId: notificationId)
-                }
+                print("PushNotificationManager - Notifications reloaded")
             } catch {
                 print("PushNotificationManager - Error reloading notifications: \(error)")
             }
