@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct NotificationView: View {
     
@@ -32,6 +33,16 @@ struct NotificationView: View {
         .task {
             await loadNotifications()
         }
+        .onReceive(notificationTappedEventUpdate) { eventId in
+            if eventId != nil {
+                injected.appState[\.routing.notificationViewOpenedFrom] = nil
+                dismiss()
+            }
+        }
+    }
+    
+    private var notificationTappedEventUpdate: AnyPublisher<String?, Never> {
+        injected.appState.updates(for: \.userData.notificationTappedEventId)
     }
     
     private var filteredNotifications: [NotificationItem] {
@@ -404,13 +415,33 @@ private extension NotificationView {
             
             if let eventId = notification.eventId {
                 await MainActor.run {
+                    let targetTab = determineTargetTab()
+                    print("NotificationView - Switching to tab: \(targetTab)")
+                    injected.appState[\.routing.selectedTab] = targetTab
+                    
                     injected.appState[\.userData.notificationTappedEventId] = eventId
+                    injected.appState[\.routing.notificationViewOpenedFrom] = nil
                     dismiss()
                 }
             }
             
             print("NotificationView - Handled notification tap")
         }
+    }
+    
+    func determineTargetTab() -> AppState.MainTab {
+        let currentTab = injected.appState[\.routing.selectedTab]
+        let notificationOpenedFrom = injected.appState[\.routing.notificationViewOpenedFrom]
+        
+        if currentTab == .profile {
+            return .home
+        }
+        
+        if let openedFrom = notificationOpenedFrom {
+            return openedFrom == .home ? .home : .saved
+        }
+        
+        return currentTab
     }
 }
 

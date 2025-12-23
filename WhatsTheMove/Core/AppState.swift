@@ -22,6 +22,14 @@ extension AppState {
         var countryDetails = CountryDetails.Routing()
         var showAddEventFromShare: Bool = false
         var sharedEventData: SharedEventData? = nil
+        var selectedTab: MainTab = .home
+        var notificationViewOpenedFrom: MainTab? = nil
+    }
+    
+    enum MainTab: Equatable {
+        case home
+        case saved
+        case profile
     }
 }
 

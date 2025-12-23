@@ -12,18 +12,12 @@ import Combine
 struct MainTabView: View {
     
     @Environment(\.injected) private var injected: DIContainer
-    @State private var selectedTab: Tab = .home
+    @State private var selectedTab: AppState.MainTab = .home
     @State private var showAddEventOptions: Bool = false
     @State private var showAddEvent: Bool = false
     @State private var shouldRefetchEvents: Bool = false
     @State private var showHowToShareSheet: Bool = false
     @State private var sharedEventData: SharedEventData? = nil
-    
-    enum Tab {
-        case home
-        case saved
-        case profile
-    }
     
     var body: some View {
         NavigationStack {
@@ -57,7 +51,14 @@ struct MainTabView: View {
         .onReceive(showAddEventFromShareUpdate) { shouldShow in
             handleShowAddEventFromShare(shouldShow)
         }
+        .onReceive(selectedTabUpdate) { newTab in
+            if selectedTab != newTab {
+                selectedTab = newTab
+            }
+        }
         .onAppear {
+            selectedTab = injected.appState[\.routing.selectedTab]
+            
             let shouldShow = injected.appState[\.routing.showAddEventFromShare]
             if shouldShow {
                 handleShowAddEventFromShare(shouldShow)
@@ -67,6 +68,10 @@ struct MainTabView: View {
     
     private var showAddEventFromShareUpdate: AnyPublisher<Bool, Never> {
         injected.appState.updates(for: \.routing.showAddEventFromShare)
+    }
+    
+    private var selectedTabUpdate: AnyPublisher<AppState.MainTab, Never> {
+        injected.appState.updates(for: \.routing.selectedTab)
     }
     
     private func handleShowAddEventFromShare(_ shouldShow: Bool) {
@@ -169,10 +174,11 @@ private extension MainTabView {
         .shadow(color: Color.black.opacity(0.15), radius: 7, x: 0, y: 0)
     }
     
-    func tabItem(tab: Tab, icon: String, label: String) -> some View {
+    func tabItem(tab: AppState.MainTab, icon: String, label: String) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedTab = tab
+                injected.appState[\.routing.selectedTab] = tab
             }
         } label: {
             HStack(spacing: 10) {

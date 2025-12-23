@@ -91,6 +91,21 @@ class PushNotificationManager: NSObject, ObservableObject {
             print("PushNotificationManager - Error marking notification as read: \(error)")
         }
     }
+    
+    private func determineTargetTab(for eventId: String) -> AppState.MainTab {
+        let currentTab = appState[\.routing.selectedTab]
+        let notificationOpenedFrom = appState[\.routing.notificationViewOpenedFrom]
+        
+        if currentTab == .profile {
+            return .home
+        }
+        
+        if let openedFrom = notificationOpenedFrom {
+            return openedFrom == .home ? .home : .saved
+        }
+        
+        return currentTab
+    }
 }
 
 extension PushNotificationManager: UNUserNotificationCenterDelegate {
@@ -121,6 +136,11 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
                 if let eventId = extractEventId(from: content.userInfo) {
                     await MainActor.run {
                         print("PushNotificationManager - Navigating to event: \(eventId)")
+                        
+                        let selectedTab = determineTargetTab(for: eventId)
+                        print("PushNotificationManager - Switching to tab: \(selectedTab)")
+                        appState[\.routing.selectedTab] = selectedTab
+                        
                         appState[\.userData.notificationTappedEventId] = eventId
                     }
                 }

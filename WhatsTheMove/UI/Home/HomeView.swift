@@ -94,10 +94,15 @@ struct HomeView: View {
                 deletingOverlay
             }
         }
-        .sheet(isPresented: $showNotifications) {
+        .sheet(isPresented: $showNotifications, onDismiss: {
+            injected.appState[\.routing.notificationViewOpenedFrom] = nil
+        }) {
             NotificationView()
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+                .onAppear {
+                    injected.appState[\.routing.notificationViewOpenedFrom] = .home
+                }
         }
     }
     
