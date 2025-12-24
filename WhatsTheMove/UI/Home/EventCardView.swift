@@ -310,7 +310,7 @@ private extension EventCardView {
         if event.admission == .free {
             text = "Free"
         } else if let amount = event.admissionAmount {
-            text = "$\(Int(amount))"
+            text = "\(Currency.symbol)\(Int(amount))"
         } else {
             text = "Paid"
         }

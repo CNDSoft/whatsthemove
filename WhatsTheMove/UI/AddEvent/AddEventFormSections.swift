@@ -366,7 +366,7 @@ struct AdmissionSection: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 100)
                     
-                    Text("$")
+                    Text(Currency.symbol)
                         .font(.rubik(.regular, size: 14))
                         .foregroundColor(Color(hex: "55564F"))
                 }

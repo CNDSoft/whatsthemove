@@ -269,7 +269,7 @@ private extension EventDetailView {
         if event.admission == .free {
             text = "Free"
         } else if let amount = event.admissionAmount {
-            text = "$\(Int(amount))"
+            text = "\(Currency.symbol)\(Int(amount))"
         } else {
             text = "Paid"
         }
@@ -463,7 +463,7 @@ private extension EventDetailView {
         if event.admission == .free {
             return "Free Entry"
         } else if let amount = event.admissionAmount {
-            return "$\(Int(amount))"
+            return "\(Currency.symbol)\(Int(amount))"
         } else {
             return "Paid"
         }
