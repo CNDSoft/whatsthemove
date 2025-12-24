@@ -177,10 +177,13 @@ private extension HomeView {
         Button {
             showNotifications = true
         } label: {
-            Image("bell")
-                .frame(width: 38, height: 38)
+            BellIconWithBadge(unreadCount: unreadNotificationCount)
         }
         .buttonStyle(.plain)
+    }
+    
+    var unreadNotificationCount: Int {
+        injected.appState[\.userData.notifications].filter { !$0.isRead }.count
     }
     
     var filterSection: some View {
