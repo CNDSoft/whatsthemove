@@ -19,7 +19,7 @@ enum NotificationType: String, CaseIterable, Codable {
         case .event: return "calendar"
         case .registration: return "welcome"
         case .general: return "bell"
-        case .deadline: return "deadline"
+        case .deadline: return "welcome"
         }
     }
 }

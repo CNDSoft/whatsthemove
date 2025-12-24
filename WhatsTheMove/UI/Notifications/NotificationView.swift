@@ -14,6 +14,7 @@ struct NotificationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedFilter: NotificationFilter = .all
+    @State private var isLoading: Bool = true
     
     private var notifications: [NotificationItem] {
         injected.appState[\.userData.notifications]
@@ -32,6 +33,7 @@ struct NotificationView: View {
         .preferredColorScheme(.light)
         .task {
             await loadNotifications()
+            isLoading = false
         }
         .onReceive(notificationTappedEventUpdate) { eventId in
             if eventId != nil {
@@ -54,7 +56,7 @@ struct NotificationView: View {
         case .event:
             return notifications.filter { $0.type == .event }
         case .registration:
-            return notifications.filter { $0.type == .registration }
+            return notifications.filter { $0.type == .registration || $0.type == .deadline }
         }
     }
     
@@ -73,7 +75,8 @@ private extension NotificationView {
             filterSection
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 10)
+        .padding(.top, 20)
+        .padding(.bottom, 10)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .clipShape(
@@ -181,7 +184,9 @@ private extension NotificationView {
     
     @ViewBuilder
     var notificationContent: some View {
-        if filteredNotifications.isEmpty {
+        if isLoading {
+            loadingView
+        } else if filteredNotifications.isEmpty {
             emptyStateView
         } else {
             notificationListView
@@ -216,12 +221,13 @@ private extension NotificationView {
                     }
                 }
                 
-                if !filteredNotifications.isEmpty && selectedFilter != .unread {
+                if !filteredNotifications.isEmpty && selectedFilter != .unread && unreadCount > 0 {
                     markAllAsReadButton
+                } else if !filteredNotifications.isEmpty && selectedFilter != .unread {
                 }
             }
             .refreshable {
-                await loadNotifications()
+                await loadNotifications(isRefresh: true)
             }
         }
     }
@@ -302,6 +308,19 @@ private extension NotificationView {
             .background(Color.white)
         }
         .buttonStyle(.plain)
+    }
+    
+    var loadingView: some View {
+        VStack {
+            Spacer()
+            
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "11104B")))
+                .scaleEffect(1.5)
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     var emptyStateView: some View {
@@ -389,10 +408,9 @@ private extension NotificationView {
 
 private extension NotificationView {
     
-    func loadNotifications() async {
+    func loadNotifications(isRefresh: Bool = false) async {
         do {
             try await injected.interactors.notifications.loadNotifications()
-            print("NotificationView - Notifications loaded successfully")
         } catch {
             print("NotificationView - Error loading notifications: \(error)")
         }
@@ -402,7 +420,6 @@ private extension NotificationView {
         Task {
             do {
                 try await injected.interactors.notifications.markAllAsRead()
-                print("NotificationView - All notifications marked as read")
             } catch {
                 print("NotificationView - Error marking all as read: \(error)")
             }
@@ -416,7 +433,6 @@ private extension NotificationView {
             if let eventId = notification.eventId {
                 await MainActor.run {
                     let targetTab = determineTargetTab()
-                    print("NotificationView - Switching to tab: \(targetTab)")
                     injected.appState[\.routing.selectedTab] = targetTab
                     
                     injected.appState[\.userData.notificationTappedEventId] = eventId
@@ -424,8 +440,6 @@ private extension NotificationView {
                     dismiss()
                 }
             }
-            
-            print("NotificationView - Handled notification tap")
         }
     }
     
@@ -514,10 +528,19 @@ private struct NotificationViewWithMockData: View {
                 userId: "user1",
                 type: .deadline,
                 title: "Registration Deadline",
-                message: "Only 2 days left to register for Tech Conference 2023.",
+                message: "Only 2 days left to register for Tech Conference 2024.",
                 actionText: "Register Now",
                 isRead: false,
                 timestamp: calendar.date(byAdding: .day, value: -1, to: now) ?? now
+            ),
+            NotificationItem(
+                userId: "user1",
+                type: .registration,
+                title: "Registration Confirmed",
+                message: "Your registration for Food Festival has been confirmed.",
+                actionText: "View Details",
+                isRead: false,
+                timestamp: calendar.date(byAdding: .hour, value: -5, to: now) ?? now
             ),
             NotificationItem(
                 userId: "user1",
@@ -536,15 +559,6 @@ private struct NotificationViewWithMockData: View {
                 actionText: "View Event",
                 isRead: true,
                 timestamp: calendar.date(byAdding: .day, value: -2, to: now) ?? now
-            ),
-            NotificationItem(
-                userId: "user1",
-                type: .registration,
-                title: "Registration Confirmed",
-                message: "Your registration for Food Festival has been confirmed.",
-                actionText: "View Details",
-                isRead: false,
-                timestamp: calendar.date(byAdding: .hour, value: -5, to: now) ?? now
             )
         ]
     }
@@ -558,7 +572,7 @@ private struct NotificationViewWithMockData: View {
         case .event:
             return notifications.filter { $0.type == .event }
         case .registration:
-            return notifications.filter { $0.type == .registration }
+            return notifications.filter { $0.type == .registration || $0.type == .deadline }
         }
     }
     
@@ -572,7 +586,8 @@ private struct NotificationViewWithMockData: View {
             filterSection
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 10)
+        .padding(.top, 20)
+        .padding(.bottom, 10)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .clipShape(
@@ -707,7 +722,7 @@ private struct NotificationViewWithMockData: View {
                     }
                 }
                 
-                if !filteredNotifications.isEmpty && selectedFilter != .unread {
+                if !filteredNotifications.isEmpty && selectedFilter != .unread && unreadCount > 0 {
                     markAllAsReadButton
                 }
             }
