@@ -74,12 +74,14 @@ extension AppEnvironment {
         let users = RealUserWebRepository()
         let events = RealEventWebRepository()
         let notifications = RealNotificationWebRepository()
+        let feedback = RealFeedbackWebRepository()
         return .init(images: images,
                      countries: countries,
                      pushToken: pushToken,
                      users: users,
                      events: events,
-                     notifications: notifications)
+                     notifications: notifications,
+                     feedback: feedback)
     }
 
     private static func configuredDBRepositories(modelContainer: ModelContainer) -> DIContainer.DBRepositories {
@@ -139,6 +141,9 @@ extension AppEnvironment {
             userWebRepository: webRepositories.users,
             analyticsInteractor: analytics)
         let remoteConfig = RealRemoteConfigInteractor()
+        let feedback = RealFeedbackInteractor(
+            appState: appState,
+            feedbackWebRepository: webRepositories.feedback)
         return .init(images: images,
                      countries: countries,
                      userPermissions: userPermissions,
@@ -148,6 +153,7 @@ extension AppEnvironment {
                      calendar: calendar,
                      notifications: notifications,
                      analytics: analytics,
-                     remoteConfig: remoteConfig)
+                     remoteConfig: remoteConfig,
+                     feedback: feedback)
     }
 }

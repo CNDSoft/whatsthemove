@@ -101,7 +101,10 @@ struct AccountView: View {
             PrivacyPolicyView()
                 .inject(injected)
         }
-        .underDevelopmentAlert(isPresented: $showFeedbackAlert)
+        .sheet(isPresented: $showFeedbackAlert) {
+            FeedbackView()
+                .inject(injected)
+        }
         .underDevelopmentAlert(isPresented: $showRateAppAlert)
     }
     
@@ -589,12 +592,9 @@ private extension AccountView {
             sectionHeader("SUPPORT & INFO")
             
             VStack(spacing: 1) {
-//                supportRow(icon: "send-feedback", title: "Send Feedback") {
-//                    showFeedbackAlert = true
-//                }
-//                supportRow(icon: "rate-the-app", title: "Rate the App") {
-//                    showRateAppAlert = true
-//                }
+                supportRow(icon: "send-feedback", title: "Send Feedback") {
+                    showFeedbackAlert = true
+                }
                 supportRow(icon: "privacy-policy", title: "Privacy Policy") {
                     showPrivacyPolicyAlert = true
                 }
