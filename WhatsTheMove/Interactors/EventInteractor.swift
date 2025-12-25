@@ -216,7 +216,7 @@ extension EventInteractor {
         calendar.firstWeekday = 2
         let now = Date()
         
-        let futureEvents = events.filter { $0.eventDate >= now }
+        let futureEvents = events.filter { !isEventInPast($0, now: now) }
         
         switch filter {
         case .tonight:
@@ -303,7 +303,7 @@ extension EventInteractor {
                 .sorted { $0.eventDate < $1.eventDate }
         case .pastEvents:
             let now = Date()
-            return events.filter { $0.eventDate < now }
+            return events.filter { isEventInPast($0, now: now) }
                 .sorted { $0.eventDate > $1.eventDate }
         }
     }
@@ -338,7 +338,7 @@ extension EventInteractor {
         calendar.firstWeekday = 2
         let now = Date()
         
-        if event.eventDate < now {
+        if isEventInPast(event, now: now) {
             return nil
         }
         
@@ -382,11 +382,40 @@ extension EventInteractor {
     func determineSavedFilter(for event: Event, starredIds: Set<String>) -> SavedFilterType {
         let now = Date()
         
-        if event.eventDate < now {
+        if isEventInPast(event, now: now) {
             return .pastEvents
         }
         
         return .allEvents
+    }
+    
+    private func isEventInPast(_ event: Event, now: Date) -> Bool {
+        let calendar = Calendar.current
+        
+        if let endTime = event.endTime {
+            let endDateTime = combineDateTime(date: event.eventDate, time: endTime, calendar: calendar)
+            return endDateTime < now
+        } else {
+            guard let dayAfterEvent = calendar.date(byAdding: .day, value: 1, to: event.eventDate),
+                  let startOfDayAfter = calendar.startOfDay(for: dayAfterEvent) as Date? else {
+                return false
+            }
+            return now >= startOfDayAfter
+        }
+    }
+    
+    private func combineDateTime(date: Date, time: Date, calendar: Calendar) -> Date {
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+        
+        var combined = DateComponents()
+        combined.year = dateComponents.year
+        combined.month = dateComponents.month
+        combined.day = dateComponents.day
+        combined.hour = timeComponents.hour
+        combined.minute = timeComponents.minute
+        
+        return calendar.date(from: combined) ?? date
     }
 }
 
