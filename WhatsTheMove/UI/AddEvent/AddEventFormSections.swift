@@ -19,7 +19,7 @@ struct EventNameSection: View {
     var body: some View {
         FormRowContainer {
             VStack(alignment: .leading, spacing: 0) {
-                FormFieldLabel(text: "Event Name")
+                FormFieldLabel(text: "Event Name", isRequired: true)
                 
                 TextField("", text: $eventName, prompt: Text("Concert, festival, workshop...")
                     .foregroundColor(Color(hex: "55564F")))
@@ -178,7 +178,7 @@ struct DateSection: View {
     var body: some View {
         FormRowContainer {
             VStack(alignment: .leading, spacing: 0) {
-                FormFieldLabel(text: "Date")
+                FormFieldLabel(text: "Date", isRequired: true)
                 
                 Button {
                     if eventDate == nil {

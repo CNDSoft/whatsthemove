@@ -127,11 +127,25 @@ struct CompactRadioButton: View {
 struct FormFieldLabel: View {
     
     let text: String
+    let isRequired: Bool
+    
+    init(text: String, isRequired: Bool = false) {
+        self.text = text
+        self.isRequired = isRequired
+    }
     
     var body: some View {
-        Text(text)
-            .font(.rubik(.medium, size: 15))
-            .foregroundColor(Color(hex: "11104B"))
+        HStack(spacing: 2) {
+            Text(text)
+                .font(.rubik(.medium, size: 15))
+                .foregroundColor(Color(hex: "11104B"))
+            
+            if isRequired {
+                Text("*")
+                    .font(.rubik(.medium, size: 15))
+                    .foregroundColor(Color(hex: "F25454"))
+            }
+        }
     }
 }
 
