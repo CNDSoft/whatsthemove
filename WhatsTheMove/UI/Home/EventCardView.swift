@@ -28,8 +28,8 @@ struct EventCardView: View {
     @State private var isSyncingToCalendar: Bool = false
     @State private var showCalendarError: Bool = false
     @State private var calendarErrorMessage: String = ""
-    @State private var showDismissWarningAlert: Bool = false
     @State private var showCalendarSelection: Bool = false
+    @State private var isRegistrationWarningDismissed: Bool = false
     @State private var showEventFormForDetails: Bool = false
     @State private var showImageSourceSheet: Bool = false
     @State private var showCamera: Bool = false
@@ -109,7 +109,6 @@ struct EventCardView: View {
                 .inject(injected)
         }
         .underDevelopmentAlert(isPresented: $showMoreAlert)
-        .underDevelopmentAlert(isPresented: $showDismissWarningAlert)
     }
     
     private var starredEventsUpdate: AnyPublisher<Set<String>, Never> {
@@ -561,13 +560,13 @@ private extension EventCardView {
     
     @ViewBuilder
     var registrationWarning: some View {
-        if event.requiresRegistration, let deadline = event.registrationDeadline {
+        if !isRegistrationWarningDismissed, event.requiresRegistration, let deadline = event.registrationDeadline {
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
             let deadlineDay = calendar.startOfDay(for: deadline)
             let daysUntil = calendar.dateComponents([.day], from: today, to: deadlineDay).day ?? 0
             
-            if daysUntil >= 0 && daysUntil <= 7 {
+            if daysUntil >= 0 && daysUntil <= 3 {
                 HStack(spacing: 8) {
                     Image(systemName: "clock")
                         .font(.system(size: 12))
@@ -580,7 +579,9 @@ private extension EventCardView {
                     Spacer()
                     
                     Button {
-                        showDismissWarningAlert = true
+                        withAnimation {
+                            isRegistrationWarningDismissed = true
+                        }
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 8, weight: .medium))
