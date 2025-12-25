@@ -9,7 +9,7 @@
 import Foundation
 
 enum SavedFilterType: String, CaseIterable {
-    case allEvents = "All Events"
+    case upcoming = "Upcoming"
     case favorites = "Favorites"
     case pastEvents = "Past Events"
 }

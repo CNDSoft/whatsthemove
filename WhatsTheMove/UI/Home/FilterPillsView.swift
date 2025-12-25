@@ -152,7 +152,7 @@ struct SavedFilterPillsView: View {
 
 #Preview("Saved Filters") {
     SavedFilterPillsView(
-        selectedFilter: .constant(.allEvents),
+        selectedFilter: .constant(.upcoming),
         events: [],
         userId: "test-user-id",
         starredIds: []

@@ -295,14 +295,16 @@ extension EventInteractor {
         userId: String,
         starredIds: Set<String>
     ) -> [Event] {
+        let now = Date()
+        
         switch filter {
-        case .allEvents:
-            return events.sorted { $0.eventDate < $1.eventDate }
+        case .upcoming:
+            return events.filter { !isEventInPast($0, now: now) }
+                .sorted { $0.eventDate < $1.eventDate }
         case .favorites:
             return events.filter { starredIds.contains($0.id) }
                 .sorted { $0.eventDate < $1.eventDate }
         case .pastEvents:
-            let now = Date()
             return events.filter { isEventInPast($0, now: now) }
                 .sorted { $0.eventDate > $1.eventDate }
         }
@@ -386,7 +388,7 @@ extension EventInteractor {
             return .pastEvents
         }
         
-        return .allEvents
+        return .upcoming
     }
     
     private func isEventInPast(_ event: Event, now: Date) -> Bool {

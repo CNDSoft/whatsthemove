@@ -13,7 +13,7 @@ struct SavedEventsView: View {
     
     @Environment(\.safeAreaInsets) private var safeAreaInsets
     @Environment(\.injected) private var injected: DIContainer
-    @State private var selectedFilter: SavedFilterType = .allEvents
+    @State private var selectedFilter: SavedFilterType = .upcoming
     @State private var selectedCategory: EventCategory? = nil
     @State private var searchQuery: String = ""
     @State private var events: [Event] = []
