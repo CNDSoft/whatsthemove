@@ -403,6 +403,11 @@ struct RegistrationSection: View {
                 if requiresRegistration {
                     deadlineInputField
                     
+                    Text("  Optional: Date by which you need (or want) to register")
+                        .font(.rubik(.regular, size: 12))
+                        .foregroundColor(Color(hex: "55564F"))
+                        .padding(.top, 4)
+                    
                     if showDeadlinePicker, let deadline = Binding($registrationDeadline) {
                         DatePicker("", selection: deadline, displayedComponents: .date)
                             .datePickerStyle(.graphical)

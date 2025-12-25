@@ -132,7 +132,6 @@ struct AddEventView: View {
         .onAppear {
             loadSharedData()
         }
-        .preferredColorScheme(.light)
     }
     
     private func loadSharedData() {
