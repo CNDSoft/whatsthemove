@@ -39,6 +39,11 @@ struct HomeView: View {
             
             VStack(spacing: 0) {
                 headerSection
+                
+                if selectedFilter == .recentlySaved && !filteredEvents.isEmpty {
+                    recentlySavedBanner
+                }
+                
                 eventListContent
             }
         }
@@ -199,6 +204,30 @@ private extension HomeView {
                 events: events
             )
             .padding(.bottom, 20)
+        }
+    }
+}
+
+// MARK: - Recently Saved Banner
+
+private extension HomeView {
+    
+    var recentlySavedBanner: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(hex: "11104B"))
+                
+                Text("These are events that you saved within the last 5 days")
+                    .font(.rubik(.regular, size: 12))
+                    .foregroundColor(Color(hex: "11104B"))
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(Color(hex: "E7FF63").opacity(0.3))
         }
     }
 }
