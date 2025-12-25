@@ -438,6 +438,24 @@ struct RegistrationSection: View {
                         .foregroundColor(Color(hex: "55564F"))
                 }
                 .buttonStyle(.plain)
+                
+                if registrationDeadline != nil {
+                    Button {
+                        registrationDeadline = nil
+                        showDeadlinePicker = false
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(Color(hex: "11104B"))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
