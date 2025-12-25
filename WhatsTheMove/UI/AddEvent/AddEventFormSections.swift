@@ -366,8 +366,10 @@ struct AdmissionSection: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 100)
                     
-                    Text(Currency.symbol)
-                        .font(.rubik(.regular, size: 14))
+                    Image(Currency.imageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
                         .foregroundColor(Color(hex: "55564F"))
                 }
             }

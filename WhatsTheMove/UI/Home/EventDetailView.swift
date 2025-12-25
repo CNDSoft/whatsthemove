@@ -265,26 +265,36 @@ private extension EventDetailView {
     }
     
     var admissionTag: some View {
-        let text: String
-        if event.admission == .free {
-            text = "Free"
-        } else if let amount = event.admissionAmount {
-            text = "\(Currency.symbol)\(Int(amount))"
-        } else {
-            text = "Paid"
+        Group {
+            if event.admission == .free {
+                Text("Free")
+                    .font(.rubik(.medium, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+            } else if let amount = event.admissionAmount {
+                HStack(spacing: 4) {
+                    Text("\(Int(amount))")
+                        .font(.rubik(.medium, size: 14))
+                        .foregroundColor(Color(hex: "55564F"))
+                    
+                    Image(Currency.imageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
+                }
+            } else {
+                Text("Paid")
+                    .font(.rubik(.medium, size: 14))
+                    .foregroundColor(Color(hex: "55564F"))
+            }
         }
-        
-        return Text(text)
-            .font(.rubik(.medium, size: 14))
-            .foregroundColor(Color(hex: "55564F"))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(hex: "F8F7F1"))
-            .overlay(
-                Capsule()
-                    .stroke(Color(hex: "E0E0E0"), lineWidth: 1)
-            )
-            .clipShape(Capsule())
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(hex: "F8F7F1"))
+        .overlay(
+            Capsule()
+                .stroke(Color(hex: "E0E0E0"), lineWidth: 1)
+        )
+        .clipShape(Capsule())
     }
     
     func statusConfig(for status: EventStatus) -> (backgroundColor: Color, textColor: Color, dotColor: Color) {
@@ -442,9 +452,7 @@ private extension EventDetailView {
                     .foregroundColor(Color(hex: "11104B"))
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(admissionText)
-                        .font(.rubik(.medium, size: 14))
-                        .foregroundColor(Color(hex: "11104B"))
+                    admissionTextView
                     
                     Text(event.admission == .free ? "No ticket required" : "Ticket purchase required")
                         .font(.rubik(.regular, size: 12))
@@ -459,13 +467,28 @@ private extension EventDetailView {
         }
     }
     
-    var admissionText: String {
-        if event.admission == .free {
-            return "Free Entry"
-        } else if let amount = event.admissionAmount {
-            return "\(Currency.symbol)\(Int(amount))"
-        } else {
-            return "Paid"
+    var admissionTextView: some View {
+        Group {
+            if event.admission == .free {
+                Text("Free Entry")
+                    .font(.rubik(.medium, size: 14))
+                    .foregroundColor(Color(hex: "11104B"))
+            } else if let amount = event.admissionAmount {
+                HStack(spacing: 4) {
+                    Text("\(Int(amount))")
+                        .font(.rubik(.medium, size: 14))
+                        .foregroundColor(Color(hex: "11104B"))
+                    
+                    Image(Currency.imageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
+                }
+            } else {
+                Text("Paid")
+                    .font(.rubik(.medium, size: 14))
+                    .foregroundColor(Color(hex: "11104B"))
+            }
         }
     }
 }

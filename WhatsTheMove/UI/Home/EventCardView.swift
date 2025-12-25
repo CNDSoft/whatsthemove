@@ -305,22 +305,32 @@ private extension EventCardView {
     }
     
     var admissionTag: some View {
-        let text: String
-        if event.admission == .free {
-            text = "Free"
-        } else if let amount = event.admissionAmount {
-            text = "\(Currency.symbol)\(Int(amount))"
-        } else {
-            text = "Paid"
+        Group {
+            if event.admission == .free {
+                Text("Free")
+                    .font(.rubik(.regular, size: 12))
+                    .foregroundColor(Color(hex: "55564F"))
+            } else if let amount = event.admissionAmount {
+                HStack(spacing: 4) {
+                    Text("\(Int(amount))")
+                        .font(.rubik(.regular, size: 12))
+                        .foregroundColor(Color(hex: "55564F"))
+                    
+                    Image(Currency.imageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 12, height: 12)
+                }
+            } else {
+                Text("Paid")
+                    .font(.rubik(.regular, size: 12))
+                    .foregroundColor(Color(hex: "55564F"))
+            }
         }
-        
-        return Text(text)
-            .font(.rubik(.regular, size: 12))
-            .foregroundColor(Color(hex: "55564F"))
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(Color(hex: "F8F7F1"))
-            .clipShape(Capsule())
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(Color(hex: "F8F7F1"))
+        .clipShape(Capsule())
     }
     
     var dateRow: some View {
