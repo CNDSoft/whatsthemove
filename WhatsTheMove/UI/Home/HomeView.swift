@@ -29,6 +29,7 @@ struct HomeView: View {
     @State private var eventToDelete: Event?
     @State private var isDeleting: Bool = false
     @State private var hasCheckedNotificationPermission: Bool = false
+    @State private var scrollToEventId: String?
     
     @Binding var triggerRefetch: Bool
     
@@ -262,37 +263,50 @@ private extension HomeView {
     }
     
     var eventListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 1) {
-                ForEach(filteredEvents) { event in
-                    EventCardView(
-                        event: event,
-                        showActions: true,
-                        onEdit: { event in
-                            eventToEdit = event
-                        },
-                        onDelete: { event in
-                            eventToDelete = event
-                            showDeleteConfirmation = true
-                        }
-                    )
-                    .onAppear {
-                        if shouldLoadMore(for: event) {
-                            Task {
-                                await loadMoreEvents()
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 1) {
+                    ForEach(filteredEvents) { event in
+                        EventCardView(
+                            event: event,
+                            showActions: true,
+                            onEdit: { event in
+                                eventToEdit = event
+                            },
+                            onDelete: { event in
+                                eventToDelete = event
+                                showDeleteConfirmation = true
+                            }
+                        )
+                        .id(event.id)
+                        .onAppear {
+                            if shouldLoadMore(for: event) {
+                                Task {
+                                    await loadMoreEvents()
+                                }
                             }
                         }
                     }
+                    
+                    if isLoadingMore {
+                        loadingMoreView
+                    }
                 }
-                
-                if isLoadingMore {
-                    loadingMoreView
+                .padding(.bottom, 100)
+            }
+            .refreshable {
+                await refreshEvents()
+            }
+            .onChange(of: scrollToEventId) { _, eventId in
+                if let eventId = eventId {
+                    withAnimation {
+                        proxy.scrollTo(eventId, anchor: UnitPoint(x: 0.5, y: 0.35))
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        scrollToEventId = nil
+                    }
                 }
             }
-            .padding(.bottom, 100)
-        }
-        .refreshable {
-            await refreshEvents()
         }
     }
     
@@ -525,6 +539,12 @@ private extension HomeView {
                 injected.appState[\.userData.notificationTappedEventId] = nil
             }
             print("HomeView - Switched to filter: \(appropriateFilter.rawValue)")
+            
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            
+            await MainActor.run {
+                scrollToEventId = eventId
+            }
         } else {
             await MainActor.run {
                 injected.appState[\.userData.lastSavedEventId] = nil
