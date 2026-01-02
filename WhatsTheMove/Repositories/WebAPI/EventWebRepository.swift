@@ -183,6 +183,7 @@ extension Event {
             "eventDate": Timestamp(date: eventDate),
             "admission": admission.rawValue,
             "requiresRegistration": requiresRegistration,
+            "registrationAlertDismissed": registrationAlertDismissed,
             "status": status.rawValue,
             "createdAt": Timestamp(date: createdAt),
             "updatedAt": Timestamp(date: updatedAt)
@@ -256,6 +257,7 @@ extension Event {
         let urlLink = dict["urlLink"] as? String
         let admissionAmount = dict["admissionAmount"] as? Double
         let registrationDeadline = (dict["registrationDeadline"] as? Timestamp)?.dateValue()
+        let registrationAlertDismissed = dict["registrationAlertDismissed"] as? Bool ?? false
         let categoryRaw = dict["category"] as? String
         let category = categoryRaw.flatMap { EventCategory(rawValue: $0) }
         let notes = dict["notes"] as? String
@@ -276,6 +278,7 @@ extension Event {
             admissionAmount: admissionAmount,
             requiresRegistration: requiresRegistration,
             registrationDeadline: registrationDeadline,
+            registrationAlertDismissed: registrationAlertDismissed,
             category: category,
             notes: notes,
             location: location,

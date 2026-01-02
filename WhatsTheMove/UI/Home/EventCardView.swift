@@ -29,7 +29,6 @@ struct EventCardView: View {
     @State private var showCalendarError: Bool = false
     @State private var calendarErrorMessage: String = ""
     @State private var showCalendarSelection: Bool = false
-    @State private var isRegistrationWarningDismissed: Bool = false
     @State private var showEventFormForDetails: Bool = false
     @State private var showImageSourceSheet: Bool = false
     @State private var showCamera: Bool = false
@@ -570,7 +569,7 @@ private extension EventCardView {
     
     @ViewBuilder
     var registrationWarning: some View {
-        if !isRegistrationWarningDismissed, event.requiresRegistration, let deadline = event.registrationDeadline {
+        if !event.registrationAlertDismissed, event.requiresRegistration, let deadline = event.registrationDeadline {
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
             let deadlineDay = calendar.startOfDay(for: deadline)
@@ -589,9 +588,7 @@ private extension EventCardView {
                     Spacer()
                     
                     Button {
-                        withAnimation {
-                            isRegistrationWarningDismissed = true
-                        }
+                        dismissRegistrationAlert()
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 8, weight: .medium))
@@ -604,6 +601,17 @@ private extension EventCardView {
                 .frame(maxWidth: .infinity)
                 .background(Color(hex: "F25454").opacity(0.05))
                 .clipShape(Capsule())
+            }
+        }
+    }
+    
+    func dismissRegistrationAlert() {
+        Task {
+            do {
+                try await injected.interactors.events.dismissRegistrationAlert(eventId: event.id)
+                print("EventCardView - Registration alert dismissed for event: \(event.id)")
+            } catch {
+                print("EventCardView - Failed to dismiss registration alert: \(error.localizedDescription)")
             }
         }
     }

@@ -47,6 +47,10 @@ struct StubEventInteractor: EventInteractor {
         print("StubEventInteractor - Validate event stub")
         return []
     }
+    
+    func dismissRegistrationAlert(eventId: String) async throws {
+        print("StubEventInteractor - Dismiss registration alert stub")
+    }
 }
 
 // MARK: - Preview Data

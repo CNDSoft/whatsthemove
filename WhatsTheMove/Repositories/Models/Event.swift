@@ -89,6 +89,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
     var admissionAmount: Double?
     var requiresRegistration: Bool
     var registrationDeadline: Date?
+    var registrationAlertDismissed: Bool
     var category: EventCategory?
     var notes: String?
     var location: String?
@@ -111,6 +112,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         admissionAmount: Double? = nil,
         requiresRegistration: Bool = false,
         registrationDeadline: Date? = nil,
+        registrationAlertDismissed: Bool = false,
         category: EventCategory? = nil,
         notes: String? = nil,
         location: String? = nil,
@@ -132,6 +134,7 @@ struct Event: Identifiable, Codable, Equatable, Hashable {
         self.admissionAmount = admissionAmount
         self.requiresRegistration = requiresRegistration
         self.registrationDeadline = registrationDeadline
+        self.registrationAlertDismissed = registrationAlertDismissed
         self.category = category
         self.notes = notes
         self.location = location

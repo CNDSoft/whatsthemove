@@ -18,6 +18,7 @@ protocol EventInteractor {
     func updateEvent(_ event: Event, newImage: UIImage?) async throws
     func deleteEvent(id: String) async throws
     func validateEvent(_ event: Event) -> [String]
+    func dismissRegistrationAlert(eventId: String) async throws
 }
 
 struct RealEventInteractor: EventInteractor {
@@ -185,6 +186,29 @@ struct RealEventInteractor: EventInteractor {
     
     func validateEvent(_ event: Event) -> [String] {
         return event.validationErrors
+    }
+    
+    func dismissRegistrationAlert(eventId: String) async throws {
+        print("RealEventInteractor - Dismissing registration alert for event: \(eventId)")
+        
+        guard var event = try await eventWebRepository.getEvent(id: eventId) else {
+            throw EventInteractorError.saveFailed
+        }
+        
+        event.registrationAlertDismissed = true
+        event.updatedAt = Date()
+        
+        try await eventWebRepository.updateEvent(event)
+        
+        await MainActor.run {
+            var events = appState[\.userData.events]
+            if let index = events.firstIndex(where: { $0.id == eventId }) {
+                events[index].registrationAlertDismissed = true
+            }
+            appState[\.userData.events] = events
+        }
+        
+        print("RealEventInteractor - Registration alert dismissed successfully")
     }
 }
 
