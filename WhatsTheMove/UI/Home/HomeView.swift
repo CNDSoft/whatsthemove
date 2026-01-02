@@ -30,6 +30,7 @@ struct HomeView: View {
     @State private var isDeleting: Bool = false
     @State private var hasCheckedNotificationPermission: Bool = false
     @State private var scrollToEventId: String?
+    @State private var unreadNotificationCount: Int = 0
     
     @Binding var triggerRefetch: Bool
     
@@ -52,8 +53,12 @@ struct HomeView: View {
         .navigationDestination(for: Event.self) { event in
             EventDetailView(event: event)
         }
+        .onAppear {
+            unreadNotificationCount = injected.appState[\.userData.notifications].filter { !$0.isRead }.count
+        }
         .task {
             await loadEventsIfNeeded()
+            await loadNotificationsIfNeeded()
             await checkNotificationPermissionAfterDelay()
         }
         .onChange(of: triggerRefetch) { _, shouldRefetch in
@@ -73,6 +78,9 @@ struct HomeView: View {
                     await handleFilterSwitchAfterAction()
                 }
             }
+        }
+        .onReceive(notificationsUpdate) { notifications in
+            unreadNotificationCount = notifications.filter { !$0.isRead }.count
         }
         .sheet(item: $eventToEdit, onDismiss: {
             Task {
@@ -122,6 +130,10 @@ struct HomeView: View {
     
     private var notificationTappedEventUpdate: AnyPublisher<String?, Never> {
         injected.appState.updates(for: \.userData.notificationTappedEventId)
+    }
+    
+    private var notificationsUpdate: AnyPublisher<[NotificationItem], Never> {
+        injected.appState.updates(for: \.userData.notifications)
     }
 }
 
@@ -186,10 +198,6 @@ private extension HomeView {
             BellIconWithBadge(unreadCount: unreadNotificationCount)
         }
         .buttonStyle(.plain)
-    }
-    
-    var unreadNotificationCount: Int {
-        injected.appState[\.userData.notifications].filter { !$0.isRead }.count
     }
     
     var filterSection: some View {
@@ -400,6 +408,24 @@ private extension HomeView {
             print("HomeView - Requesting push notification permission after delay")
             injected.interactors.userPermissions.request(permission: .pushNotifications)
             hasCheckedNotificationPermission = true
+        }
+    }
+    
+    func loadNotificationsIfNeeded() async {
+        let cachedNotifications = await MainActor.run {
+            injected.appState[\.userData.notifications]
+        }
+        
+        if !cachedNotifications.isEmpty {
+            print("HomeView - Using \(cachedNotifications.count) cached notifications")
+            return
+        }
+        
+        do {
+            try await injected.interactors.notifications.loadNotifications()
+            print("HomeView - Notifications loaded successfully")
+        } catch {
+            print("HomeView - Failed to load notifications: \(error.localizedDescription)")
         }
     }
     

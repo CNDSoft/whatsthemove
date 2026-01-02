@@ -40,6 +40,7 @@ struct AccountView: View {
     @State private var showFeedbackAlert: Bool = false
     @State private var showRateAppAlert: Bool = false
     @State private var showPrivacyPolicyAlert: Bool = false
+    @State private var unreadNotificationCount: Int = 0
     
     var body: some View {
         ZStack {
@@ -62,6 +63,7 @@ struct AccountView: View {
             selectedCalendarName = injected.appState[\.userData.selectedCalendarName]
             includeSourceLinks = injected.appState[\.userData.includeSourceLinksInCalendar]
             analyticsEnabled = injected.appState[\.userData.analyticsEnabled]
+            unreadNotificationCount = injected.appState[\.userData.notifications].filter { !$0.isRead }.count
             loadNotificationPreferences()
         }
         .onReceive(userDataUpdate) { userData in
@@ -74,6 +76,9 @@ struct AccountView: View {
             selectedCalendarName = userData.selectedCalendarName
             includeSourceLinks = userData.includeSourceLinksInCalendar
             analyticsEnabled = userData.analyticsEnabled
+        }
+        .onReceive(notificationsUpdate) { notifications in
+            unreadNotificationCount = notifications.filter { !$0.isRead }.count
         }
         .sheet(isPresented: $showNotifications, onDismiss: {
             injected.appState[\.routing.notificationViewOpenedFrom] = nil
@@ -110,6 +115,10 @@ struct AccountView: View {
     
     private var userDataUpdate: AnyPublisher<AppState.UserData, Never> {
         injected.appState.updates(for: \.userData)
+    }
+    
+    private var notificationsUpdate: AnyPublisher<[NotificationItem], Never> {
+        injected.appState.updates(for: \.userData.notifications)
     }
 }
 
@@ -186,10 +195,6 @@ private extension AccountView {
             BellIconWithBadge(unreadCount: unreadNotificationCount)
         }
         .buttonStyle(.plain)
-    }
-    
-    var unreadNotificationCount: Int {
-        injected.appState[\.userData.notifications].filter { !$0.isRead }.count
     }
 }
 
