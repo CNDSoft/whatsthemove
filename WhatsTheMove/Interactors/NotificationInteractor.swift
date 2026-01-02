@@ -41,6 +41,9 @@ struct RealNotificationInteractor: NotificationInteractor {
             appState[\.userData.notifications] = notifications
         }
         
+        let unreadCount = notifications.filter { !$0.isRead }.count
+        await updateAppBadge(count: unreadCount)
+        
         print("RealNotificationInteractor - Loaded \(notifications.count) notifications")
     }
     
@@ -53,13 +56,17 @@ struct RealNotificationInteractor: NotificationInteractor {
         
         try await notificationWebRepository.markNotificationAsRead(userId: userId, notificationId: notificationId)
         
+        var unreadCount = 0
         await MainActor.run {
             var notifications = appState[\.userData.notifications]
             if let index = notifications.firstIndex(where: { $0.id == notificationId }) {
                 notifications[index].isRead = true
             }
             appState[\.userData.notifications] = notifications
+            unreadCount = notifications.filter { !$0.isRead }.count
         }
+        
+        await updateAppBadge(count: unreadCount)
         
         print("RealNotificationInteractor - Notification marked as read")
     }
@@ -80,6 +87,8 @@ struct RealNotificationInteractor: NotificationInteractor {
             }
             appState[\.userData.notifications] = notifications
         }
+        
+        await updateAppBadge(count: 0)
         
         print("RealNotificationInteractor - All notifications marked as read")
     }
@@ -189,6 +198,15 @@ struct RealNotificationInteractor: NotificationInteractor {
         }
         
         print("RealNotificationInteractor - FCM token registered successfully")
+    }
+    
+    private func updateAppBadge(count: Int) async {
+        do {
+            try await UNUserNotificationCenter.current().setBadgeCount(count)
+            print("RealNotificationInteractor - Updated app badge to \(count)")
+        } catch {
+            print("RealNotificationInteractor - Failed to update app badge: \(error)")
+        }
     }
 }
 
