@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 enum NotificationType: String, CaseIterable, Codable {
     case event = "Event"
@@ -79,8 +80,8 @@ extension NotificationItem {
             "title": title,
             "message": message,
             "isRead": isRead,
-            "timestamp": timestamp,
-            "createdAt": createdAt
+            "timestamp": Timestamp(date: timestamp),
+            "createdAt": Timestamp(date: createdAt)
         ]
         if let actionText = actionText {
             dict["actionText"] = actionText
@@ -106,8 +107,20 @@ extension NotificationItem {
         let actionUrl = data["actionUrl"] as? String
         let eventId = data["eventId"] as? String
         let isRead = (data["isRead"] as? Bool) ?? false
-        let timestamp = (data["timestamp"] as? Date) ?? Date()
-        let createdAt = (data["createdAt"] as? Date) ?? Date()
+        
+        let timestamp: Date
+        if let firestoreTimestamp = data["timestamp"] as? Timestamp {
+            timestamp = firestoreTimestamp.dateValue()
+        } else {
+            timestamp = Date()
+        }
+        
+        let createdAt: Date
+        if let firestoreCreatedAt = data["createdAt"] as? Timestamp {
+            createdAt = firestoreCreatedAt.dateValue()
+        } else {
+            createdAt = Date()
+        }
         
         return NotificationItem(
             id: id,
