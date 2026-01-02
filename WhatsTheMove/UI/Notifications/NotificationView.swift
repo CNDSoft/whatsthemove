@@ -15,10 +15,7 @@ struct NotificationView: View {
     @Environment(\.injected) private var injected: DIContainer
     @State private var selectedFilter: NotificationFilter = .all
     @State private var isLoading: Bool = true
-    
-    private var notifications: [NotificationItem] {
-        injected.appState[\.userData.notifications]
-    }
+    @State private var notifications: [NotificationItem] = []
     
     var body: some View {
         ZStack {
@@ -41,10 +38,17 @@ struct NotificationView: View {
                 dismiss()
             }
         }
+        .onReceive(notificationsUpdate) { updatedNotifications in
+            notifications = updatedNotifications
+        }
     }
     
     private var notificationTappedEventUpdate: AnyPublisher<String?, Never> {
         injected.appState.updates(for: \.userData.notificationTappedEventId)
+    }
+    
+    private var notificationsUpdate: AnyPublisher<[NotificationItem], Never> {
+        injected.appState.updates(for: \.userData.notifications)
     }
     
     private var filteredNotifications: [NotificationItem] {
