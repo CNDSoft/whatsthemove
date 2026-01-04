@@ -246,7 +246,7 @@ extension EventInteractor {
         case .tonight:
             return futureEvents
                 .filter { calendar.isDateInToday($0.eventDate) }
-                .sorted { $0.eventDate < $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) < effectiveStartDateTime(for: $1) }
             
         case .thisWeekend:
             let weekday = calendar.component(.weekday, from: now)
@@ -264,7 +264,7 @@ extension EventInteractor {
                 .filter { event in
                     event.eventDate >= fridayStart && event.eventDate <= sundayEnd
                 }
-                .sorted { $0.eventDate < $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) < effectiveStartDateTime(for: $1) }
             
         case .nextWeek:
             guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
@@ -275,12 +275,12 @@ extension EventInteractor {
             
             return futureEvents
                 .filter { $0.eventDate >= startOfNextWeek && $0.eventDate <= endOfNextWeek }
-                .sorted { $0.eventDate < $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) < effectiveStartDateTime(for: $1) }
             
         case .thisMonth:
             return futureEvents
                 .filter { calendar.isDate($0.eventDate, equalTo: now, toGranularity: .month) }
-                .sorted { $0.eventDate < $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) < effectiveStartDateTime(for: $1) }
             
         case .recentlySaved:
             guard let fiveDaysAgo = calendar.date(byAdding: .day, value: -5, to: now) else {
@@ -324,13 +324,13 @@ extension EventInteractor {
         switch filter {
         case .upcoming:
             return events.filter { !isEventInPast($0, now: now) }
-                .sorted { $0.eventDate < $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) < effectiveStartDateTime(for: $1) }
         case .favorites:
             return events.filter { starredIds.contains($0.id) }
-                .sorted { $0.eventDate < $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) < effectiveStartDateTime(for: $1) }
         case .pastEvents:
             return events.filter { isEventInPast($0, now: now) }
-                .sorted { $0.eventDate > $1.eventDate }
+                .sorted { effectiveStartDateTime(for: $0) > effectiveStartDateTime(for: $1) }
         }
     }
     
@@ -442,6 +442,14 @@ extension EventInteractor {
         combined.minute = timeComponents.minute
         
         return calendar.date(from: combined) ?? date
+    }
+    
+    private func effectiveStartDateTime(for event: Event) -> Date {
+        let calendar = Calendar.current
+        if let startTime = event.startTime {
+            return combineDateTime(date: event.eventDate, time: startTime, calendar: calendar)
+        }
+        return event.eventDate
     }
 }
 
