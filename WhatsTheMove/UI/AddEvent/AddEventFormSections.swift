@@ -497,7 +497,22 @@ struct NotesSection: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            FormFieldLabel(text: "Notes")
+            HStack {
+                FormFieldLabel(text: "Notes")
+                
+                Spacer()
+                
+                if !notes.isEmpty {
+                    Button {
+                        notes = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color(hex: "55564F"))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             
             TextField("", text: $notes, prompt: Text("Any additional details...")
                 .foregroundColor(Color(hex: "55564F")), axis: .vertical)
