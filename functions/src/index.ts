@@ -56,14 +56,26 @@ function calculateDaysUntilInTimezone(
   return Math.round((eventLocal.getTime() - nowLocal.getTime()) / (24 * 60 * 60 * 1000));
 }
 
-function calculateHoursUntilInTimezone(
-  nowUtc: Date,
-  eventDateUtc: Date,
-  timezone: string
-): number {
-  const nowLocal = getDateInTimezone(nowUtc, timezone);
-  const eventLocal = getDateInTimezone(eventDateUtc, timezone);
-  return (eventLocal.getTime() - nowLocal.getTime()) / (60 * 60 * 1000);
+// Hours calculation uses UTC directly - no timezone conversion needed
+function calculateHoursUntil(nowUtc: Date, eventDateUtc: Date): number {
+  return (eventDateUtc.getTime() - nowUtc.getTime()) / (60 * 60 * 1000);
+}
+
+// Combines the DATE from eventDate with the TIME from startTime (both in UTC)
+function combineEventDateWithStartTime(eventDate: Date, startTime: Date | null): Date {
+  if (!startTime) {
+    return eventDate;
+  }
+
+  // Use UTC methods to avoid any timezone conversion issues
+  return new Date(Date.UTC(
+    eventDate.getUTCFullYear(),
+    eventDate.getUTCMonth(),
+    eventDate.getUTCDate(),
+    startTime.getUTCHours(),
+    startTime.getUTCMinutes(),
+    0
+  ));
 }
 
 export const eventReminders = functions.pubsub
@@ -75,13 +87,25 @@ export const eventReminders = functions.pubsub
     try {
       const db = admin.firestore();
       const now = Timestamp.now();
-      const oneWeekFromNow = new Date(now.toDate().getTime() + 7 * 24 * 60 * 60 * 1000);
+      const nowDate = now.toDate();
 
-      console.log("EventReminders - Starting event reminders check");
+      // Use start of today (UTC) for query since eventDate time component is arbitrary
+      // This is intentionally broad - precise filtering happens per-user with their timezone
+      const startOfTodayUTC = new Date(Date.UTC(
+        nowDate.getUTCFullYear(),
+        nowDate.getUTCMonth(),
+        nowDate.getUTCDate(),
+        0, 0, 0, 0
+      ));
+
+      const oneWeekFromNow = new Date(nowDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      console.log(`EventReminders - Query range: ${startOfTodayUTC.toISOString()} to ` +
+        `${oneWeekFromNow.toISOString()}`);
 
       const eventsSnapshot = await db
         .collection("events")
-        .where("eventDate", ">=", now)
+        .where("eventDate", ">=", Timestamp.fromDate(startOfTodayUTC))
         .where("eventDate", "<=", Timestamp.fromDate(oneWeekFromNow))
         .get();
 
@@ -117,13 +141,25 @@ export const eventReminders = functions.pubsub
         }
 
         const eventDate = event.eventDate.toDate();
+        const startTime = event.startTime ? event.startTime.toDate() : null;
         const nowDate = now.toDate();
         const userTimezone = user.timezone || DEFAULT_TIMEZONE;
 
+        // Days calculation needs timezone for calendar day comparison
         const daysUntil = calculateDaysUntilInTimezone(nowDate, eventDate, userTimezone);
-        const hoursUntil = calculateHoursUntilInTimezone(nowDate, eventDate, userTimezone);
 
-        console.log(`EventReminders - User timezone: ${userTimezone}, days until: ${daysUntil}, hours until: ${hoursUntil}`);
+        // Hours calculation uses UTC directly - combine eventDate + startTime
+        const effectiveStartDateTime = combineEventDateWithStartTime(eventDate, startTime);
+        const hoursUntil = calculateHoursUntil(nowDate, effectiveStartDateTime);
+
+        console.log(`EventReminders - timezone: ${userTimezone}, days: ${daysUntil}, ` +
+          `hours: ${hoursUntil.toFixed(2)}, hasStartTime: ${!!startTime}`);
+
+        // Skip events that have already passed
+        if (hoursUntil < 0) {
+          console.log(`EventReminders - Event ${event.id} has already passed, skipping`);
+          continue;
+        }
 
         let reminderType: string | null = null;
         let reminderText = "";
