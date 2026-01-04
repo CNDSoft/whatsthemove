@@ -273,7 +273,20 @@ export const registrationDeadlines = functions.pubsub
     try {
       const db = admin.firestore();
       const now = Timestamp.now();
-      const threeDaysFromNow = new Date(now.toDate().getTime() + 3 * 24 * 60 * 60 * 1000);
+      const nowDate = now.toDate();
+
+      // Use start of today (UTC) since registrationDeadline time component is arbitrary
+      const startOfTodayUTC = new Date(Date.UTC(
+        nowDate.getUTCFullYear(),
+        nowDate.getUTCMonth(),
+        nowDate.getUTCDate(),
+        0, 0, 0, 0
+      ));
+
+      const threeDaysFromNow = new Date(nowDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+      console.log(`RegistrationDeadlines - Query range: ${startOfTodayUTC.toISOString()} to ` +
+        `${threeDaysFromNow.toISOString()}`);
 
       const eventsSnapshot = await db
         .collection("events")
@@ -284,10 +297,12 @@ export const registrationDeadlines = functions.pubsub
         const data = doc.data();
         if (!data.registrationDeadline) return false;
         const deadline = data.registrationDeadline.toDate();
-        return deadline >= now.toDate() && deadline <= threeDaysFromNow;
+        // Use startOfTodayUTC instead of now to catch all deadlines today
+        return deadline >= startOfTodayUTC && deadline <= threeDaysFromNow;
       });
 
-      console.log(`RegistrationDeadlines - Found ${eventsWithUpcomingDeadlines.length} events with upcoming deadlines`);
+      console.log(`RegistrationDeadlines - Found ${eventsWithUpcomingDeadlines.length} ` +
+        `events with upcoming deadlines`);
 
       const { sendPushNotification } = await import("./utils/fcm");
       const { getUser, createNotification } = await import("./utils/firestore");
