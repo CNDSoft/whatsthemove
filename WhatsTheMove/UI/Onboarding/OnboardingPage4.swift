@@ -45,7 +45,7 @@ private extension OnboardingPage4 {
     
     var titleSection: some View {
         Text("Set up link sharing")
-            .font(.rubik(.bold, size: 32))
+            .font(.rubik(.bold, size: 36))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
             .tracking(-0.64)
@@ -59,7 +59,7 @@ private extension OnboardingPage4 {
     
     var descriptionSection: some View {
         Text("Add the wtm extension to your Favorites to save content from other apps.")
-            .font(.rubik(.regular, size: 16))
+            .font(.rubik(.regular, size: 18))
             .foregroundColor(Color(hex: "11104B"))
             .multilineTextAlignment(.center)
             .lineSpacing(6)
@@ -81,7 +81,7 @@ private extension OnboardingPage4 {
     func stepRow(number: String, text: String) -> some View {
         HStack(spacing: 10) {
             Text(number)
-                .font(.rubik(.regular, size: 14))
+                .font(.rubik(.regular, size: 16))
                 .foregroundColor(Color(hex: "11104B"))
                 .frame(width: 22, height: 22)
                 .background(
@@ -90,7 +90,7 @@ private extension OnboardingPage4 {
                 )
             
             Text(text)
-                .font(.rubik(.regular, size: 14))
+                .font(.rubik(.regular, size: 16))
                 .foregroundColor(Color(hex: "11104B"))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineSpacing(6)
