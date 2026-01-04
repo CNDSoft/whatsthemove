@@ -14,6 +14,7 @@ protocol UserInteractor {
     func loadStarredEventIds() async throws
     func updateUserProfile(firstName: String, lastName: String, email: String, phoneNumber: String?) async throws
     func updateTimezone(_ timezone: String) async throws
+    func syncTimezoneIfNeeded() async
 }
 
 struct RealUserInteractor: UserInteractor {
@@ -132,6 +133,30 @@ struct RealUserInteractor: UserInteractor {
         
         print("RealUserInteractor - Timezone updated successfully")
     }
+    
+    func syncTimezoneIfNeeded() async {
+        guard let userId = await MainActor.run(body: { appState[\.userData.userId] }) else {
+            print("RealUserInteractor - No user ID found, skipping timezone sync")
+            return
+        }
+        
+        do {
+            let hasTimezoneInFirebase = try await userWebRepository.hasTimezoneField(userId: userId)
+            
+            if hasTimezoneInFirebase {
+                print("RealUserInteractor - User already has timezone in Firebase")
+                return
+            }
+            
+            let deviceTimezone = TimeZone.current.identifier
+            print("RealUserInteractor - User missing timezone field, setting to device timezone: \(deviceTimezone)")
+            
+            try await updateTimezone(deviceTimezone)
+            print("RealUserInteractor - Timezone set successfully")
+        } catch {
+            print("RealUserInteractor - Failed to sync timezone: \(error.localizedDescription)")
+        }
+    }
 }
 
 struct StubUserInteractor: UserInteractor {
@@ -155,6 +180,10 @@ struct StubUserInteractor: UserInteractor {
     
     func updateTimezone(_ timezone: String) async throws {
         print("StubUserInteractor - Update timezone stub")
+    }
+    
+    func syncTimezoneIfNeeded() async {
+        print("StubUserInteractor - Sync timezone if needed stub")
     }
 }
 

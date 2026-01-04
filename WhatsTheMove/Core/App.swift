@@ -119,6 +119,7 @@ private struct RootContent: View {
         
         if authStatus {
             try? await injected.interactors.users.loadStarredEventIds()
+            await injected.interactors.users.syncTimezoneIfNeeded()
             
             do {
                 print("RootContent - Fetching events during launch")

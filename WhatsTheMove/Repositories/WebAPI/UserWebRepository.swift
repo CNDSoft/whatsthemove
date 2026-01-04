@@ -21,6 +21,7 @@ protocol UserWebRepository {
     func updateFCMToken(userId: String, token: String?) async throws
     func updateAnalyticsPreference(userId: String, enabled: Bool) async throws
     func updateTimezone(userId: String, timezone: String) async throws
+    func hasTimezoneField(userId: String) async throws -> Bool
 }
 
 struct RealUserWebRepository: UserWebRepository {
@@ -186,6 +187,23 @@ struct RealUserWebRepository: UserWebRepository {
         
         print("RealUserWebRepository - Timezone updated successfully")
     }
+    
+    func hasTimezoneField(userId: String) async throws -> Bool {
+        print("RealUserWebRepository - Checking if timezone field exists for user: \(userId)")
+        
+        let document = try await db.collection(collectionName)
+            .document(userId)
+            .getDocument()
+        
+        guard document.exists, let data = document.data() else {
+            print("RealUserWebRepository - User not found")
+            return false
+        }
+        
+        let hasTimezone = data["timezone"] as? String != nil
+        print("RealUserWebRepository - Timezone field exists: \(hasTimezone)")
+        return hasTimezone
+    }
 }
 
 struct StubUserWebRepository: UserWebRepository {
@@ -235,6 +253,11 @@ struct StubUserWebRepository: UserWebRepository {
     
     func updateTimezone(userId: String, timezone: String) async throws {
         print("StubUserWebRepository - Update timezone stub")
+    }
+    
+    func hasTimezoneField(userId: String) async throws -> Bool {
+        print("StubUserWebRepository - Has timezone field stub")
+        return true
     }
 }
 
