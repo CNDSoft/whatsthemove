@@ -20,6 +20,7 @@ protocol UserWebRepository {
     func getNotificationPreferences(userId: String) async throws -> NotificationPreferences
     func updateFCMToken(userId: String, token: String?) async throws
     func updateAnalyticsPreference(userId: String, enabled: Bool) async throws
+    func updateTimezone(userId: String, timezone: String) async throws
 }
 
 struct RealUserWebRepository: UserWebRepository {
@@ -175,6 +176,16 @@ struct RealUserWebRepository: UserWebRepository {
         
         print("RealUserWebRepository - Analytics preference updated successfully")
     }
+    
+    func updateTimezone(userId: String, timezone: String) async throws {
+        print("RealUserWebRepository - Updating timezone for user: \(userId) to: \(timezone)")
+        
+        try await db.collection(collectionName)
+            .document(userId)
+            .updateData(["timezone": timezone])
+        
+        print("RealUserWebRepository - Timezone updated successfully")
+    }
 }
 
 struct StubUserWebRepository: UserWebRepository {
@@ -220,6 +231,10 @@ struct StubUserWebRepository: UserWebRepository {
     
     func updateAnalyticsPreference(userId: String, enabled: Bool) async throws {
         print("StubUserWebRepository - Update analytics preference stub")
+    }
+    
+    func updateTimezone(userId: String, timezone: String) async throws {
+        print("StubUserWebRepository - Update timezone stub")
     }
 }
 

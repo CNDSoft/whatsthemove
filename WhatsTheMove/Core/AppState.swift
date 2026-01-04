@@ -70,6 +70,7 @@ extension AppState {
         var notifications: [NotificationItem] = []
         var fcmToken: String?
         var analyticsEnabled: Bool = UserDefaults.standard.object(forKey: "analyticsEnabled") as? Bool ?? false
+        var timezone: String = TimeZone.current.identifier
     }
 }
 

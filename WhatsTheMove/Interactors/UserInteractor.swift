@@ -13,6 +13,7 @@ protocol UserInteractor {
     func isEventStarred(eventId: String) -> Bool
     func loadStarredEventIds() async throws
     func updateUserProfile(firstName: String, lastName: String, email: String, phoneNumber: String?) async throws
+    func updateTimezone(_ timezone: String) async throws
 }
 
 struct RealUserInteractor: UserInteractor {
@@ -84,7 +85,7 @@ struct RealUserInteractor: UserInteractor {
             throw UserInteractorError.userNotAuthenticated
         }
         
-        guard var user = try await userWebRepository.getUser(id: userId) else {
+        guard let user = try await userWebRepository.getUser(id: userId) else {
             throw UserInteractorError.userNotFound
         }
         
@@ -99,6 +100,7 @@ struct RealUserInteractor: UserInteractor {
             notificationPreferences: user.notificationPreferences,
             fcmToken: user.fcmToken,
             analyticsEnabled: user.analyticsEnabled,
+            timezone: user.timezone,
             createdAt: user.createdAt,
             updatedAt: Date()
         )
@@ -113,6 +115,22 @@ struct RealUserInteractor: UserInteractor {
         }
         
         print("RealUserInteractor - User profile updated successfully")
+    }
+    
+    func updateTimezone(_ timezone: String) async throws {
+        print("RealUserInteractor - Updating timezone to: \(timezone)")
+        
+        guard let userId = await MainActor.run(body: { appState[\.userData.userId] }) else {
+            throw UserInteractorError.userNotAuthenticated
+        }
+        
+        try await userWebRepository.updateTimezone(userId: userId, timezone: timezone)
+        
+        await MainActor.run {
+            appState[\.userData.timezone] = timezone
+        }
+        
+        print("RealUserInteractor - Timezone updated successfully")
     }
 }
 
@@ -133,6 +151,10 @@ struct StubUserInteractor: UserInteractor {
     
     func updateUserProfile(firstName: String, lastName: String, email: String, phoneNumber: String?) async throws {
         print("StubUserInteractor - Update user profile stub")
+    }
+    
+    func updateTimezone(_ timezone: String) async throws {
+        print("StubUserInteractor - Update timezone stub")
     }
 }
 

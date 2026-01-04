@@ -24,6 +24,8 @@ struct ProfileView: View {
     @State private var isSaving: Bool = false
     @State private var errorMessage: String?
     @State private var showError: Bool = false
+    @State private var selectedTimezone: String = TimeZone.current.identifier
+    @State private var showTimezonePicker: Bool = false
     
     var body: some View {
         ZStack {
@@ -48,6 +50,7 @@ struct ProfileView: View {
             lastName = injected.appState[\.userData.lastName] ?? ""
             email = injected.appState[\.userData.email] ?? ""
             phoneNumber = injected.appState[\.userData.phoneNumber] ?? ""
+            selectedTimezone = injected.appState[\.userData.timezone]
         }
         .overlay {
             if showCloseAccountAlert {
@@ -58,6 +61,14 @@ struct ProfileView: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text(errorMessage ?? "An error occurred")
+        }
+        .sheet(isPresented: $showTimezonePicker) {
+            TimezonePickerView(
+                selectedTimezone: $selectedTimezone,
+                onSave: { timezone in
+                    updateTimezone(timezone)
+                }
+            )
         }
     }
 }
@@ -165,6 +176,7 @@ private extension ProfileView {
             .background(Color.white)
             
             phoneNumberRow
+            timezoneRow
         }
         .background(Color(hex: "F4F4F4"))
     }
@@ -193,6 +205,46 @@ private extension ProfileView {
         .padding(.horizontal, 20)
         .padding(.vertical, 15)
         .background(Color.white)
+    }
+    
+    var timezoneRow: some View {
+        Button {
+            showTimezonePicker = true
+        } label: {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Timezone")
+                        .font(.rubik(.medium, size: 15))
+                        .foregroundColor(Color(hex: "11104B"))
+                    
+                    Text(formatTimezoneDisplay(selectedTimezone))
+                        .font(.rubik(.regular, size: 14))
+                        .foregroundColor(Color(hex: "55564F"))
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(Color(hex: "11104B"))
+                    .frame(width: 5)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 15)
+            .background(Color.white)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    func formatTimezoneDisplay(_ identifier: String) -> String {
+        guard let timezone = TimeZone(identifier: identifier) else {
+            return identifier
+        }
+        let offset = timezone.secondsFromGMT() / 3600
+        let offsetString = offset >= 0 ? "+\(offset)" : "\(offset)"
+        let abbreviation = timezone.abbreviation() ?? ""
+        return "\(identifier.replacingOccurrences(of: "_", with: " ")) (GMT\(offsetString)) \(abbreviation)"
     }
     
     var actionButtonsSection: some View {
@@ -477,6 +529,26 @@ private extension ProfileView {
                 errorMessage = error.localizedDescription
                 showError = true
                 print("ProfileView - Error updating profile: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func updateTimezone(_ timezone: String) {
+        print("ProfileView - Updating timezone to: \(timezone)")
+        
+        Task {
+            do {
+                try await injected.interactors.users.updateTimezone(timezone)
+                await MainActor.run {
+                    selectedTimezone = timezone
+                    print("ProfileView - Timezone updated successfully")
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showError = true
+                    print("ProfileView - Error updating timezone: \(error.localizedDescription)")
+                }
             }
         }
     }

@@ -47,6 +47,7 @@ struct User: Codable, Equatable {
     var notificationPreferences: NotificationPreferences
     var fcmToken: String?
     var analyticsEnabled: Bool
+    var timezone: String
     let createdAt: Date
     let updatedAt: Date
     
@@ -67,6 +68,7 @@ extension User {
             "starredEventIds": starredEventIds,
             "notificationPreferences": notificationPreferences.toDictionary(),
             "analyticsEnabled": analyticsEnabled,
+            "timezone": timezone,
             "createdAt": createdAt,
             "updatedAt": updatedAt
         ]
@@ -91,6 +93,7 @@ extension User {
         let starredEventIds = (data["starredEventIds"] as? [String]) ?? []
         let fcmToken = data["fcmToken"] as? String
         let analyticsEnabled = (data["analyticsEnabled"] as? Bool) ?? false
+        let timezone = (data["timezone"] as? String) ?? TimeZone.current.identifier
         
         let notificationPreferences: NotificationPreferences
         if let prefsDict = data["notificationPreferences"] as? [String: Any] {
@@ -113,6 +116,7 @@ extension User {
             notificationPreferences: notificationPreferences,
             fcmToken: fcmToken,
             analyticsEnabled: analyticsEnabled,
+            timezone: timezone,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

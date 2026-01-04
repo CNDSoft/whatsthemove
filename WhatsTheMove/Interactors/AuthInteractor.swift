@@ -49,6 +49,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
             appState[\.userData.fcmToken] = user?.fcmToken
             appState[\.userData.analyticsEnabled] = user?.analyticsEnabled ?? false
+            appState[\.userData.timezone] = user?.timezone ?? TimeZone.current.identifier
         }
         
         analyticsInteractor.trackLogin(method: "email")
@@ -68,6 +69,7 @@ struct RealAuthInteractor: AuthInteractor {
         try await changeRequest.commitChanges()
         
         let now = Date()
+        let detectedTimezone = TimeZone.current.identifier
         let user = User(
             id: firebaseUser.uid,
             email: email,
@@ -79,6 +81,7 @@ struct RealAuthInteractor: AuthInteractor {
             notificationPreferences: NotificationPreferences(),
             fcmToken: nil,
             analyticsEnabled: false,
+            timezone: detectedTimezone,
             createdAt: now,
             updatedAt: now
         )
@@ -94,6 +97,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.firstName] = firstName
             appState[\.userData.lastName] = lastName
             appState[\.userData.analyticsEnabled] = false
+            appState[\.userData.timezone] = detectedTimezone
         }
         
         analyticsInteractor.trackSignUp(method: "email")
@@ -115,6 +119,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.firstName] = nil
             appState[\.userData.lastName] = nil
             appState[\.userData.phoneNumber] = nil
+            appState[\.userData.timezone] = TimeZone.current.identifier
         }
     }
     
@@ -136,6 +141,7 @@ struct RealAuthInteractor: AuthInteractor {
                 appState[\.userData.notificationPreferences] = user?.notificationPreferences ?? NotificationPreferences()
                 appState[\.userData.fcmToken] = user?.fcmToken
                 appState[\.userData.analyticsEnabled] = user?.analyticsEnabled ?? false
+                appState[\.userData.timezone] = user?.timezone ?? TimeZone.current.identifier
             }
             return true
         }
@@ -149,6 +155,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.firstName] = nil
             appState[\.userData.lastName] = nil
             appState[\.userData.phoneNumber] = nil
+            appState[\.userData.timezone] = TimeZone.current.identifier
         }
         return false
     }
@@ -246,6 +253,7 @@ struct RealAuthInteractor: AuthInteractor {
             appState[\.userData.phoneNumber] = nil
             appState[\.userData.events] = []
             appState[\.userData.starredEventIds] = []
+            appState[\.userData.timezone] = TimeZone.current.identifier
         }
         
         print("RealAuthInteractor - Account deleted successfully, app state cleared")

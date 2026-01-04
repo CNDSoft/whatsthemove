@@ -8,6 +8,64 @@ export { helloWorld } from "./test";
 
 export { sendNotificationToToken, testSendNotificationToToken } from "./notifications/sendToToken";
 
+const DEFAULT_TIMEZONE = "America/New_York";
+
+function getDateInTimezone(date: Date, timezone: string): Date {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    const parts = formatter.formatToParts(date);
+    const getPart = (type: string) => parts.find((p) => p.type === type)?.value || "0";
+
+    return new Date(
+      parseInt(getPart("year")),
+      parseInt(getPart("month")) - 1,
+      parseInt(getPart("day")),
+      parseInt(getPart("hour")),
+      parseInt(getPart("minute")),
+      parseInt(getPart("second"))
+    );
+  } catch (error) {
+    console.log(`getDateInTimezone - Invalid timezone ${timezone}, using default`);
+    return getDateInTimezone(date, DEFAULT_TIMEZONE);
+  }
+}
+
+function getMidnightInTimezone(date: Date, timezone: string): Date {
+  const localDate = getDateInTimezone(date, timezone);
+  localDate.setHours(0, 0, 0, 0);
+  return localDate;
+}
+
+function calculateDaysUntilInTimezone(
+  nowUtc: Date,
+  eventDateUtc: Date,
+  timezone: string
+): number {
+  const nowLocal = getMidnightInTimezone(nowUtc, timezone);
+  const eventLocal = getMidnightInTimezone(eventDateUtc, timezone);
+  return Math.round((eventLocal.getTime() - nowLocal.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+function calculateHoursUntilInTimezone(
+  nowUtc: Date,
+  eventDateUtc: Date,
+  timezone: string
+): number {
+  const nowLocal = getDateInTimezone(nowUtc, timezone);
+  const eventLocal = getDateInTimezone(eventDateUtc, timezone);
+  return (eventLocal.getTime() - nowLocal.getTime()) / (60 * 60 * 1000);
+}
+
 export const eventReminders = functions.pubsub
   .schedule("every 1 hours")
   .timeZone("America/New_York")
@@ -59,20 +117,24 @@ export const eventReminders = functions.pubsub
         }
 
         const eventDate = event.eventDate.toDate();
-        const timeDiff = eventDate.getTime() - now.toDate().getTime();
-        const daysUntil = timeDiff / (24 * 60 * 60 * 1000);
-        const hoursUntil = timeDiff / (60 * 60 * 1000);
+        const nowDate = now.toDate();
+        const userTimezone = user.timezone || DEFAULT_TIMEZONE;
+
+        const daysUntil = calculateDaysUntilInTimezone(nowDate, eventDate, userTimezone);
+        const hoursUntil = calculateHoursUntilInTimezone(nowDate, eventDate, userTimezone);
+
+        console.log(`EventReminders - User timezone: ${userTimezone}, days until: ${daysUntil}, hours until: ${hoursUntil}`);
 
         let reminderType: string | null = null;
         let reminderText = "";
         let isEnabled = false;
 
         if (event.status === "Going") {
-          if (daysUntil <= 7 && daysUntil > 6 && prefs.reminderWeekBefore) {
+          if (daysUntil === 7 && prefs.reminderWeekBefore) {
             reminderType = "1week";
             reminderText = "in one week";
             isEnabled = true;
-          } else if (daysUntil <= 1 && daysUntil > 0.8 && prefs.reminderDayBefore) {
+          } else if (daysUntil === 1 && prefs.reminderDayBefore) {
             reminderType = "1day";
             reminderText = "tomorrow";
             isEnabled = true;
@@ -82,7 +144,7 @@ export const eventReminders = functions.pubsub
             isEnabled = true;
           }
         } else if (event.status === "Interested") {
-          if (daysUntil <= 1 && daysUntil > 0.8 && prefs.reminderInterestedDayBefore) {
+          if (daysUntil === 1 && prefs.reminderInterestedDayBefore) {
             reminderType = "1day";
             reminderText = "tomorrow";
             isEnabled = true;
@@ -246,18 +308,12 @@ export const registrationDeadlines = functions.pubsub
           }
 
           const registrationDeadline = event.registrationDeadline.toDate();
+          const nowDate = now.toDate();
+          const userTimezone = user.timezone || DEFAULT_TIMEZONE;
 
-          const todayMidnight = new Date(now.toDate());
-          todayMidnight.setHours(0, 0, 0, 0);
+          const daysUntilDeadline = calculateDaysUntilInTimezone(nowDate, registrationDeadline, userTimezone);
 
-          const deadlineMidnight = new Date(registrationDeadline);
-          deadlineMidnight.setHours(0, 0, 0, 0);
-
-          const daysUntilDeadline = Math.round(
-            (deadlineMidnight.getTime() - todayMidnight.getTime()) / (24 * 60 * 60 * 1000)
-          );
-
-          console.log(`RegistrationDeadlines - Event ${event.id}: ${daysUntilDeadline} days until deadline`);
+          console.log(`RegistrationDeadlines - User timezone: ${userTimezone}, Event ${event.id}: ${daysUntilDeadline} days until deadline`);
 
           const deadlineText =
             daysUntilDeadline === 0 ? "today" :

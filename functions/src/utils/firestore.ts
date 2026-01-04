@@ -17,6 +17,7 @@ export interface Notification {
 export interface User {
   id: string;
   fcmToken?: string;
+  timezone?: string;
   notificationPreferences: {
     eventRemindersEnabled: boolean;
     registrationDeadlinesEnabled: boolean;
