@@ -35,6 +35,7 @@ struct MainTabView: View {
         .sheet(isPresented: $showAddEvent, onDismiss: {
             shouldRefetchEvents = true
             sharedEventData = nil
+            injected.appState[\.routing.sharedEventData] = nil
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 shouldRefetchEvents = false
             }
