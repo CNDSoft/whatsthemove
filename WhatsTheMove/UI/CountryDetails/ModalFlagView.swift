@@ -7,7 +7,9 @@
 //
 
 import SwiftUI
+#if DEBUG
 import EnvironmentOverrides
+#endif
 
 struct ModalFlagView: View {
 
@@ -34,7 +36,9 @@ struct ModalFlagView: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .onReceive(inspection.notice) { self.inspection.visit(self, $0) }
+        #if DEBUG
         .attachEnvironmentOverrides()
+        #endif
     }
     
     private var closeButton: some View {

@@ -8,7 +8,9 @@
 
 import SwiftUI
 import Combine
+#if DEBUG
 import EnvironmentOverrides
+#endif
 import FirebaseAuth
 import UserNotifications
 
@@ -33,7 +35,9 @@ extension AppEnvironment {
                 RootContent()
                     .modifier(RootViewAppearance())
                     .modelContainer(modelContainer)
+                    #if DEBUG
                     .attachEnvironmentOverrides(onChange: onChangeHandler)
+                    #endif
                     .inject(diContainer)
                 if modelContainer.isStub {
                     Text("⚠️ There is an issue with local database")
@@ -43,6 +47,7 @@ extension AppEnvironment {
         }
     }
 
+    #if DEBUG
     private var onChangeHandler: (EnvironmentValues.Diff) -> Void {
         return { diff in
             if !diff.isDisjoint(with: [.locale, .sizeCategory]) {
@@ -50,6 +55,7 @@ extension AppEnvironment {
             }
         }
     }
+    #endif
 }
 
 // MARK: - Root Content
