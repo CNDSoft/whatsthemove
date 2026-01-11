@@ -120,8 +120,8 @@ private extension HowToShareEventsSheet {
             
             stepView(
                 number: "4",
-                title: "Review and save",
-                description: "We'll extract the event details automatically. Just review and save!",
+                title: "Review and finish saving",
+                description: "We'll pre-fill what we can from the link. You can quickly edit or add any missing details before saving.",
                 backgroundColor: Color(hex: "2D9674").opacity(0.1),
                 numberBackgroundColor: Color(hex: "2D9674"),
                 numberTextColor: Color(hex: "F8F7F1")
