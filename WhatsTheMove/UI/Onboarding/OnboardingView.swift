@@ -181,7 +181,7 @@ private extension OnboardingView {
         Button(action: {
             handleSkipAction()
         }) {
-            Text("Skip")
+            Text(skipButtonTitle)
                 .font(.rubik(.regular, size: 14))
                 .foregroundColor(Color(hex: "11104B"))
                 .frame(maxWidth: .infinity)
@@ -231,6 +231,10 @@ private extension OnboardingView {
         default:
             return "Next"
         }
+    }
+    
+    var skipButtonTitle: String {
+        currentPage == 6 ? "Next" : "Skip"
     }
     
     var shouldShowPrimaryButton: Bool {
