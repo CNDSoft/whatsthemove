@@ -77,7 +77,7 @@ struct RealEventWebRepository: EventWebRepository {
         
         try await db.collection(collectionName)
             .document(event.id)
-            .updateData(updatedEvent.toDictionary())
+            .updateData(updatedEvent.toDictionary(forUpdate: true))
         
         print("RealEventWebRepository - Event updated successfully")
     }
@@ -176,7 +176,7 @@ enum EventRepositoryError: LocalizedError {
 
 extension Event {
     
-    func toDictionary() -> [String: Any] {
+    func toDictionary(forUpdate: Bool = false) -> [String: Any] {
         var dict: [String: Any] = [
             "userId": userId,
             "name": name,
@@ -191,46 +191,68 @@ extension Event {
         
         if let imageUrl = imageUrl {
             dict["imageUrl"] = imageUrl
+        } else if forUpdate {
+            dict["imageUrl"] = FieldValue.delete()
         }
         
         if let startTime = startTime {
             dict["startTime"] = Timestamp(date: startTime)
+        } else if forUpdate {
+            dict["startTime"] = FieldValue.delete()
         }
         
         if let endTime = endTime {
             dict["endTime"] = Timestamp(date: endTime)
+        } else if forUpdate {
+            dict["endTime"] = FieldValue.delete()
         }
         
         if let urlLink = urlLink, !urlLink.isEmpty {
             dict["urlLink"] = urlLink
+        } else if forUpdate {
+            dict["urlLink"] = FieldValue.delete()
         }
         
         if let admissionAmount = admissionAmount {
             dict["admissionAmount"] = admissionAmount
+        } else if forUpdate {
+            dict["admissionAmount"] = FieldValue.delete()
         }
         
         if let registrationDeadline = registrationDeadline {
             dict["registrationDeadline"] = Timestamp(date: registrationDeadline)
+        } else if forUpdate {
+            dict["registrationDeadline"] = FieldValue.delete()
         }
         
         if let category = category {
             dict["category"] = category.rawValue
+        } else if forUpdate {
+            dict["category"] = FieldValue.delete()
         }
         
         if let notes = notes, !notes.isEmpty {
             dict["notes"] = notes
+        } else if forUpdate {
+            dict["notes"] = FieldValue.delete()
         }
         
         if let location = location, !location.isEmpty {
             dict["location"] = location
+        } else if forUpdate {
+            dict["location"] = FieldValue.delete()
         }
         
         if let appleCalendarEventId = appleCalendarEventId {
             dict["appleCalendarEventId"] = appleCalendarEventId
+        } else if forUpdate {
+            dict["appleCalendarEventId"] = FieldValue.delete()
         }
         
         if let googleCalendarEventId = googleCalendarEventId {
             dict["googleCalendarEventId"] = googleCalendarEventId
+        } else if forUpdate {
+            dict["googleCalendarEventId"] = FieldValue.delete()
         }
         
         return dict
