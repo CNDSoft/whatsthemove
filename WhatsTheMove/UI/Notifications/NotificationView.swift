@@ -225,9 +225,8 @@ private extension NotificationView {
                     }
                 }
                 
-                if !filteredNotifications.isEmpty && selectedFilter != .unread && unreadCount > 0 {
+                if !filteredNotifications.isEmpty && unreadCount > 0 {
                     markAllAsReadButton
-                } else if !filteredNotifications.isEmpty && selectedFilter != .unread {
                 }
             }
             .refreshable {
@@ -726,7 +725,7 @@ private struct NotificationViewWithMockData: View {
                     }
                 }
                 
-                if !filteredNotifications.isEmpty && selectedFilter != .unread && unreadCount > 0 {
+                if !filteredNotifications.isEmpty && unreadCount > 0 {
                     markAllAsReadButton
                 }
             }
