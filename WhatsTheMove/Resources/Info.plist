@@ -25,6 +25,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>FirebaseMessagingAutoInitEnabled</key>
+	<false/>
 	<key>GIDClientID</key>
 	<string>233558487708-59q73e1sp66691qpq33pmkkmist3vshf.apps.googleusercontent.com</string>
 	<key>UIAppFonts</key>
@@ -53,11 +57,5 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
-	<key>FirebaseMessagingAutoInitEnabled</key>
-	<false/>
 </dict>
 </plist>
