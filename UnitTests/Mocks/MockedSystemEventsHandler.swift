@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 // MARK: - SystemEventsHandler
 

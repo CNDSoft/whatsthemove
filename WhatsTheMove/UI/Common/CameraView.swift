@@ -1,6 +1,6 @@
 //
 //  CameraView.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Cem Sertkaya on 12/5/24.
 //  Copyright © 2024 Cem Sertkaya. All rights reserved.

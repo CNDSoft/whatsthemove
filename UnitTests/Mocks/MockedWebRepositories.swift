@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit.UIImage
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 class TestWebRepository: WebRepository {
     let session: URLSession = .mockedResponsesOnly

@@ -37,7 +37,7 @@ class ShareViewController: UIViewController {
         
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Saving to WhatsTheMove"
+        titleLabel.text = "Saving to Whats The Move"
         titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         titleLabel.textColor = UIColor(red: 17/255, green: 16/255, blue: 75/255, alpha: 1.0)
         titleLabel.textAlignment = .center

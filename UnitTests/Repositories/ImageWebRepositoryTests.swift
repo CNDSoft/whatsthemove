@@ -8,7 +8,7 @@
 
 import Testing
 import UIKit.UIImage
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @Suite(.serialized) final class ImageWebRepositoryTests {
 

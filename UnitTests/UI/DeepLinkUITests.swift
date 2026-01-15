@@ -10,7 +10,7 @@ import Testing
 import SwiftData
 import ViewInspector
 import UIKit.UIColor
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @MainActor
 @Suite struct DeepLinkUITests {

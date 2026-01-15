@@ -8,7 +8,7 @@
 
 import Testing
 import Foundation
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @Suite struct PushTokenWebRepositoryTests {
 

@@ -1,6 +1,6 @@
 //
 //  TestHelpers.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Alexey on 15/11/24.
 //  Copyright © 2024 Alexey Naumov. All rights reserved.
@@ -9,7 +9,7 @@
 import UIKit.UIColor
 import SwiftUI
 import ViewInspector
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 // MARK: - UI
 

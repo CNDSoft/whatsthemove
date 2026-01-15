@@ -1,6 +1,6 @@
 //
 //  Font+Rubik.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Cem Sertkaya on 11/27/2025.
 //  Copyright © 2025 Cem Sertkaya. All rights reserved.

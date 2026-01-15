@@ -1,6 +1,6 @@
 //
 //  OnboardingPage1.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Cem Sertkaya on 11/27/24.
 //  Copyright © 2024 Cem Sertkaya. All rights reserved.

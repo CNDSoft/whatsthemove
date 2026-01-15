@@ -8,7 +8,7 @@
 
 import Testing
 import UserNotifications
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @MainActor
 @Suite struct PushNotificationsHandlerTests {

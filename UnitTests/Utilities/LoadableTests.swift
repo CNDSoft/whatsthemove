@@ -11,7 +11,7 @@ import Testing
 import Combine
 import SwiftUI
 import ViewInspector
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @Suite struct LoadableTests {
 

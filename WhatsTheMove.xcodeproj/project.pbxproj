@@ -53,7 +53,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		488734172CDCA2DB00B400A3 /* WhatsTheMove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhatsTheMove.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		488734172CDCA2DB00B400A3 /* Whats The Move.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Whats The Move.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		488734292CDCA2DD00B400A3 /* UnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -74,12 +74,12 @@
 			);
 			target = 4E8377122EE9AF6900FE7AC1 /* ShareExtension */;
 		};
-		4EC166842ED840B100DBBFD4 /* Exceptions for "WhatsTheMove" folder in "WhatsTheMove" target */ = {
+		4EC166842ED840B100DBBFD4 /* Exceptions for "WhatsTheMove" folder in "Whats The Move" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Resources/Info.plist,
 			);
-			target = 488734162CDCA2DB00B400A3 /* WhatsTheMove */;
+			target = 488734162CDCA2DB00B400A3 /* Whats The Move */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -87,7 +87,7 @@
 		488734192CDCA2DB00B400A3 /* WhatsTheMove */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				4EC166842ED840B100DBBFD4 /* Exceptions for "WhatsTheMove" folder in "WhatsTheMove" target */,
+				4EC166842ED840B100DBBFD4 /* Exceptions for "WhatsTheMove" folder in "Whats The Move" target */,
 				4E8377242EE9B10C00FE7AC1 /* Exceptions for "WhatsTheMove" folder in "ShareExtension" target */,
 			);
 			path = WhatsTheMove;
@@ -157,7 +157,7 @@
 		488734182CDCA2DB00B400A3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				488734172CDCA2DB00B400A3 /* WhatsTheMove.app */,
+				488734172CDCA2DB00B400A3 /* Whats The Move.app */,
 				488734292CDCA2DD00B400A3 /* UnitTests.xctest */,
 				4E8377132EE9AF6900FE7AC1 /* ShareExtension.appex */,
 			);
@@ -167,9 +167,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		488734162CDCA2DB00B400A3 /* WhatsTheMove */ = {
+		488734162CDCA2DB00B400A3 /* Whats The Move */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4887343D2CDCA2DD00B400A3 /* Build configuration list for PBXNativeTarget "WhatsTheMove" */;
+			buildConfigurationList = 4887343D2CDCA2DD00B400A3 /* Build configuration list for PBXNativeTarget "Whats The Move" */;
 			buildPhases = (
 				488734132CDCA2DB00B400A3 /* Sources */,
 				488734142CDCA2DB00B400A3 /* Frameworks */,
@@ -184,7 +184,7 @@
 			fileSystemSynchronizedGroups = (
 				488734192CDCA2DB00B400A3 /* WhatsTheMove */,
 			);
-			name = WhatsTheMove;
+			name = "Whats The Move";
 			packageProductDependencies = (
 				4819F10D2CDF5819003CA0AE /* EnvironmentOverrides */,
 				4EC1692D2ED866A000DBBFD4 /* FirebaseAuth */,
@@ -198,7 +198,7 @@
 				4EEA7AB22EFB2E2E00C3939F /* FirebaseRemoteConfig */,
 			);
 			productName = WhatsTheMove;
-			productReference = 488734172CDCA2DB00B400A3 /* WhatsTheMove.app */;
+			productReference = 488734172CDCA2DB00B400A3 /* Whats The Move.app */;
 			productType = "com.apple.product-type.application";
 		};
 		488734282CDCA2DD00B400A3 /* UnitTests */ = {
@@ -291,7 +291,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				488734162CDCA2DB00B400A3 /* WhatsTheMove */,
+				488734162CDCA2DB00B400A3 /* Whats The Move */,
 				488734282CDCA2DD00B400A3 /* UnitTests */,
 				4E8377122EE9AF6900FE7AC1 /* ShareExtension */,
 			);
@@ -349,7 +349,7 @@
 /* Begin PBXTargetDependency section */
 		4887342B2CDCA2DD00B400A3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 488734162CDCA2DB00B400A3 /* WhatsTheMove */;
+			target = 488734162CDCA2DB00B400A3 /* Whats The Move */;
 			targetProxy = 4887342A2CDCA2DD00B400A3 /* PBXContainerItemProxy */;
 		};
 		4E83771C2EE9AF6900FE7AC1 /* PBXTargetDependency */ = {
@@ -495,6 +495,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatsTheMove/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Whats The Move";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "WhatsTheMove needs access to your calendar to automatically sync your saved events.";
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "WhatsTheMove needs permission to add your events to your calendar.";
@@ -537,6 +538,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatsTheMove/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Whats The Move";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "WhatsTheMove needs access to your calendar to automatically sync your saved events.";
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "WhatsTheMove needs permission to add your events to your calendar.";
@@ -671,7 +673,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4887343D2CDCA2DD00B400A3 /* Build configuration list for PBXNativeTarget "WhatsTheMove" */ = {
+		4887343D2CDCA2DD00B400A3 /* Build configuration list for PBXNativeTarget "Whats The Move" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4887343E2CDCA2DD00B400A3 /* Debug */,

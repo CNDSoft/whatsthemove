@@ -7,7 +7,7 @@
 //
 
 import Testing
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @MainActor
 @Suite struct DeepLinksHandlerTests {

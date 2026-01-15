@@ -1,6 +1,6 @@
 //
 //  TimezonePickerView.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Cem Sertkaya on 1/4/26.
 //  Copyright © 2026 Cem Sertkaya. All rights reserved.

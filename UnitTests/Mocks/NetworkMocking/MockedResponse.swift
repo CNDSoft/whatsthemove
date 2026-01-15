@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 extension RequestMocking {
     struct MockedResponse {

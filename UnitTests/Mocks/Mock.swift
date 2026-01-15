@@ -7,7 +7,7 @@
 //
 
 import Testing
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 protocol Mock {
     associatedtype Action: Equatable

@@ -9,7 +9,7 @@
 import Testing
 import SwiftUI
 import ViewInspector
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @MainActor
 @Suite struct ImageViewTests {

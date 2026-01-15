@@ -10,7 +10,7 @@ import Testing
 import ViewInspector
 import SwiftData
 import SwiftUI
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @MainActor
 @Suite struct CountriesListTests {

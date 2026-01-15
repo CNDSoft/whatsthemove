@@ -8,7 +8,7 @@
 
 import Testing
 import SwiftData
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @MainActor
 @Suite struct CountriesDBRepositoryTests {

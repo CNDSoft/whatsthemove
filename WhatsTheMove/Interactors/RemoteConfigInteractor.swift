@@ -1,6 +1,6 @@
 //
 //  RemoteConfigInteractor.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Cem Sertkaya on 12/23/24.
 //  Copyright © 2024 Cem Sertkaya. All rights reserved.
@@ -26,7 +26,7 @@ struct RealRemoteConfigInteractor: RemoteConfigInteractor {
         
         Last updated: December 23, 2024
         
-        This Privacy Policy describes how WhatsTheMove collects, uses, and protects your information when you use our mobile application.
+        This Privacy Policy describes how Whats The Move collects, uses, and protects your information when you use our mobile application.
         
         INFORMATION WE COLLECT
         

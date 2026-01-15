@@ -7,7 +7,7 @@
 //
 
 import SwiftData
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 // MARK: - CountriesWebRepository
 

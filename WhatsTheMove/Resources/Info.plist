@@ -8,7 +8,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.whatsthemove.urlscheme</string>
+			<string>com.Whats The Move.urlscheme</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>wtm</string>

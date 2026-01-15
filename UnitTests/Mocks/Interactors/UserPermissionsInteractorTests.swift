@@ -9,7 +9,7 @@
 import Testing
 import Combine
 import UserNotifications
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @Suite struct UserPermissionsInteractorTests {
 

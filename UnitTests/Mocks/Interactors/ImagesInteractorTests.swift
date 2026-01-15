@@ -9,7 +9,7 @@
 import Testing
 import UIKit
 import Combine
-@testable import WhatsTheMove
+@testable import Whats The Move
 
 @Suite struct ImagesInteractorTests {
 

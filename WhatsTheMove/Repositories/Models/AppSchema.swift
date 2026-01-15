@@ -1,6 +1,6 @@
 //
 //  AppSchema.swift
-//  WhatsTheMove
+//  Whats The Move
 //
 //  Created by Alexey on 7/11/24.
 //  Copyright © 2024 Alexey Naumov. All rights reserved.
