@@ -114,13 +114,45 @@ struct RealAuthInteractor: AuthInteractor {
         
         await MainActor.run {
             appState[\.userData.isAuthenticated] = false
+            appState[\.userData.hasCompletedOnboarding] = false
             appState[\.userData.email] = nil
             appState[\.userData.userId] = nil
             appState[\.userData.firstName] = nil
             appState[\.userData.lastName] = nil
             appState[\.userData.phoneNumber] = nil
+            appState[\.userData.events] = []
+            appState[\.userData.starredEventIds] = []
+            appState[\.userData.lastSavedEventId] = nil
+            appState[\.userData.notificationTappedEventId] = nil
+            appState[\.userData.connectedCalendarType] = nil
+            appState[\.userData.selectedCalendarIdentifier] = nil
+            appState[\.userData.selectedCalendarName] = nil
+            appState[\.userData.calendarSyncEnabled] = false
+            appState[\.userData.lastCalendarSyncDate] = nil
+            appState[\.userData.includeSourceLinksInCalendar] = true
+            appState[\.userData.notificationPreferences] = NotificationPreferences()
+            appState[\.userData.notifications] = []
+            appState[\.userData.fcmToken] = nil
+            appState[\.userData.analyticsEnabled] = false
             appState[\.userData.timezone] = TimeZone.current.identifier
+            
+            appState[\.routing.selectedTab] = .home
+            
+            clearUserDefaults()
         }
+        
+        print("RealAuthInteractor - App state and UserDefaults cleared")
+    }
+    
+    private func clearUserDefaults() {
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "connectedCalendarType")
+        UserDefaults.standard.removeObject(forKey: "selectedCalendarIdentifier")
+        UserDefaults.standard.removeObject(forKey: "selectedCalendarName")
+        UserDefaults.standard.set(false, forKey: "calendarSyncEnabled")
+        UserDefaults.standard.removeObject(forKey: "lastCalendarSyncDate")
+        UserDefaults.standard.removeObject(forKey: "includeSourceLinksInCalendar")
+        UserDefaults.standard.removeObject(forKey: "analyticsEnabled")
     }
     
     func checkAuthStatus() async -> Bool {
