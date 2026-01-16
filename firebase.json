@@ -1,4 +1,23 @@
 {
+  "hosting": {
+    "site": "eventbooking-fd7c2",
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/privacy",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/privacy-policy",
+        "destination": "/index.html"
+      }
+    ]
+  },
   "firestore": {
     "indexes": "firestore.indexes.json"
   },
