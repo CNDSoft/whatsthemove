@@ -10,11 +10,11 @@
     "rewrites": [
       {
         "source": "/privacy",
-        "destination": "/index.html"
+        "destination": "/privacy.html"
       },
       {
         "source": "/privacy-policy",
-        "destination": "/index.html"
+        "destination": "/privacy.html"
       }
     ]
   },
