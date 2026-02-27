@@ -269,7 +269,8 @@ extension EventInteractor {
         case .nextWeek:
             guard let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
                   let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
-                  let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) else {
+                  let endOfNextWeekDay = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek),
+                  let endOfNextWeek = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: endOfNextWeekDay) else {
                 return []
             }
             
@@ -387,7 +388,8 @@ extension EventInteractor {
         
         if let nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: now),
            let startOfNextWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: nextWeekStart)),
-           let endOfNextWeek = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek) {
+           let endOfNextWeekDay = calendar.date(byAdding: .day, value: 6, to: startOfNextWeek),
+           let endOfNextWeek = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: endOfNextWeekDay) {
             if event.eventDate >= startOfNextWeek && event.eventDate <= endOfNextWeek {
                 return .nextWeek
             }
