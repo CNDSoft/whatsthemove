@@ -301,8 +301,7 @@ export const registrationDeadlines = functions.pubsub
         return deadline >= startOfTodayUTC && deadline <= threeDaysFromNow;
       });
 
-      console.log(`RegistrationDeadlines - Found ${eventsWithUpcomingDeadlines.length} ` +
-        `events with upcoming deadlines`);
+      console.log(`RegistrationDeadlines - Found ${eventsWithUpcomingDeadlines.length} events with upcoming deadlines`);
 
       const { sendPushNotification } = await import("./utils/fcm");
       const { getUser, createNotification } = await import("./utils/firestore");
