@@ -250,7 +250,7 @@ extension EventInteractor {
             
         case .thisWeekend:
             let weekday = calendar.component(.weekday, from: now)
-            let daysUntilFriday = (6 - weekday + 7) % 7
+            let daysUntilFriday = weekday == 1 ? -2 : (6 - weekday)
             let daysUntilSunday = (1 - weekday + 7) % 7
             
             guard let friday = calendar.date(byAdding: .day, value: daysUntilFriday, to: now),
@@ -374,7 +374,7 @@ extension EventInteractor {
         }
         
         let weekday = calendar.component(.weekday, from: now)
-        let daysUntilFriday = (6 - weekday + 7) % 7
+        let daysUntilFriday = weekday == 1 ? -2 : (6 - weekday)
         let daysUntilSunday = (1 - weekday + 7) % 7
         
         if let friday = calendar.date(byAdding: .day, value: daysUntilFriday, to: now),
