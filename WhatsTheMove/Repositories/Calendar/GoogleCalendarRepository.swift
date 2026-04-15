@@ -37,7 +37,7 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
         }
         
         let redirectURI = "com.googleusercontent.apps.233558487708-59q73e1sp66691qpq33pmkkmist3vshf:/oauth2redirect"
-        let scope = "https://www.googleapis.com/auth/calendar"
+        let scope = "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly"
         
         let codeVerifier = generateCodeVerifier()
         let codeChallenge = generateCodeChallenge(from: codeVerifier)
@@ -171,32 +171,19 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
     
     func getCalendars() async throws -> [CalendarInfo] {
         print("RealGoogleCalendarRepository - Fetching calendars")
-        
-        guard let accessToken = getAccessToken() else {
-            throw CalendarSyncError.authenticationFailed
-        }
-        
+
         let url = URL(string: "\(baseURL)/users/me/calendarList")!
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        
+        let request = URLRequest(url: url)
+
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw CalendarSyncError.networkError(NSError(domain: "Invalid response", code: -1))
-            }
-            
-            if httpResponse.statusCode == 401 {
-                throw CalendarSyncError.authenticationFailed
-            }
-            
+            let (data, httpResponse) = try await authenticatedData(for: request)
+
             guard httpResponse.statusCode == 200 else {
                 throw CalendarSyncError.networkError(NSError(domain: "HTTP \(httpResponse.statusCode)", code: httpResponse.statusCode))
             }
-            
+
             let json = try JSONDecoder().decode(GoogleCalendarListResponse.self, from: data)
-            
+
             let calendars = json.items.filter { $0.accessRole == "owner" || $0.accessRole == "writer" }.map { item in
                 CalendarInfo(
                     id: item.id,
@@ -207,124 +194,85 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
                     allowsModification: item.accessRole == "owner" || item.accessRole == "writer"
                 )
             }
-            
+
             print("RealGoogleCalendarRepository - Found \(calendars.count) calendars")
             return calendars
         } catch {
             print("RealGoogleCalendarRepository - Failed to fetch calendars: \(error)")
-            throw CalendarSyncError.networkError(error)
+            throw error
         }
     }
     
     func createEvent(_ event: Event, in calendarId: String, includeSourceLinks: Bool) async throws -> String {
         print("RealGoogleCalendarRepository - Creating event: \(event.name)")
-        
-        guard let accessToken = getAccessToken() else {
-            throw CalendarSyncError.authenticationFailed
-        }
-        
+
         let url = URL(string: "\(baseURL)/calendars/\(calendarId)/events")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+
         let googleEvent = convertToGoogleEvent(event, includeSourceLinks: includeSourceLinks)
         request.httpBody = try JSONEncoder().encode(googleEvent)
-        
+
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw CalendarSyncError.networkError(NSError(domain: "Invalid response", code: -1))
-            }
-            
-            if httpResponse.statusCode == 401 {
-                throw CalendarSyncError.authenticationFailed
-            }
-            
+            let (data, httpResponse) = try await authenticatedData(for: request)
+
             guard httpResponse.statusCode == 200 else {
                 throw CalendarSyncError.eventCreationFailed
             }
-            
+
             let createdEvent = try JSONDecoder().decode(GoogleEventResponse.self, from: data)
             print("RealGoogleCalendarRepository - Event created with ID: \(createdEvent.id)")
             return createdEvent.id
         } catch {
             print("RealGoogleCalendarRepository - Failed to create event: \(error)")
-            throw CalendarSyncError.networkError(error)
+            throw error
         }
     }
     
     func updateEvent(_ event: Event, calendarEventId: String, in calendarId: String, includeSourceLinks: Bool) async throws {
         print("RealGoogleCalendarRepository - Updating event: \(calendarEventId)")
-        
-        guard let accessToken = getAccessToken() else {
-            throw CalendarSyncError.authenticationFailed
-        }
-        
+
         let url = URL(string: "\(baseURL)/calendars/\(calendarId)/events/\(calendarEventId)")!
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+
         let googleEvent = convertToGoogleEvent(event, includeSourceLinks: includeSourceLinks)
         request.httpBody = try JSONEncoder().encode(googleEvent)
-        
+
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw CalendarSyncError.networkError(NSError(domain: "Invalid response", code: -1))
-            }
-            
-            if httpResponse.statusCode == 401 {
-                throw CalendarSyncError.authenticationFailed
-            }
-            
+            let (_, httpResponse) = try await authenticatedData(for: request)
+
             guard httpResponse.statusCode == 200 else {
                 throw CalendarSyncError.eventCreationFailed
             }
-            
+
             print("RealGoogleCalendarRepository - Event updated successfully")
         } catch {
             print("RealGoogleCalendarRepository - Failed to update event: \(error)")
-            throw CalendarSyncError.networkError(error)
+            throw error
         }
     }
     
     func deleteEvent(calendarEventId: String, in calendarId: String) async throws {
         print("RealGoogleCalendarRepository - Deleting event: \(calendarEventId)")
-        
-        guard let accessToken = getAccessToken() else {
-            throw CalendarSyncError.authenticationFailed
-        }
-        
+
         let url = URL(string: "\(baseURL)/calendars/\(calendarId)/events/\(calendarEventId)")!
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        
+
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw CalendarSyncError.networkError(NSError(domain: "Invalid response", code: -1))
-            }
-            
-            if httpResponse.statusCode == 401 {
-                throw CalendarSyncError.authenticationFailed
-            }
-            
+            let (_, httpResponse) = try await authenticatedData(for: request)
+
             guard httpResponse.statusCode == 204 else {
                 throw CalendarSyncError.eventCreationFailed
             }
-            
+
             print("RealGoogleCalendarRepository - Event deleted successfully")
         } catch {
             print("RealGoogleCalendarRepository - Failed to delete event: \(error)")
-            throw CalendarSyncError.networkError(error)
+            throw error
         }
     }
     
@@ -414,6 +362,88 @@ struct RealGoogleCalendarRepository: GoogleCalendarRepository {
     
     private func saveRefreshToken(_ token: String) {
         KeychainHelper.save(service: keychainService, account: refreshTokenKey, data: token)
+    }
+
+    private func refreshAccessToken() async throws {
+        print("RealGoogleCalendarRepository - Refreshing access token")
+
+        guard let refreshToken = getRefreshToken() else {
+            print("RealGoogleCalendarRepository - No refresh token available")
+            throw CalendarSyncError.authenticationFailed
+        }
+
+        guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String else {
+            throw CalendarSyncError.authenticationFailed
+        }
+
+        let tokenURL = URL(string: "https://oauth2.googleapis.com/token")!
+        var request = URLRequest(url: tokenURL)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+        let parameters = [
+            "client_id": clientID,
+            "refresh_token": refreshToken,
+            "grant_type": "refresh_token"
+        ]
+
+        let body = parameters.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" }.joined(separator: "&")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            print("RealGoogleCalendarRepository - Token refresh failed")
+            throw CalendarSyncError.authenticationFailed
+        }
+
+        let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
+        saveAccessToken(tokenResponse.access_token)
+
+        if let newRefreshToken = tokenResponse.refresh_token {
+            saveRefreshToken(newRefreshToken)
+        }
+
+        print("RealGoogleCalendarRepository - Access token refreshed successfully")
+    }
+
+    private func authenticatedData(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        guard let accessToken = getAccessToken() else {
+            throw CalendarSyncError.authenticationFailed
+        }
+
+        var authedRequest = request
+        authedRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: authedRequest)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw CalendarSyncError.networkError(NSError(domain: "Invalid response", code: -1))
+        }
+
+        if httpResponse.statusCode == 401 {
+            print("RealGoogleCalendarRepository - Got 401, attempting token refresh")
+            try await refreshAccessToken()
+
+            guard let newToken = getAccessToken() else {
+                throw CalendarSyncError.authenticationFailed
+            }
+
+            authedRequest.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+            let (retryData, retryResponse) = try await URLSession.shared.data(for: authedRequest)
+
+            guard let retryHttp = retryResponse as? HTTPURLResponse else {
+                throw CalendarSyncError.networkError(NSError(domain: "Invalid response", code: -1))
+            }
+
+            if retryHttp.statusCode == 401 {
+                throw CalendarSyncError.authenticationFailed
+            }
+
+            return (retryData, retryHttp)
+        }
+
+        return (data, httpResponse)
     }
 }
 

@@ -59,9 +59,11 @@ struct RealCalendarInteractor: CalendarInteractor {
     
     func connectGoogleCalendar(calendarIdentifier: String, calendarName: String) async throws {
         print("RealCalendarInteractor - Connecting to Google Calendar: \(calendarName)")
-        
-        try await googleCalendarRepository.authenticate()
-        
+
+        if !googleCalendarRepository.isAuthenticated() {
+            try await googleCalendarRepository.authenticate()
+        }
+
         await MainActor.run {
             appState[\.userData.connectedCalendarType] = .google
             appState[\.userData.selectedCalendarIdentifier] = calendarIdentifier

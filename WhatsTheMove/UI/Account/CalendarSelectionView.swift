@@ -84,20 +84,20 @@ struct CalendarSelectionView: View {
     }
     
     @ViewBuilder private var content: some View {
-        if selectedCalendarType == .google && !injected.interactors.calendar.isGoogleAuthenticated() {
-            connectGoogleView()
-        } else if selectedCalendarType == .apple && (!injected.interactors.calendar.hasRequestedApplePermission() || injected.interactors.calendar.isApplePermissionDenied()) {
-            connectAppleView()
-        } else {
-            switch calendarsState {
-            case .notRequested:
+        switch calendarsState {
+        case .isLoading:
+            loadingView()
+        case let .loaded(calendars):
+            loadedView(calendars)
+        case let .failed(error):
+            failedView(error)
+        case .notRequested:
+            if selectedCalendarType == .google && !injected.interactors.calendar.isGoogleAuthenticated() {
+                connectGoogleView()
+            } else if selectedCalendarType == .apple && (!injected.interactors.calendar.hasRequestedApplePermission() || injected.interactors.calendar.isApplePermissionDenied()) {
+                connectAppleView()
+            } else {
                 notRequestedView()
-            case .isLoading:
-                loadingView()
-            case let .loaded(calendars):
-                loadedView(calendars)
-            case let .failed(error):
-                failedView(error)
             }
         }
     }
